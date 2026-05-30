@@ -1,0 +1,368 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import 'tailwindcss' source('../');
+
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
+
+  html,
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background:
+      radial-gradient(circle at 20% 0%, var(--app-glow-a), transparent 28rem),
+      radial-gradient(circle at 80% 12%, var(--app-glow-b), transparent 25rem),
+      linear-gradient(180deg, var(--app-bg-start) 0%, var(--app-bg-mid) 42%, var(--app-bg) 100%);
+    color: var(--app-text);
+    @apply antialiased;
+  }
+
+  code {
+    @apply rounded px-1.5 py-0.5 font-mono text-sm;
+    background: rgba(0, 229, 153, 0.1);
+    color: #91ffd3;
+  }
+
+  .using-mouse * {
+    outline: none !important;
+  }
+}
+
+/* ─── Semantic badge tokens ─── */
+:root {
+  color-scheme: dark;
+  --app-bg: #070b0d;
+  --app-bg-start: #070b0d;
+  --app-bg-mid: #080d10;
+  --app-panel: #0d1417;
+  --app-panel-soft: #10191d;
+  --app-panel-raised: #121d22;
+  --app-border: rgba(132, 255, 210, 0.12);
+  --app-border-strong: rgba(132, 255, 210, 0.22);
+  --app-text: #e8fff7;
+  --app-muted: #8aa29b;
+  --app-faint: #5f7770;
+  --app-green: #00e599;
+  --app-green-soft: rgba(0, 229, 153, 0.12);
+  --app-cyan: #66e3ff;
+  --app-glow-a: rgba(0, 229, 153, 0.13);
+  --app-glow-b: rgba(0, 150, 255, 0.09);
+  --app-shadow-sm: 0 18px 60px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  --app-shadow-md: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 16px 50px rgba(0, 0, 0, 0.18);
+  --app-shadow-lg: 0 22px 70px rgba(0, 0, 0, 0.26);
+  --app-primary-bg: #00e599;
+  --app-primary-bg-hover: #00c986;
+  --app-primary-text: #04100c;
+  /* Status */
+  --badge-good-bg: #f0fdf4;
+  --badge-good-text: #15803d;
+  --badge-warn-bg: #fffbeb;
+  --badge-warn-text: #b45309;
+  --badge-risk-bg: #fff1f2;
+  --badge-risk-text: #be123c;
+  --badge-info-bg: #eff6ff;
+  --badge-info-text: #1d4ed8;
+  --badge-muted-bg: #f8fafc;
+  --badge-muted-text: #64748b;
+  /* Sidebar */
+  --sidebar-width: 17rem;
+}
+
+html.theme-light {
+  color-scheme: light;
+  --app-bg: #f6f8fb;
+  --app-bg-start: #ffffff;
+  --app-bg-mid: #f8fafc;
+  --app-panel: #ffffff;
+  --app-panel-soft: #f8fafc;
+  --app-panel-raised: #f1f5f9;
+  --app-border: #e2e8f0;
+  --app-border-strong: #cbd5e1;
+  --app-text: #020617;
+  --app-muted: #475569;
+  --app-faint: #94a3b8;
+  --app-green: #047857;
+  --app-green-soft: #d1fae5;
+  --app-cyan: #0369a1;
+  --app-glow-a: rgba(16, 185, 129, 0.1);
+  --app-glow-b: rgba(14, 165, 233, 0.08);
+  --app-shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
+  --app-shadow-md: 0 1px 2px rgba(15, 23, 42, 0.05), 0 8px 22px rgba(15, 23, 42, 0.06);
+  --app-shadow-lg: 0 10px 28px rgba(15, 23, 42, 0.1);
+  --app-primary-bg: #020617;
+  --app-primary-bg-hover: #1e293b;
+  --app-primary-text: #ffffff;
+}
+
+@layer base {
+  ::selection {
+    background: rgba(0, 229, 153, 0.3);
+    color: #ffffff;
+  }
+
+  * {
+    scrollbar-color: rgba(132, 255, 210, 0.28) transparent;
+  }
+
+  input,
+  select,
+  textarea {
+    color: var(--app-text);
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: #60766f;
+  }
+}
+
+@layer utilities {
+  .bg-white,
+  .bg-slate-50,
+  .bg-slate-50\/50 {
+    background-color: var(--app-panel) !important;
+  }
+
+  .bg-white\/80,
+  .bg-white\/90,
+  .bg-white\/95 {
+    background-color: color-mix(in srgb, var(--app-panel) 90%, transparent) !important;
+  }
+
+  .bg-slate-100 {
+    background-color: var(--app-panel-soft) !important;
+  }
+
+  .bg-slate-950,
+  .bg-slate-900 {
+    background-color: var(--app-primary-bg) !important;
+    color: var(--app-primary-text) !important;
+  }
+
+  .bg-slate-800 {
+    background-color: var(--app-primary-bg-hover) !important;
+    color: var(--app-primary-text) !important;
+  }
+
+  .bg-emerald-100 {
+    background-color: var(--app-green-soft) !important;
+  }
+
+  .text-white {
+    color: var(--app-primary-text) !important;
+  }
+
+  .text-slate-950,
+  .text-slate-900,
+  .text-slate-800 {
+    color: var(--app-text) !important;
+  }
+
+  .text-slate-700,
+  .text-slate-600,
+  .text-slate-500 {
+    color: var(--app-muted) !important;
+  }
+
+  .text-slate-400,
+  .text-slate-300 {
+    color: var(--app-faint) !important;
+  }
+
+  .text-emerald-700 {
+    color: var(--app-green) !important;
+  }
+
+  .border-slate-100,
+  .border-slate-200,
+  .border-slate-300 {
+    border-color: var(--app-border) !important;
+  }
+
+  .divide-slate-100 > :not([hidden]) ~ :not([hidden]) {
+    border-color: var(--app-border) !important;
+  }
+
+  .shadow-sm {
+    box-shadow: var(--app-shadow-sm) !important;
+  }
+
+  .shadow-lg,
+  .shadow-xl {
+    box-shadow: var(--app-shadow-lg) !important;
+  }
+
+  .focus\:border-slate-950:focus,
+  .focus-within\:border-slate-950:focus-within {
+    border-color: var(--app-green) !important;
+  }
+
+  .hover\:bg-slate-50:hover,
+  .hover\:bg-slate-100:hover,
+  .hover\:bg-slate-800:hover {
+    background-color: var(--app-panel-raised) !important;
+  }
+
+  .hover\:text-slate-950:hover,
+  .hover\:text-slate-900:hover {
+    color: var(--app-text) !important;
+  }
+
+  .hover\:border-slate-300:hover,
+  .hover\:border-slate-950:hover {
+    border-color: var(--app-border-strong) !important;
+  }
+
+  .from-slate-800,
+  .from-slate-950 {
+    --tw-gradient-from: var(--app-primary-bg) var(--tw-gradient-from-position) !important;
+  }
+
+  .to-slate-950,
+  .to-slate-800 {
+    --tw-gradient-to: var(--app-cyan) var(--tw-gradient-to-position) !important;
+  }
+}
+
+.neon-surface {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035), transparent),
+    var(--app-panel);
+  border: 1px solid var(--app-border);
+  box-shadow: var(--app-shadow-md);
+}
+
+.neon-grid {
+  background-image:
+    linear-gradient(rgba(132, 255, 210, 0.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(132, 255, 210, 0.055) 1px, transparent 1px);
+  background-size: 44px 44px;
+}
+
+.app-page-bg {
+  background: transparent;
+}
+
+.app-header {
+  background-color: color-mix(in srgb, var(--app-panel) 92%, transparent);
+  border-color: var(--app-border);
+}
+
+.field-label {
+  margin-bottom: 0.25rem;
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  color: var(--app-faint);
+}
+
+.field-input {
+  width: 100%;
+  border-radius: 0.25rem;
+  border: 1px solid var(--app-border);
+  background-color: var(--app-panel);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--app-text);
+  outline: none;
+}
+
+.field-input:focus {
+  border-color: var(--app-green);
+}
+
+.quote-print-area {
+  background: #ffffff !important;
+  color: #020617 !important;
+  border-color: #e2e8f0 !important;
+}
+
+.quote-print-area .bg-white,
+.quote-print-area .bg-slate-50,
+.quote-print-area .bg-slate-100 {
+  background: #ffffff !important;
+}
+
+.quote-print-area .text-slate-950,
+.quote-print-area .text-slate-900,
+.quote-print-area .text-slate-800 {
+  color: #020617 !important;
+}
+
+.quote-print-area .text-slate-700,
+.quote-print-area .text-slate-600,
+.quote-print-area .text-slate-500 {
+  color: #475569 !important;
+}
+
+.quote-print-area .text-slate-400,
+.quote-print-area .text-slate-300 {
+  color: #94a3b8 !important;
+}
+
+.quote-print-area .border-slate-100,
+.quote-print-area .border-slate-200,
+.quote-print-area .border-slate-300,
+.quote-print-area .divide-slate-100 > :not([hidden]) ~ :not([hidden]) {
+  border-color: #e2e8f0 !important;
+}
+
+@media print {
+  body * {
+    visibility: hidden !important;
+  }
+
+  .ticket-print-area,
+  .ticket-print-area *,
+  .quote-print-area,
+  .quote-print-area * {
+    visibility: visible !important;
+  }
+
+  .ticket-print-area,
+  .quote-print-area {
+    position: fixed !important;
+    inset: 0 auto auto 0 !important;
+    border: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .ticket-print-area {
+    width: 80mm !important;
+  }
+
+  .quote-print-area {
+    width: 210mm !important;
+    min-height: 297mm !important;
+    color: #020617 !important;
+    background: #ffffff !important;
+  }
+
+  .quote-print-area * {
+    color: #020617 !important;
+    border-color: #e2e8f0 !important;
+  }
+
+  .quote-print-area .bg-white,
+  .quote-print-area .bg-slate-50,
+  .quote-print-area .bg-slate-100 {
+    background: #ffffff !important;
+  }
+
+  .quote-print-area .text-slate-500,
+  .quote-print-area .text-slate-600,
+  .quote-print-area .text-slate-700 {
+    color: #475569 !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+}
