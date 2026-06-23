@@ -208,7 +208,7 @@ export const restockCatalogItem = createServerFn({ method: 'POST' })
 
     const warehouse = await ensureWarehouse(company.id)
     const reference = `RESTOCK-${Date.now().toString().slice(-6)}`
-    const item = await prisma.$transaction(async (tx: PrismaClient) => {
+    const item = await prisma.$transaction(async (tx) => {
       const updated = await tx.catalogItem.update({
         where: { id: existing.id },
         data: {
@@ -281,7 +281,7 @@ export const createQuote = createServerFn({ method: 'POST' })
     const total = taxable + tax
     const reference = `DEV-${String(settings.nextNumber).padStart(5, '0')}`
 
-    return prisma.$transaction(async (tx: PrismaClient) => {
+    return prisma.$transaction(async (tx) => {
       await tx.quoteSettings.update({
         where: { companyId: company.id },
         data: { nextNumber: { increment: 1 } },
@@ -458,7 +458,7 @@ export const createPurchaseInvoice = createServerFn({ method: 'POST' })
       where: { companyId: company.id, name: data.vendorName.trim() },
     })
 
-    return prisma.$transaction(async (tx: PrismaClient) => {
+    return prisma.$transaction(async (tx) => {
       const invoice = await tx.purchaseInvoice.create({
         data: {
           companyId: company.id,
@@ -590,7 +590,7 @@ export const createPosSale = createServerFn({ method: 'POST' })
         : await ensureAccount(company.id, 'Cash', 'Caisse boutique')
     const warehouse = lineItems.some((line) => line.item.stock !== null) ? await ensureWarehouse(company.id) : null
 
-    const transaction = await prisma.$transaction(async (tx: PrismaClient) => {
+    const transaction = await prisma.$transaction(async (tx) => {
       for (const line of lineItems) {
         if (line.item.stock !== null) {
           await tx.catalogItem.update({
