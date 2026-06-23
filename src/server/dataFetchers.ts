@@ -1,6 +1,7 @@
 import { createServerFn } from '@tanstack/react-start'
 import { z } from 'zod'
 import { prisma } from './db'
+import type { Customer, CatalogItem, Transaction, Quote, Vendor, PurchaseInvoice } from '../generated/prisma/client'
 
 async function getCompany(companySlug: string, permission?: string) {
   const { requireCompanyAccess } = await import('./access')
@@ -259,21 +260,21 @@ export const searchCompanyData = createServerFn({ method: 'GET' })
     ])
 
     return [
-      ...customers.map((customer) => ({
+      ...customers.map((customer: Customer) => ({
         id: customer.id,
         type: 'Client',
         title: customer.name,
         subtitle: customer.email ?? 'Fiche client',
         to: `/${data.companySlug}/crm`,
       })),
-      ...items.map((item) => ({
+      ...items.map((item: CatalogItem) => ({
         id: item.id,
         type: item.type === 'Service' ? 'Service' : 'Produit',
         title: item.name,
         subtitle: `${item.sku} - ${item.status}`,
         to: `/${data.companySlug}/products-services`,
       })),
-      ...transactions.map((transaction) => ({
+      ...transactions.map((transaction: Transaction) => ({
         id: transaction.id,
         type: transaction.type === 'Expense' ? 'Depense' : transaction.category === 'POS' ? 'Ticket' : 'Facture',
         title: transaction.description,
@@ -284,14 +285,14 @@ export const searchCompanyData = createServerFn({ method: 'GET' })
             ? `/${data.companySlug}/finance/expenses`
             : `/${data.companySlug}/invoices`,
       })),
-      ...quotes.map((quote) => ({
+      ...quotes.map((quote: Quote & { customer: Customer | null }) => ({
         id: quote.id,
         type: 'Devis',
         title: quote.reference,
         subtitle: `${quote.title} - ${quote.customer?.name ?? 'Client libre'}`,
         to: `/${data.companySlug}/quotes`,
       })),
-      ...vendors.map((vendor) => ({
+      ...vendors.map((vendor: Vendor) => ({
         id: vendor.id,
         type: 'Fournisseur',
         title: vendor.name,
@@ -329,9 +330,9 @@ export const getPurchasesData = createServerFn({ method: 'GET' })
       }),
     ])
 
-    const legacyInvoices = transactions.filter((transaction) =>
+    const legacyInvoices = transactions.filter((transaction: Transaction) =>
       ['Achat stock', 'Achats', 'Fournisseur', 'Charges', 'Loyer', 'Transport'].includes(transaction.category),
-    ).map((transaction) => ({
+    ).map((transaction: Transaction) => ({
       id: transaction.id,
       description: transaction.description,
       reference: transaction.reference,
@@ -343,7 +344,7 @@ export const getPurchasesData = createServerFn({ method: 'GET' })
       source: 'transaction',
     }))
     const purchaseInvoices = [
-      ...invoices.map((invoice) => ({
+      ...invoices.map((invoice: PurchaseInvoice & { vendor: Vendor | null }) => ({
         id: invoice.id,
         description: invoice.vendorName ? `${invoice.vendorName} - ${invoice.reference}` : invoice.reference,
         reference: invoice.reference,
@@ -356,7 +357,7 @@ export const getPurchasesData = createServerFn({ method: 'GET' })
       })),
       ...legacyInvoices,
     ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 100)
-    const stockAlerts = items.filter((item) =>
+    const stockAlerts = items.filter((item: CatalogItem) =>
       item.stock !== null && item.minStockLevel !== null && item.stock <= item.minStockLevel,
     )
 

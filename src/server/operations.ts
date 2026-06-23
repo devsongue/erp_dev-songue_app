@@ -1,6 +1,7 @@
 import { createServerFn } from '@tanstack/react-start'
 import { z } from 'zod'
 import { prisma } from './db'
+import type { PrismaClient } from '../generated/prisma/client'
 
 async function getCompany(companySlug: string, permission: string) {
   const { requireCompanyAccess } = await import('./access')
@@ -207,7 +208,7 @@ export const restockCatalogItem = createServerFn({ method: 'POST' })
 
     const warehouse = await ensureWarehouse(company.id)
     const reference = `RESTOCK-${Date.now().toString().slice(-6)}`
-    const item = await prisma.$transaction(async (tx) => {
+    const item = await prisma.$transaction(async (tx: PrismaClient) => {
       const updated = await tx.catalogItem.update({
         where: { id: existing.id },
         data: {
@@ -280,7 +281,7 @@ export const createQuote = createServerFn({ method: 'POST' })
     const total = taxable + tax
     const reference = `DEV-${String(settings.nextNumber).padStart(5, '0')}`
 
-    return prisma.$transaction(async (tx) => {
+    return prisma.$transaction(async (tx: PrismaClient) => {
       await tx.quoteSettings.update({
         where: { companyId: company.id },
         data: { nextNumber: { increment: 1 } },
@@ -457,7 +458,7 @@ export const createPurchaseInvoice = createServerFn({ method: 'POST' })
       where: { companyId: company.id, name: data.vendorName.trim() },
     })
 
-    return prisma.$transaction(async (tx) => {
+    return prisma.$transaction(async (tx: PrismaClient) => {
       const invoice = await tx.purchaseInvoice.create({
         data: {
           companyId: company.id,
@@ -575,7 +576,7 @@ export const createPosSale = createServerFn({ method: 'POST' })
     }
 
     const lineItems = itemIds.map((itemId) => {
-      const item = items.find((candidate) => candidate.id === itemId)
+      const item = items.find((candidate: { id: string }) => candidate.id === itemId)
       if (!item) throw new Error('Produit introuvable.')
       const quantity = requestedQuantities.get(itemId) ?? 0
       return { item, quantity, total: item.price * quantity }
@@ -589,7 +590,7 @@ export const createPosSale = createServerFn({ method: 'POST' })
         : await ensureAccount(company.id, 'Cash', 'Caisse boutique')
     const warehouse = lineItems.some((line) => line.item.stock !== null) ? await ensureWarehouse(company.id) : null
 
-    const transaction = await prisma.$transaction(async (tx) => {
+    const transaction = await prisma.$transaction(async (tx: PrismaClient) => {
       for (const line of lineItems) {
         if (line.item.stock !== null) {
           await tx.catalogItem.update({

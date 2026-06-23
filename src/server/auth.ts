@@ -4,6 +4,7 @@ import { deleteCookie, getCookie, setCookie } from '@tanstack/react-start/server
 import { z } from 'zod'
 import { prisma } from './db'
 import { hashPassword, verifyPassword } from './password'
+import type { Permission } from '../generated/prisma/client'
 
 const sessionCookieName = 'erp_session'
 const sessionDurationMs = 1000 * 60 * 60 * 24 * 7
@@ -662,7 +663,7 @@ async function createCompanyForOwner(input: {
       name: 'Proprietaire',
       description: 'Controle total sur cette entreprise.',
       systemKey: 'owner',
-      permissions: { create: permissions.map((permission) => ({ permissionId: permission.id })) },
+      permissions: { create: permissions.map((permission: Permission) => ({ permissionId: permission.id })) },
     },
   })
 
@@ -672,11 +673,11 @@ async function createCompanyForOwner(input: {
       name: 'Administrateur',
       description: 'Gestion des modules, utilisateurs, roles et operations.',
       systemKey: 'admin',
-      permissions: { create: permissions.map((permission) => ({ permissionId: permission.id })) },
+      permissions: { create: permissions.map((permission: Permission) => ({ permissionId: permission.id })) },
     },
   })
 
-  const accountantPermissions = permissions.filter((permission) =>
+  const accountantPermissions = permissions.filter((permission: Permission) =>
     ['invoice.', 'finance.', 'audit.'].some((prefix) => permission.key.startsWith(prefix)),
   )
   await prisma.role.create({
@@ -685,7 +686,7 @@ async function createCompanyForOwner(input: {
       name: 'Comptable',
       description: 'Gestion finance, factures et rapports comptables.',
       systemKey: 'accountant',
-      permissions: { create: accountantPermissions.map((permission) => ({ permissionId: permission.id })) },
+      permissions: { create: accountantPermissions.map((permission: Permission) => ({ permissionId: permission.id })) },
     },
   })
 
@@ -697,8 +698,8 @@ async function createCompanyForOwner(input: {
       systemKey: 'readonly',
       permissions: {
         create: permissions
-          .filter((permission) => permission.key.endsWith('.read') || permission.key === 'audit.read')
-          .map((permission) => ({ permissionId: permission.id })),
+          .filter((permission: Permission) => permission.key.endsWith('.read') || permission.key === 'audit.read')
+          .map((permission: Permission) => ({ permissionId: permission.id })),
       },
     },
   })
