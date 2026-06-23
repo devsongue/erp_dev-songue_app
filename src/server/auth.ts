@@ -143,8 +143,14 @@ export const getAuthState = createServerFn({ method: 'GET' }).handler(async () =
 })
 
 export const getInstallationState = createServerFn({ method: 'GET' }).handler(async () => {
-  const usersCount = await prisma.user.count()
-  return { needsSetup: usersCount === 0 }
+  try {
+    const usersCount = await prisma.user.count()
+    return { needsSetup: usersCount === 0 }
+  } catch (error) {
+    console.error('Database connection error in getInstallationState:', error)
+    // We assume setup is needed or database is unreachable
+    return { needsSetup: true, error: true }
+  }
 })
 
 export const getCompanyAuthState = createServerFn({ method: 'GET' })
