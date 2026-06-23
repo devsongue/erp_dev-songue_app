@@ -9,7 +9,7 @@ export const Route = createFileRoute('/login')({
   }),
   beforeLoad: async () => {
     const installation = await getInstallationState()
-    if (installation.needsSetup) {
+    if (installation?.needsSetup) {
       throw redirect({ to: '/register' })
     }
   },
@@ -32,13 +32,13 @@ function LoginPage() {
     const result = await login({ data: { email, password } })
     setIsSubmitting(false)
 
-    if (result.needsSetup) {
+    if (result?.needsSetup) {
       await navigate({ to: '/register' })
       return
     }
 
-    if (!result.ok) {
-      setError(result.message)
+    if (!result || !result.ok) {
+      setError(result?.message ?? 'Erreur de connexion au serveur.')
       return
     }
 
