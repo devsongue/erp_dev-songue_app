@@ -7,8 +7,8 @@ async function main() {
   const password = 'Devsongue61996@'
 
   // Delete existing users if any, or just check.
-  const existing = await prisma.user.findUnique({ where: { email } })
-  if (existing) {
+  let user = await prisma.user.findUnique({ where: { email } })
+  if (user) {
     console.log('Account exists, updating password...')
     await prisma.user.update({
       where: { email },
@@ -18,11 +18,24 @@ async function main() {
     return
   }
 
+  user = await prisma.user.create({
+    data: {
+      name: 'Foundanen Tuo',
+      email: email,
+      passwordHash: hashPassword(password),
+      isOwner: true,
+    }
+  })
+
   // Create workspace and company (if not exists)
   let workspace = await prisma.workspace.findFirst()
   if (!workspace) {
     workspace = await prisma.workspace.create({
-      data: { name: 'Espace Devsongue' },
+      data: { 
+        name: 'Espace Devsongue',
+        slug: 'espace-devsongue',
+        ownerId: user.id
+      },
     })
   }
 
@@ -39,21 +52,14 @@ async function main() {
 
   const role = await prisma.role.findFirst({ where: { name: 'Owner' } })
 
-  const user = await prisma.user.create({
+  await prisma.companyMembership.create({
     data: {
-      name: 'Foundanen Tuo',
-      email: email,
-      passwordHash: hashPassword(password),
-      isOwner: true,
-      memberships: {
-        create: {
-          companyId: company.id,
-          status: 'ACTIVE',
-          roles: role ? {
-            create: { roleId: role.id }
-          } : undefined
-        }
-      }
+      userId: user.id,
+      companyId: company.id,
+      status: 'ACTIVE',
+      roles: role ? {
+        create: { roleId: role.id }
+      } : undefined
     }
   })
 
