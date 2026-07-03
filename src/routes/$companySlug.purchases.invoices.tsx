@@ -165,15 +165,15 @@ function PurchaseInvoicesPage() {
       </section>
 
       {isModalOpen ? (
-        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-950/40 px-4 py-8 sm:items-center">
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-950/40 px-3 py-6 sm:items-center sm:px-4 sm:py-8">
           <div className="w-full max-w-2xl rounded border border-slate-200 bg-white shadow-xl">
-            <div className="flex items-center justify-between gap-4 border-b border-slate-100 px-5 py-4">
+            <div className="flex items-center justify-between gap-4 border-b border-slate-100 px-4 py-4 sm:px-5">
               <h2 className="text-lg font-bold text-slate-950">Nouvelle facture achat</h2>
               <button type="button" onClick={() => setIsModalOpen(false)} className="inline-flex size-9 items-center justify-center rounded border border-slate-200 text-slate-500 hover:bg-slate-50" aria-label="Fermer">
                 <X className="size-4" />
               </button>
             </div>
-            <form onSubmit={addInvoice} className="space-y-4 p-5">
+            <form onSubmit={addInvoice} className="space-y-4 p-4 sm:p-5">
               <div className="grid gap-4 sm:grid-cols-2">
                 <label className="block">
                   <span className="mb-1 block text-xs font-bold uppercase tracking-wide text-slate-400">Fournisseur</span>

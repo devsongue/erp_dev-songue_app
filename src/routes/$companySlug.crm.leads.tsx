@@ -144,15 +144,15 @@ function TextField({ label, value, onChange, ...props }: Omit<InputHTMLAttribute
 
 function Modal({ title, children, onClose }: { title: string; children: ReactNode; onClose: () => void }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-950/40 px-4 py-8 sm:items-center" role="dialog" aria-modal="true">
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-950/40 px-3 py-6 sm:items-center sm:px-4 sm:py-8" role="dialog" aria-modal="true">
       <div className="neon-surface w-full max-w-xl rounded shadow-xl">
-        <div className="flex items-center justify-between gap-4 border-b border-slate-100 px-5 py-4 dark:border-slate-800">
+        <div className="flex items-center justify-between gap-4 border-b border-slate-100 px-4 py-4 sm:px-5 dark:border-slate-800">
           <h2 className="text-lg font-bold text-slate-950 dark:text-white">{title}</h2>
           <button type="button" onClick={onClose} className="inline-flex size-9 items-center justify-center rounded border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-900 dark:border-slate-800 dark:hover:bg-slate-900 dark:hover:text-white" aria-label="Fermer">
             <X className="size-4" />
           </button>
         </div>
-        <div className="p-5">{children}</div>
+        <div className="p-4 sm:p-5">{children}</div>
       </div>
     </div>
   )

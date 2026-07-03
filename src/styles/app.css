@@ -329,6 +329,17 @@ html:not(.theme-light) .dark\:text-emerald-300 {
   border-color: var(--app-accent);
 }
 
+/* Petits ecrans: police 16px sur les champs (evite le zoom automatique iOS au focus)
+   et hauteur minimale confortable pour le tactile. */
+@media (max-width: 639px) {
+  input:not([type='checkbox']):not([type='radio']):not([type='range']),
+  select,
+  textarea {
+    font-size: 1rem !important;
+    min-height: 2.75rem;
+  }
+}
+
 .quote-print-area {
   background: #ffffff !important;
   color: #020617 !important;

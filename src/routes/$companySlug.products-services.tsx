@@ -642,15 +642,15 @@ function SelectField({ label, value, onChange, children }: { label: string; valu
 
 function Modal({ title, children, onClose, wide = false }: { title: string; children: ReactNode; onClose: () => void; wide?: boolean }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-950/40 px-4 py-8 sm:items-center" role="dialog" aria-modal="true">
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-950/40 px-3 py-6 sm:items-center sm:px-4 sm:py-8" role="dialog" aria-modal="true">
       <div className={`w-full rounded border border-slate-200 bg-white shadow-xl ${wide ? 'max-w-4xl' : 'max-w-2xl'}`}>
-        <div className="flex items-center justify-between gap-4 border-b border-slate-100 px-5 py-4">
+        <div className="flex items-center justify-between gap-4 border-b border-slate-100 px-4 py-4 sm:px-5">
           <h2 className="text-lg font-bold text-slate-950">{title}</h2>
           <button type="button" onClick={onClose} className="inline-flex size-9 items-center justify-center rounded border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-900" aria-label="Fermer">
             <X className="size-4" />
           </button>
         </div>
-        <div className="p-5">{children}</div>
+        <div className="p-4 sm:p-5">{children}</div>
       </div>
     </div>
   )

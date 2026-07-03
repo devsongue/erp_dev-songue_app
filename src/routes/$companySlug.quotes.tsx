@@ -669,15 +669,15 @@ function QuotePrint({ quote, settings, companyName }: { quote: any; settings: an
 
 function Modal({ title, children, onClose, size = 'normal' }: { title: string; children: React.ReactNode; onClose: () => void; size?: 'normal' | 'wide' }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-950/40 px-4 py-8" role="dialog" aria-modal="true">
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-950/40 px-3 py-6 sm:px-4 sm:py-8" role="dialog" aria-modal="true">
       <div className={`w-full rounded border border-slate-200 bg-white shadow-xl ${size === 'wide' ? 'max-w-5xl' : 'max-w-2xl'}`}>
-        <div className="flex items-center justify-between gap-4 border-b border-slate-100 px-5 py-4">
+        <div className="flex items-center justify-between gap-4 border-b border-slate-100 px-4 py-4 sm:px-5">
           <h2 className="text-lg font-bold text-slate-950">{title}</h2>
           <button type="button" onClick={onClose} className="inline-flex size-9 items-center justify-center rounded border border-slate-200 text-slate-500 hover:bg-slate-50" aria-label="Fermer">
             <X className="size-4" />
           </button>
         </div>
-        <div className="p-5">{children}</div>
+        <div className="p-4 sm:p-5">{children}</div>
       </div>
     </div>
   )

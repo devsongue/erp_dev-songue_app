@@ -270,7 +270,7 @@ function UsersSettings({
         </form>
       </SettingsSection>
 
-      <div className="overflow-hidden rounded border border-slate-200 bg-white">
+      <div className="overflow-x-auto rounded border border-slate-200 bg-white">
         <table className="w-full text-left text-sm">
           <thead className="border-b border-slate-200 bg-slate-50 text-slate-600">
             <tr>
