@@ -1,16 +1,32 @@
 import { Link, createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
 import { LockKeyhole, Mail } from 'lucide-react'
 import * as React from 'react'
-import { getInstallationState, login } from '~/server/auth'
+import { getAuthState, getInstallationState, login } from '~/server/auth'
+
+// N'accepte que les chemins internes ("/...") pour eviter une redirection
+// ouverte vers un site externe apres connexion.
+function sanitizeRedirect(value: unknown) {
+  if (typeof value !== 'string') return undefined
+  if (!value.startsWith('/') || value.startsWith('//')) return undefined
+  return value
+}
 
 export const Route = createFileRoute('/login')({
   validateSearch: (search) => ({
-    redirect: typeof search.redirect === 'string' ? search.redirect : undefined,
+    redirect: sanitizeRedirect(search.redirect),
   }),
   beforeLoad: async () => {
     const installation = await getInstallationState()
     if (installation?.needsSetup) {
       throw redirect({ to: '/register' })
+    }
+    const auth = await getAuthState()
+    const firstCompany = auth.companies[0]
+    if (auth.user && firstCompany) {
+      throw redirect({
+        to: '/$companySlug/dashboard',
+        params: { companySlug: firstCompany.slug },
+      })
     }
   },
   component: LoginPage,

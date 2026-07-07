@@ -378,26 +378,28 @@ export const createCrmLead = createServerFn({ method: 'POST' })
   }))
   .handler(async ({ data }) => {
     const company = await getCompany(data.companySlug, 'customer.create')
-    const customer = await prisma.customer.create({
-      data: {
-        companyId: company.id,
-        name: data.name.trim(),
-        email: data.email?.trim() || null,
-      },
+    return prisma.$transaction(async (tx) => {
+      const customer = await tx.customer.create({
+        data: {
+          companyId: company.id,
+          name: data.name.trim(),
+          email: data.email?.trim() || null,
+        },
+      })
+      const lead = await tx.lead.create({
+        data: {
+          companyId: company.id,
+          name: data.name.trim(),
+          company: data.company?.trim() || null,
+          email: data.email?.trim() || null,
+          phone: data.phone?.trim() || null,
+          source: data.source,
+          status: 'New',
+          score: 0,
+        },
+      })
+      return { lead, customer }
     })
-    const lead = await prisma.lead.create({
-      data: {
-        companyId: company.id,
-        name: data.name.trim(),
-        company: data.company?.trim() || null,
-        email: data.email?.trim() || null,
-        phone: data.phone?.trim() || null,
-        source: data.source,
-        status: 'New',
-        score: 0,
-      },
-    })
-    return { lead, customer }
   })
 
 export const createFinanceTransaction = createServerFn({ method: 'POST' })
@@ -415,23 +417,25 @@ export const createFinanceTransaction = createServerFn({ method: 'POST' })
     const fallback = await ensureAccount(company.id, 'Cash', 'Caisse boutique')
     const accountId = data.accountId || fallback.id
     const amount = Math.round(data.amount)
-    const transaction = await prisma.transaction.create({
-      data: {
-        companyId: company.id,
-        accountId,
-        description: data.description.trim(),
-        amount,
-        type: data.type,
-        category: data.category.trim(),
-        reference: data.reference?.trim() || null,
-        status: 'Completed',
-      },
+    return prisma.$transaction(async (tx) => {
+      const transaction = await tx.transaction.create({
+        data: {
+          companyId: company.id,
+          accountId,
+          description: data.description.trim(),
+          amount,
+          type: data.type,
+          category: data.category.trim(),
+          reference: data.reference?.trim() || null,
+          status: 'Completed',
+        },
+      })
+      await tx.bankAccount.update({
+        where: { id: accountId, companyId: company.id },
+        data: { balance: { increment: data.type === 'Income' ? amount : -amount } },
+      })
+      return transaction
     })
-    await prisma.bankAccount.update({
-      where: { id: accountId },
-      data: { balance: { increment: data.type === 'Income' ? amount : -amount } },
-    })
-    return transaction
   })
 
 export const createPurchaseInvoice = createServerFn({ method: 'POST' })

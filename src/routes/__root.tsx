@@ -1,6 +1,5 @@
 /// <reference types="vite/client" />
 import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'
-import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
 import * as React from 'react'
 import { DefaultCatchBoundary } from '~/components/DefaultCatchBoundary'
 import { NotFound } from '~/components/NotFound'
@@ -25,20 +24,24 @@ export const Route = createRootRoute({
       { rel: 'apple-touch-icon', sizes: '180x180', href: '/apple-touch-icon.png' },
       { rel: 'icon', type: 'image/png', sizes: '32x32', href: '/favicon-32x32.png' },
       { rel: 'icon', type: 'image/png', sizes: '16x16', href: '/favicon-16x16.png' },
-      { rel: 'manifest', href: '/site.webmanifest', color: '#fffff' },
+      { rel: 'manifest', href: '/site.webmanifest' },
       { rel: 'icon', href: '/favicon.ico' },
-    ],
-    scripts: [
-      {
-        src: '/customScript.js',
-        type: 'text/javascript',
-      },
     ],
   }),
   errorComponent: DefaultCatchBoundary,
   notFoundComponent: () => <NotFound />,
   shellComponent: RootDocument,
 })
+
+// Charge les devtools uniquement en dev : le composant est retire du bundle
+// de production (import dynamique elimine par import.meta.env.PROD).
+const TanStackRouterDevtools = import.meta.env.PROD
+  ? () => null
+  : React.lazy(() =>
+      import('@tanstack/react-router-devtools').then((module) => ({
+        default: module.TanStackRouterDevtools,
+      })),
+    )
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (
@@ -48,7 +51,9 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         {children}
-        <TanStackRouterDevtools position="bottom-right" />
+        <React.Suspense>
+          <TanStackRouterDevtools position="bottom-right" />
+        </React.Suspense>
         <Scripts />
       </body>
     </html>

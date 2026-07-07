@@ -7,7 +7,7 @@ import { nitro } from 'nitro/vite'
 export default defineConfig({
   server: {
     allowedHosts: ['shamrock-timing-sleet.ngrok-free.dev'],
-    port: 3000,
+    port: Number(process.env.PORT ?? 3000),
   },
   resolve: {
     tsconfigPaths: true,

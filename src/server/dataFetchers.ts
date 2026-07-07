@@ -193,10 +193,13 @@ export const searchCompanyData = createServerFn({ method: 'GET' })
     const query = data.query.trim()
     if (query.length < 2) return []
 
-    const company = await getCompany(data.companySlug)
+    const { requireCompanyAccess } = await import('./access')
+    const { user, company, permissions } = await requireCompanyAccess(data.companySlug)
+    // La recherche croise plusieurs modules : chaque section respecte la permission de son module.
+    const can = (permission: string) => user.isOwner || permissions.has(permission)
 
     const [customers, items, transactions, quotes, vendors] = await Promise.all([
-      prisma.customer.findMany({
+      can('customer.read') ? prisma.customer.findMany({
         where: {
           companyId: company.id,
           OR: [
@@ -206,8 +209,8 @@ export const searchCompanyData = createServerFn({ method: 'GET' })
         },
         orderBy: { updatedAt: 'desc' },
         take: 5,
-      }),
-      prisma.catalogItem.findMany({
+      }) : Promise.resolve([] as Customer[]),
+      can('inventory.read') ? prisma.catalogItem.findMany({
         where: {
           companyId: company.id,
           OR: [
@@ -219,8 +222,8 @@ export const searchCompanyData = createServerFn({ method: 'GET' })
         },
         orderBy: { updatedAt: 'desc' },
         take: 5,
-      }),
-      prisma.transaction.findMany({
+      }) : Promise.resolve([] as CatalogItem[]),
+      can('finance.read') ? prisma.transaction.findMany({
         where: {
           companyId: company.id,
           OR: [
@@ -231,8 +234,8 @@ export const searchCompanyData = createServerFn({ method: 'GET' })
         },
         orderBy: { date: 'desc' },
         take: 5,
-      }),
-      prisma.quote.findMany({
+      }) : Promise.resolve([] as Transaction[]),
+      can('invoice.read') ? prisma.quote.findMany({
         where: {
           companyId: company.id,
           OR: [
@@ -243,8 +246,8 @@ export const searchCompanyData = createServerFn({ method: 'GET' })
         include: { customer: true },
         orderBy: { updatedAt: 'desc' },
         take: 5,
-      }),
-      prisma.vendor.findMany({
+      }) : Promise.resolve([] as (Quote & { customer: Customer | null })[]),
+      can('finance.read') ? prisma.vendor.findMany({
         where: {
           companyId: company.id,
           OR: [
@@ -256,7 +259,7 @@ export const searchCompanyData = createServerFn({ method: 'GET' })
         },
         orderBy: { updatedAt: 'desc' },
         take: 5,
-      }),
+      }) : Promise.resolve([] as Vendor[]),
     ])
 
     return [

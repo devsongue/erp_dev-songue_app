@@ -13,17 +13,13 @@ export const Route = createFileRoute('/$companySlug/dashboard')({
 function DashboardPage() {
   const { companySlug } = Route.useParams()
   const { activeCompany } = useCompany()
-  const { accounts, transactions, crmDeals, products } = Route.useLoaderData()
+  const { accounts, transactions, lowStock, lowStockCount, openDealsCount } = Route.useLoaderData()
 
   const balance = accounts.reduce((sum: number, account: any) => sum + account.balance, 0)
   const monthIncome = transactions
     .filter((transaction: any) => transaction.type === 'Income')
     .reduce((sum: number, transaction: any) => sum + transaction.amount, 0)
   const unpaid = transactions.filter((transaction: any) => transaction.status === 'Pending')
-  const lowStock = products.filter(
-    (product: any) => product.type === 'Product' && product.stock !== null && product.stock <= (product.minStockLevel ?? 0),
-  )
-  const openClients = crmDeals.filter((deal: any) => deal.stageId !== 'Won' && deal.stageId !== 'Lost')
 
   const actions = [
     {
@@ -59,8 +55,8 @@ function DashboardPage() {
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <MetricCard icon={Banknote} label="Argent disponible" value={formatMoney(balance)} />
         <MetricCard icon={ReceiptText} label="Ventes enregistrees" value={formatMoney(monthIncome)} />
-        <MetricCard icon={Boxes} label="Stock bas" value={lowStock.length.toString()} />
-        <MetricCard icon={Contact} label="Clients a suivre" value={openClients.length.toString()} />
+        <MetricCard icon={Boxes} label="Stock bas" value={lowStockCount.toString()} />
+        <MetricCard icon={Contact} label="Clients a suivre" value={openDealsCount.toString()} />
       </section>
 
       <section className="mt-6 grid gap-5 lg:grid-cols-[1fr_0.8fr]">
@@ -69,7 +65,7 @@ function DashboardPage() {
             <h2 className="font-bold text-slate-950">A traiter</h2>
           </div>
           <div className="divide-y divide-slate-100">
-            {lowStock.slice(0, 4).map((product: any) => (
+            {lowStock.map((product: any) => (
               <ActionRow
                 key={product.id}
                 title={product.name}

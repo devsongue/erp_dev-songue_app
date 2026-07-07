@@ -1,9 +1,11 @@
 import { createHash, randomBytes } from 'node:crypto'
 import { createServerFn } from '@tanstack/react-start'
-import { deleteCookie, getCookie, setCookie } from '@tanstack/react-start/server'
+import { deleteCookie, getCookie, getRequestIP, setCookie } from '@tanstack/react-start/server'
 import { z } from 'zod'
 import { prisma } from './db'
+import { getSessionContext, invalidateSessionCache, invalidateSessionToken } from './access'
 import { hashPassword, verifyPassword } from './password'
+import { isBlocked, recordFailure, recordSuccess } from './rateLimit'
 import type { Permission } from '@prisma/client'
 
 const sessionCookieName = 'erp_session'
@@ -77,64 +79,15 @@ async function readAuthState(): Promise<AuthState> {
   const token = getCookie(sessionCookieName)
   if (!token) return { user: null, companies: [] }
 
-  const session = await prisma.session.findUnique({
-    where: { tokenHash: hashToken(token) },
-    include: {
-      user: {
-        include: {
-          memberships: {
-            where: { status: 'ACTIVE' },
-            include: {
-              company: true,
-              roles: {
-                include: {
-                  role: {
-                    include: {
-                      permissions: {
-                        include: {
-                          permission: true,
-                        },
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-  })
-
-  if (!session || session.expiresAt <= new Date()) {
-    if (session) {
-      await prisma.session.delete({ where: { id: session.id } })
-    }
+  const context = await getSessionContext()
+  if (!context) {
     clearSessionCookie()
     return { user: null, companies: [] }
   }
 
   return {
-    user: {
-      id: session.user.id,
-      name: session.user.name,
-      email: session.user.email,
-      isOwner: session.user.isOwner,
-    },
-    companies: session.user.memberships.map((membership) => ({
-      id: membership.company.id,
-      name: membership.company.name,
-      slug: membership.company.slug,
-      logoUrl: membership.company.logoUrl,
-      roles: membership.roles.map((userRole) => userRole.role.name),
-      permissions: Array.from(
-        new Set(
-          membership.roles.flatMap((userRole) =>
-            userRole.role.permissions.map((rolePermission) => rolePermission.permission.key),
-          ),
-        ),
-      ),
-    })),
+    user: context.user,
+    companies: context.companies,
   }
 }
 
@@ -179,13 +132,28 @@ export const login = createServerFn({ method: 'POST' })
       return { ok: false, message: 'Premiere installation requise.', needsSetup: true }
     }
 
+    const email = data.email.toLowerCase().trim()
+    const clientIp = getRequestIP({ xForwardedFor: true }) ?? 'unknown'
+    const rateLimitKeys = [`login:email:${email}`, `login:ip:${clientIp}`]
+
+    for (const key of rateLimitKeys) {
+      const { blocked, retryAfterSeconds } = isBlocked(key)
+      if (blocked) {
+        const minutes = Math.max(1, Math.ceil(retryAfterSeconds / 60))
+        return { ok: false, message: `Trop de tentatives. Reessaie dans ${minutes} min.`, needsSetup: false }
+      }
+    }
+
     const user = await prisma.user.findUnique({
-      where: { email: data.email.toLowerCase().trim() },
+      where: { email },
     })
 
-    if (!user || !verifyPassword(data.password, user.passwordHash)) {
+    if (!user || !(await verifyPassword(data.password, user.passwordHash))) {
+      rateLimitKeys.forEach(recordFailure)
       return { ok: false, message: 'Email ou mot de passe incorrect.', needsSetup: false }
     }
+
+    rateLimitKeys.forEach(recordSuccess)
 
     const token = createSessionToken()
     const expiresAt = new Date(Date.now() + sessionDurationMs)
@@ -236,7 +204,7 @@ export const setupOwnerAccount = createServerFn({ method: 'POST' })
       data: {
         name: data.ownerName.trim(),
         email: data.ownerEmail.toLowerCase().trim(),
-        passwordHash: hashPassword(data.password),
+        passwordHash: await hashPassword(data.password),
         isOwner: true,
       },
     })
@@ -265,6 +233,7 @@ export const logout = createServerFn({ method: 'POST' }).handler(async () => {
   const token = getCookie(sessionCookieName)
   if (token) {
     await prisma.session.deleteMany({ where: { tokenHash: hashToken(token) } })
+    invalidateSessionToken(token)
   }
   clearSessionCookie()
   return { ok: true }
@@ -309,6 +278,7 @@ export const createCompany = createServerFn({ method: 'POST' })
       website: data.website?.trim(),
     })
 
+    invalidateSessionCache()
     return { ok: true, companySlug: company.slug }
   })
 
@@ -452,52 +422,57 @@ export const updateCompanyProfile = createServerFn({ method: 'POST' })
     const company = await prisma.company.findUnique({ where: { slug: data.companySlug } })
     if (!company) return { ok: false, message: 'Entreprise introuvable.' }
 
-    const updated = await prisma.company.update({
-      where: { id: company.id },
-      data: {
-        name: data.name.trim(),
-        legalName: data.legalName?.trim() || null,
-        logoUrl: data.logoUrl?.trim() || null,
-        address: data.address?.trim() || null,
-        phone: data.phone?.trim() || null,
-        email: data.email?.trim() || null,
-        taxId: data.taxId?.trim() || null,
-        website: data.website?.trim() || null,
-      },
+    const updated = await prisma.$transaction(async (tx) => {
+      const updatedCompany = await tx.company.update({
+        where: { id: company.id },
+        data: {
+          name: data.name.trim(),
+          legalName: data.legalName?.trim() || null,
+          logoUrl: data.logoUrl?.trim() || null,
+          address: data.address?.trim() || null,
+          phone: data.phone?.trim() || null,
+          email: data.email?.trim() || null,
+          taxId: data.taxId?.trim() || null,
+          website: data.website?.trim() || null,
+        },
+      })
+
+      await tx.quoteSettings.upsert({
+        where: { companyId: updatedCompany.id },
+        update: {
+          logoUrl: updatedCompany.logoUrl,
+          legalName: updatedCompany.legalName || updatedCompany.name,
+          address: updatedCompany.address,
+          phone: updatedCompany.phone,
+          email: updatedCompany.email,
+          taxId: updatedCompany.taxId,
+        },
+        create: {
+          companyId: updatedCompany.id,
+          logoUrl: updatedCompany.logoUrl,
+          legalName: updatedCompany.legalName || updatedCompany.name,
+          address: updatedCompany.address,
+          phone: updatedCompany.phone,
+          email: updatedCompany.email,
+          taxId: updatedCompany.taxId,
+        },
+      })
+
+      await tx.auditLog.create({
+        data: {
+          companyId: updatedCompany.id,
+          actorId: auth.user?.id,
+          action: 'company.profile_updated',
+          entity: 'Company',
+          entityId: updatedCompany.id,
+          metadata: JSON.stringify({ name: updatedCompany.name, legalName: updatedCompany.legalName }),
+        },
+      })
+
+      return updatedCompany
     })
 
-    await prisma.quoteSettings.upsert({
-      where: { companyId: updated.id },
-      update: {
-        logoUrl: updated.logoUrl,
-        legalName: updated.legalName || updated.name,
-        address: updated.address,
-        phone: updated.phone,
-        email: updated.email,
-        taxId: updated.taxId,
-      },
-      create: {
-        companyId: updated.id,
-        logoUrl: updated.logoUrl,
-        legalName: updated.legalName || updated.name,
-        address: updated.address,
-        phone: updated.phone,
-        email: updated.email,
-        taxId: updated.taxId,
-      },
-    })
-
-    await prisma.auditLog.create({
-      data: {
-        companyId: updated.id,
-        actorId: auth.user?.id,
-        action: 'company.profile_updated',
-        entity: 'Company',
-        entityId: updated.id,
-        metadata: JSON.stringify({ name: updated.name, legalName: updated.legalName }),
-      },
-    })
-
+    invalidateSessionCache()
     return {
       ok: true,
       company: {
@@ -547,6 +522,7 @@ export const createRole = createServerFn({ method: 'POST' })
       },
     })
 
+    invalidateSessionCache()
     return { ok: true }
   })
 
@@ -579,7 +555,7 @@ export const addManager = createServerFn({ method: 'POST' })
       create: {
         name: data.name.trim(),
         email: data.email.toLowerCase().trim(),
-        passwordHash: hashPassword(data.temporaryPassword),
+        passwordHash: await hashPassword(data.temporaryPassword),
       },
     })
 
@@ -595,6 +571,7 @@ export const addManager = createServerFn({ method: 'POST' })
       create: { membershipId: membership.id, roleId: role.id },
     })
 
+    invalidateSessionCache()
     return { ok: true }
   })
 
