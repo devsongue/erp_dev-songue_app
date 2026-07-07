@@ -1,26 +1,15 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { BarChart3, Boxes, CircleDollarSign, Users } from 'lucide-react'
-import { getCatalogData, getCrmData, getFinanceData } from '~/server/dataFetchers'
+import { getReportsData } from '~/server/dataFetchers'
 import { formatMoney } from '~/utils/currency'
 
 export const Route = createFileRoute('/$companySlug/reports')({
-  loader: async ({ params }) => {
-    const [finance, crm, catalog] = await Promise.all([
-      getFinanceData({ data: { companySlug: params.companySlug } }),
-      getCrmData({ data: { companySlug: params.companySlug } }),
-      getCatalogData({ data: { companySlug: params.companySlug } }),
-    ])
-    return { finance, crm, catalog }
-  },
+  loader: async ({ params }) => getReportsData({ data: { companySlug: params.companySlug } }),
   component: ReportsPage,
 })
 
 function ReportsPage() {
-  const { finance, crm, catalog } = Route.useLoaderData()
-  const income = finance.transactions.filter((tx: any) => tx.type === 'Income').reduce((sum: number, tx: any) => sum + tx.amount, 0)
-  const expenses = finance.transactions.filter((tx: any) => tx.type === 'Expense').reduce((sum: number, tx: any) => sum + tx.amount, 0)
-  const stockValue = catalog.items.reduce((sum: number, item: any) => sum + (item.stock ?? 0) * item.price, 0)
-  const openDeals = crm.deals.filter((deal: any) => deal.status === 'Open').length
+  const { income, expenses, stockValue, openDeals } = Route.useLoaderData()
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">

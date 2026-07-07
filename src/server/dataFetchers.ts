@@ -155,7 +155,10 @@ export const getPosData = createServerFn({ method: 'GET' })
   .handler(async ({ data }) => {
     const company = await getCompany(data.companySlug, 'finance.read')
 
-    const [items, categories, customers, tickets] = await Promise.all([
+    const todayStart = new Date()
+    todayStart.setHours(0, 0, 0, 0)
+
+    const [items, categories, customers, tickets, todayAgg] = await Promise.all([
       prisma.catalogItem.findMany({
         where: { companyId: company.id, status: 'Active' },
         include: { category: true },
@@ -169,9 +172,22 @@ export const getPosData = createServerFn({ method: 'GET' })
         orderBy: { date: 'desc' },
         take: 50,
       }),
+      // Total du jour en SQL : la liste `tickets` est tronquee a 50 et ne peut
+      // pas servir de base a un total fiable.
+      prisma.transaction.aggregate({
+        where: { companyId: company.id, category: 'POS', date: { gte: todayStart } },
+        _sum: { amount: true },
+        _count: { _all: true },
+      }),
     ])
 
-    return { items, categories, customers, tickets }
+    return {
+      items,
+      categories,
+      customers,
+      tickets,
+      today: { total: todayAgg._sum.amount ?? 0, count: todayAgg._count._all },
+    }
   })
 
 export const getVendorData = createServerFn({ method: 'GET' })
@@ -303,6 +319,92 @@ export const searchCompanyData = createServerFn({ method: 'GET' })
         to: `/${data.companySlug}/purchases/vendors`,
       })),
     ].slice(0, 12)
+  })
+
+export const getPosReportData = createServerFn({ method: 'GET' })
+  .inputValidator(z.object({
+    companySlug: z.string(),
+    start: z.string(),
+    end: z.string(),
+  }))
+  .handler(async ({ data }) => {
+    const company = await getCompany(data.companySlug, 'finance.read')
+
+    const start = new Date(data.start)
+    const end = new Date(data.end)
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || start > end) {
+      throw new Error('Periode invalide.')
+    }
+
+    const where = {
+      companyId: company.id,
+      category: 'POS',
+      date: { gte: start, lte: end },
+    }
+
+    // Totaux par compte en SQL sur toute la periode : la liste des tickets est
+    // plafonnee pour l'affichage mais les montants restent exacts.
+    const [tickets, groups] = await Promise.all([
+      prisma.transaction.findMany({
+        where,
+        include: { account: true },
+        orderBy: { date: 'desc' },
+        take: 200,
+      }),
+      prisma.transaction.groupBy({
+        by: ['accountId'],
+        where,
+        _sum: { amount: true },
+        _count: { _all: true },
+      }),
+    ])
+
+    const accounts = await prisma.bankAccount.findMany({
+      where: { companyId: company.id, id: { in: groups.map((group) => group.accountId) } },
+      select: { id: true, name: true },
+    })
+
+    return {
+      tickets,
+      totals: groups.map((group) => ({
+        accountName: accounts.find((account) => account.id === group.accountId)?.name ?? 'Caisse',
+        amount: group._sum.amount ?? 0,
+      })),
+      totalAmount: groups.reduce((sum, group) => sum + (group._sum.amount ?? 0), 0),
+      ticketCount: groups.reduce((sum, group) => sum + group._count._all, 0),
+    }
+  })
+
+export const getReportsData = createServerFn({ method: 'GET' })
+  .inputValidator(z.object({ companySlug: z.string() }))
+  .handler(async ({ data }) => {
+    const company = await getCompany(data.companySlug, 'finance.read')
+
+    // Agregats SQL sur l'ensemble des donnees : les listes tronquees (take: 50)
+    // des autres fetchers donneraient des totaux faux des que l'historique grossit.
+    const [incomeAgg, expenseAgg, stockItems, openDeals] = await Promise.all([
+      prisma.transaction.aggregate({
+        where: { companyId: company.id, type: 'Income' },
+        _sum: { amount: true },
+      }),
+      prisma.transaction.aggregate({
+        where: { companyId: company.id, type: 'Expense' },
+        _sum: { amount: true },
+      }),
+      prisma.catalogItem.findMany({
+        where: { companyId: company.id, type: 'Product', stock: { not: null } },
+        select: { stock: true, cost: true },
+      }),
+      prisma.deal.count({ where: { companyId: company.id, status: 'Open' } }),
+    ])
+
+    return {
+      income: incomeAgg._sum.amount ?? 0,
+      expenses: expenseAgg._sum.amount ?? 0,
+      // Valorisation au cout d'achat, comme les pages Stock et Produits.
+      stockValue: stockItems.reduce((sum, item) => sum + (item.stock ?? 0) * item.cost, 0),
+      openDeals,
+    }
   })
 
 export const getPurchasesData = createServerFn({ method: 'GET' })

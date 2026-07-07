@@ -279,13 +279,15 @@ export const createQuote = createServerFn({ method: 'POST' })
     const taxable = Math.max(0, subtotal - discount)
     const tax = Math.round(taxable * (data.taxRate / 100))
     const total = taxable + tax
-    const reference = `DEV-${String(settings.nextNumber).padStart(5, '0')}`
 
     return prisma.$transaction(async (tx) => {
-      await tx.quoteSettings.update({
+      // Increment atomique : deux devis simultanes ne peuvent pas recevoir la
+      // meme reference (contrainte unique companyId+reference sinon violee).
+      const numbering = await tx.quoteSettings.update({
         where: { companyId: company.id },
         data: { nextNumber: { increment: 1 } },
       })
+      const reference = `DEV-${String(numbering.nextNumber - 1).padStart(5, '0')}`
 
       return tx.quote.create({
         data: {
@@ -518,6 +520,7 @@ export const createSalesInvoice = createServerFn({ method: 'POST' })
     companySlug: z.string(),
     customerId: z.string().optional(),
     customerName: z.string().optional(),
+    accountId: z.string().optional(),
     number: z.string().optional(),
     amount: z.number().positive(),
     status: z.enum(['Draft', 'Sent', 'Paid']).default('Draft'),
@@ -537,18 +540,64 @@ export const createSalesInvoice = createServerFn({ method: 'POST' })
     }
 
     const amount = Math.round(data.amount)
-    return prisma.salesInvoice.create({
-      data: {
-        companyId: company.id,
-        customerId: customerId ?? null,
-        number: data.number?.trim() || `FAC-${Date.now().toString().slice(-6)}`,
-        status: data.status,
-        subtotalCents: amount,
-        totalCents: amount,
-        paidCents: data.status === 'Paid' ? amount : 0,
-        notes: data.notes?.trim() || null,
-      },
-      include: { customer: true },
+    const number = data.number?.trim() || `FAC-${Date.now().toString().slice(-6)}`
+
+    // Comme pour les factures d'achat : une facture payee impacte la
+    // tresorerie (transaction + paiement + solde du compte).
+    const account = data.status === 'Paid'
+      ? data.accountId
+        ? await prisma.bankAccount.findFirst({ where: { id: data.accountId, companyId: company.id } })
+        : await ensureAccount(company.id, 'Cash', 'Caisse boutique')
+      : null
+    if (data.status === 'Paid' && !account) throw new Error('Compte introuvable.')
+
+    return prisma.$transaction(async (tx) => {
+      const invoice = await tx.salesInvoice.create({
+        data: {
+          companyId: company.id,
+          customerId: customerId ?? null,
+          number,
+          status: data.status,
+          subtotalCents: amount,
+          totalCents: amount,
+          paidCents: data.status === 'Paid' ? amount : 0,
+          notes: data.notes?.trim() || null,
+        },
+        include: { customer: true },
+      })
+
+      if (data.status === 'Paid' && account) {
+        const transaction = await tx.transaction.create({
+          data: {
+            companyId: company.id,
+            accountId: account.id,
+            description: invoice.customer ? `${invoice.customer.name} - ${number}` : `Facture ${number}`,
+            amount,
+            type: 'Income',
+            category: 'Ventes',
+            reference: number,
+            status: 'Completed',
+          },
+        })
+        await tx.payment.create({
+          data: {
+            companyId: company.id,
+            accountId: account.id,
+            transactionId: transaction.id,
+            salesInvoiceId: invoice.id,
+            amount,
+            direction: 'In',
+            method: account.type,
+            reference: number,
+          },
+        })
+        await tx.bankAccount.update({
+          where: { id: account.id },
+          data: { balance: { increment: amount } },
+        })
+      }
+
+      return invoice
     })
   })
 
@@ -597,10 +646,16 @@ export const createPosSale = createServerFn({ method: 'POST' })
     const transaction = await prisma.$transaction(async (tx) => {
       for (const line of lineItems) {
         if (line.item.stock !== null) {
-          await tx.catalogItem.update({
-            where: { id: line.item.id },
+          // Decrement conditionnel : deux ventes simultanees du meme article ne
+          // peuvent pas faire passer le stock en negatif (la verification
+          // au-dessus est hors transaction, donc non suffisante).
+          const updated = await tx.catalogItem.updateMany({
+            where: { id: line.item.id, companyId: company.id, stock: { gte: line.quantity } },
             data: { stock: { decrement: line.quantity } },
           })
+          if (updated.count === 0) {
+            throw new Error(`Stock insuffisant pour ${line.item.name}.`)
+          }
           await tx.stockMovement.create({
             data: {
               companyId: company.id,

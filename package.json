@@ -17,7 +17,6 @@
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
     "@tanstack/react-router": "^1.170.6",
-    "@tanstack/react-router-devtools": "^1.167.0",
     "@tanstack/react-start": "^1.168.8",
     "dotenv": "^17.4.2",
     "lucide-react": "^1.16.0",
@@ -29,6 +28,7 @@
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.2.2",
+    "@tanstack/react-router-devtools": "^1.167.0",
     "@types/node": "^22.5.4",
     "@types/pg": "^8.20.0",
     "@types/react": "^19.0.8",

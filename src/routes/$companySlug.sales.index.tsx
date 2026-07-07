@@ -10,9 +10,8 @@ export const Route = createFileRoute('/$companySlug/sales/')({
 
 function SalesDashboard() {
   const { companySlug } = Route.useParams()
-  const { tickets } = Route.useLoaderData()
-  const posSales = tickets.reduce((sum: number, ticket: any) => sum + ticket.amount, 0)
-  const averageBasket = tickets.length > 0 ? posSales / tickets.length : 0
+  const { today } = Route.useLoaderData()
+  const averageBasket = today.count > 0 ? today.total / today.count : 0
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
@@ -28,8 +27,8 @@ function SalesDashboard() {
       </div>
 
       <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
-        <SalesMetric title="Caisse" value={formatMoney(posSales)} detail={`${tickets.length} tickets`} icon={ReceiptText} />
-        <SalesMetric title="Panier moyen" value={formatMoney(averageBasket)} detail="Ventes comptoir" icon={ShoppingCart} />
+        <SalesMetric title="Caisse du jour" value={formatMoney(today.total)} detail={`${today.count} tickets aujourd'hui`} icon={ReceiptText} />
+        <SalesMetric title="Panier moyen du jour" value={formatMoney(averageBasket)} detail="Ventes comptoir" icon={ShoppingCart} />
         <SalesMetric title="Documents" value="Devis + factures" detail="Suivi commercial simple" icon={FileCheck2} />
       </div>
 

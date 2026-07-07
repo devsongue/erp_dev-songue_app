@@ -17,7 +17,6 @@ import {
   X,
 } from 'lucide-react'
 import { type CatalogCategory, type CatalogItem, type CatalogItemStatus, type CatalogItemType } from '~/domain/catalogData'
-import { getCompanyFactor, useCompany } from '~/context/CompanyContext'
 import { getCatalogData } from '~/server/dataFetchers'
 import { createCatalogCategory, createCatalogItem, restockCatalogItem, updateCatalogItemStatus } from '~/server/operations'
 import { formatMoney } from '~/utils/currency'
@@ -78,8 +77,6 @@ function CatalogPage() {
   const { companySlug } = Route.useParams()
   const router = useRouter()
   const data = Route.useLoaderData()
-  const { activeCompanyId } = useCompany()
-  const factor = getCompanyFactor(activeCompanyId)
 
   const [items, setItems] = useState<CatalogItem[]>(() => data.items.map(toCatalogItem))
   const [categories, setCategories] = useState<CatalogCategory[]>(() => data.categories.map(toCatalogCategory))
@@ -91,12 +88,13 @@ function CatalogPage() {
   const [productForm, setProductForm] = useState<ProductFormState>(productFormDefaults)
   const [categoryForm, setCategoryForm] = useState<CategoryFormState>(categoryFormDefaults)
   const [actionMessage, setActionMessage] = useState('')
+  const [isSaving, setIsSaving] = useState(false)
 
   const products = items.filter((item) => item.type === 'Product')
   const services = items.filter((item) => item.type === 'Service')
   const lowStock = products.filter((item) => item.stock !== null && item.minStockLevel !== undefined && item.stock > 0 && item.stock <= item.minStockLevel)
   const outOfStock = products.filter((item) => item.stock === 0)
-  const totalStockValue = products.reduce((sum, item) => sum + (item.stock ?? 0) * item.cost * factor, 0)
+  const totalStockValue = products.reduce((sum, item) => sum + (item.stock ?? 0) * item.cost, 0)
   const suppliers = Array.from(new Set(items.map((item) => item.supplier).filter(Boolean))).sort() as string[]
 
   const filteredItems = useMemo(() => {
@@ -149,6 +147,8 @@ function CatalogPage() {
       return
     }
 
+    if (isSaving) return
+    setIsSaving(true)
     try {
       const newItem = toCatalogItem(await createCatalogItem({
         data: {
@@ -174,6 +174,8 @@ function CatalogPage() {
       await router.invalidate()
     } catch (error: any) {
       setActionMessage(error.message || 'Impossible d ajouter cet article.')
+    } finally {
+      setIsSaving(false)
     }
   }
 
@@ -184,19 +186,27 @@ function CatalogPage() {
       setActionMessage('Renseigne le nom de la categorie.')
       return
     }
-    const newCategory = toCatalogCategory(await createCatalogCategory({
-      data: {
-        companySlug,
-        name,
-        type: categoryForm.type,
-        color: categoryForm.color,
-      },
-    }))
-    setCategories((current) => [newCategory, ...current])
-    setProductForm((current) => ({ ...current, categoryId: newCategory.id, type: newCategory.type }))
-    setCategoryForm(categoryFormDefaults)
-    setActiveModal('product')
-    setActionMessage(`${newCategory.name} ajoutee aux categories.`)
+    if (isSaving) return
+    setIsSaving(true)
+    try {
+      const newCategory = toCatalogCategory(await createCatalogCategory({
+        data: {
+          companySlug,
+          name,
+          type: categoryForm.type,
+          color: categoryForm.color,
+        },
+      }))
+      setCategories((current) => [newCategory, ...current])
+      setProductForm((current) => ({ ...current, categoryId: newCategory.id, type: newCategory.type }))
+      setCategoryForm(categoryFormDefaults)
+      setActiveModal('product')
+      setActionMessage(`${newCategory.name} ajoutee aux categories.`)
+    } catch (error: any) {
+      setActionMessage(error.message || 'Impossible d ajouter cette categorie.')
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   async function markRestocked(itemId: string) {
@@ -297,10 +307,6 @@ function CatalogPage() {
               </button>
             ))}
           </div>
-          <button onClick={() => setActionMessage('Filtres avances: categorie, fournisseur et marge seront connectes a la base.')} className="inline-flex items-center gap-2 rounded border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
-            <SlidersHorizontal className="size-4" />
-            Filtres
-          </button>
           <div className="flex items-center gap-1 rounded border border-slate-200 bg-white p-1">
             <button onClick={() => setViewMode('grid')} className={`rounded p-1.5 ${viewMode === 'grid' ? 'bg-slate-100 text-slate-900' : 'text-slate-400 hover:text-slate-700'}`} aria-label="Vue grille">
               <LayoutGrid className="size-4" />
@@ -419,9 +425,9 @@ function CatalogPage() {
                 <X className="size-4" />
                 Annuler
               </button>
-              <button type="submit" className="inline-flex items-center justify-center gap-2 rounded bg-slate-950 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800">
+              <button type="submit" disabled={isSaving} className="inline-flex items-center justify-center gap-2 rounded bg-slate-950 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60">
                 <Check className="size-4" />
-                Enregistrer
+                {isSaving ? 'Enregistrement...' : 'Enregistrer'}
               </button>
             </div>
           </form>
@@ -449,9 +455,9 @@ function CatalogPage() {
                 <X className="size-4" />
                 Retour
               </button>
-              <button type="submit" className="inline-flex items-center justify-center gap-2 rounded bg-slate-950 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800">
+              <button type="submit" disabled={isSaving} className="inline-flex items-center justify-center gap-2 rounded bg-slate-950 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60">
                 <Check className="size-4" />
-                Ajouter
+                {isSaving ? 'Ajout...' : 'Ajouter'}
               </button>
             </div>
           </form>
@@ -462,8 +468,6 @@ function CatalogPage() {
 }
 
 function CatalogCard({ item, categories, onRestock, onToggleStatus }: { item: CatalogItem; categories: CatalogCategory[]; onRestock: (id: string) => void; onToggleStatus: (id: string) => void }) {
-  const { activeCompanyId } = useCompany()
-  const factor = getCompanyFactor(activeCompanyId)
   const category = categories.find((c) => c.id === item.categoryId)
   const stockState = getStockState(item)
 
@@ -500,7 +504,7 @@ function CatalogCard({ item, categories, onRestock, onToggleStatus }: { item: Ca
                 </span>
               )}
             </div>
-            <p className="text-lg font-bold text-slate-950">{formatMoney(item.price * factor)}</p>
+            <p className="text-lg font-bold text-slate-950">{formatMoney(item.price)}</p>
           </div>
 
           <div className="grid grid-cols-2 gap-2">
@@ -518,9 +522,6 @@ function CatalogCard({ item, categories, onRestock, onToggleStatus }: { item: Ca
 }
 
 function CatalogList({ items, categories, onRestock, onToggleStatus }: { items: CatalogItem[]; categories: CatalogCategory[]; onRestock: (id: string) => void; onToggleStatus: (id: string) => void }) {
-  const { activeCompanyId } = useCompany()
-  const factor = getCompanyFactor(activeCompanyId)
-
   return (
     <div className="overflow-hidden rounded border border-slate-200 bg-white">
       <div className="overflow-x-auto">
@@ -553,7 +554,7 @@ function CatalogList({ items, categories, onRestock, onToggleStatus }: { items: 
                     <p className="mt-0.5 font-mono text-xs text-slate-400">{item.sku}</p>
                   </td>
                   <td className="px-4 py-3 text-slate-600">{category?.name ?? 'General'}</td>
-                  <td className="px-4 py-3 text-right font-bold text-slate-950">{formatMoney(item.price * factor)}</td>
+                  <td className="px-4 py-3 text-right font-bold text-slate-950">{formatMoney(item.price)}</td>
                   <td className="px-4 py-3 text-right font-bold text-slate-700">{item.type === 'Service' ? 'Illimite' : `${item.stock ?? 0} / ${item.minStockLevel ?? 0}`}</td>
                   <td className="px-4 py-3 text-center">
                     <span className={`inline-flex rounded px-2 py-1 text-xs font-bold ${stockState.className}`}>{stockState.label}</span>

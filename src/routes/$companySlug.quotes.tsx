@@ -334,6 +334,7 @@ function QuoteModal({
     { itemId: items[0]?.id ?? '', description: items[0]?.name ?? '', quantity: '1', unitPrice: String(items[0]?.price ?? 0) },
   ])
   const [error, setError] = React.useState('')
+  const [isSubmitting, setIsSubmitting] = React.useState(false)
 
   const subtotal = lines.reduce((sum, line) => sum + getNumber(line.quantity) * getNumber(line.unitPrice), 0)
   const discount = Math.round(subtotal * (getNumber(discountRate) / 100))
@@ -372,18 +373,27 @@ function QuoteModal({
       return
     }
 
-    await onSubmit({
-      customerId: customerId || undefined,
-      customerName: customerId ? undefined : customerName,
-      customerEmail: customerId ? undefined : customerEmail,
-      title,
-      validUntil,
-      discountRate: getNumber(discountRate),
-      taxRate: getNumber(taxRate),
-      notes,
-      terms,
-      lines: cleanLines,
-    })
+    if (isSubmitting) return
+    setError('')
+    setIsSubmitting(true)
+    try {
+      await onSubmit({
+        customerId: customerId || undefined,
+        customerName: customerId ? undefined : customerName,
+        customerEmail: customerId ? undefined : customerEmail,
+        title,
+        validUntil,
+        discountRate: getNumber(discountRate),
+        taxRate: getNumber(taxRate),
+        notes,
+        terms,
+        lines: cleanLines,
+      })
+    } catch (submitError: any) {
+      setError(submitError?.message || 'Impossible de creer le devis.')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -484,9 +494,9 @@ function QuoteModal({
           </div>
           {error ? <p className="mt-4 rounded border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700">{error}</p> : null}
           <div className="mt-5 grid gap-2">
-            <button type="submit" className="inline-flex items-center justify-center gap-2 rounded bg-slate-950 px-4 py-2 text-sm font-semibold text-white">
+            <button type="submit" disabled={isSubmitting} className="inline-flex items-center justify-center gap-2 rounded bg-slate-950 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60">
               <Save className="size-4" />
-              Enregistrer
+              {isSubmitting ? 'Enregistrement...' : 'Enregistrer'}
             </button>
             <button type="button" onClick={onClose} className="inline-flex items-center justify-center gap-2 rounded border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700">
               <X className="size-4" />
@@ -512,6 +522,7 @@ function SettingsModal({ settings, companyName, onClose, onSubmit }: { settings:
     accentColor: settings.accentColor ?? '#0f172a',
   })
   const [error, setError] = React.useState('')
+  const [isSubmitting, setIsSubmitting] = React.useState(false)
 
   function updateField(key: keyof typeof form, value: string) {
     setForm((current) => ({ ...current, [key]: value }))
@@ -528,7 +539,15 @@ function SettingsModal({ settings, companyName, onClose, onSubmit }: { settings:
       setError('La couleur doit etre au format hexadecimal, par exemple #0f172a.')
       return
     }
-    await onSubmit(form)
+    if (isSubmitting) return
+    setIsSubmitting(true)
+    try {
+      await onSubmit(form)
+    } catch (submitError: any) {
+      setError(submitError?.message || 'Impossible d enregistrer le modele.')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -566,9 +585,9 @@ function SettingsModal({ settings, companyName, onClose, onSubmit }: { settings:
             <X className="size-4" />
             Annuler
           </button>
-          <button type="submit" className="inline-flex items-center gap-2 rounded bg-slate-950 px-4 py-2 text-sm font-semibold text-white">
+          <button type="submit" disabled={isSubmitting} className="inline-flex items-center gap-2 rounded bg-slate-950 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60">
             <Check className="size-4" />
-            Enregistrer
+            {isSubmitting ? 'Enregistrement...' : 'Enregistrer'}
           </button>
         </div>
       </form>

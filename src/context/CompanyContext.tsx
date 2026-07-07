@@ -78,23 +78,3 @@ export function useCompany() {
 }
 
 const companyColors = ['bg-slate-950', 'bg-slate-700', 'bg-slate-600', 'bg-slate-500']
-
-export function getCompanyFactor(companyId: CompanyId): number {
-  const knownFactors: Record<string, number> = {
-    'nova-ci': 1,
-    'nova-sn': 0.6,
-    'nova-ml': 0.35,
-  }
-
-  if (knownFactors[companyId]) return knownFactors[companyId]
-
-  const hash = Array.from(companyId).reduce((total, char) => total + char.charCodeAt(0), 0)
-  return 0.45 + (hash % 45) / 100
-}
-
-export function filterForCompany<T>(items: T[], companyId: CompanyId): T[] {
-  if (companyId === 'nova-ci') return items
-
-  const factor = getCompanyFactor(companyId)
-  return items.slice(0, Math.max(1, Math.ceil(items.length * factor)))
-}

@@ -40,7 +40,7 @@ export const getDashboardData = createServerFn({ method: 'GET' })
       }),
       prisma.catalogItem.count({ where: lowStockWhere }),
       prisma.deal.count({
-        where: { companyId: company.id, stageId: { notIn: ['Won', 'Lost'] } },
+        where: { companyId: company.id, status: 'Open' },
       }),
     ])
 

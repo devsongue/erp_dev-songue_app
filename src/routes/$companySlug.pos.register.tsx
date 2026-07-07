@@ -2,7 +2,7 @@ import { createFileRoute, useRouter } from '@tanstack/react-router'
 import { CreditCard, ImageIcon, Minus, Plus, Printer, ReceiptText, Search, ShoppingCart, Smartphone, Trash2, UserRound, Wallet, X } from 'lucide-react'
 import { useMemo, useState, type ComponentType, type ReactNode } from 'react'
 import { type CatalogCategory, type CatalogItem } from '~/domain/catalogData'
-import { getCompanyFactor, useCompany } from '~/context/CompanyContext'
+import { useCompany } from '~/context/CompanyContext'
 import { getPosData } from '~/server/dataFetchers'
 import { createPosSale } from '~/server/operations'
 import { formatMoney } from '~/utils/currency'
@@ -39,8 +39,7 @@ function PosRegister() {
   const { companySlug } = Route.useParams()
   const router = useRouter()
   const data = Route.useLoaderData()
-  const { activeCompany, activeCompanyId } = useCompany()
-  const factor = getCompanyFactor(activeCompanyId)
+  const { activeCompany } = useCompany()
   const products = data.items.map(toCatalogItem).filter((item: CatalogItem) => item.status === 'Active')
   const customers = data.customers
   const [cart, setCart] = useState<CartLine[]>([])
@@ -51,6 +50,7 @@ function PosRegister() {
   const [lastTicket, setLastTicket] = useState<CheckoutTicket | null>(null)
   const [isTicketModalOpen, setIsTicketModalOpen] = useState(false)
   const [actionMessage, setActionMessage] = useState('')
+  const [isCheckingOut, setIsCheckingOut] = useState(false)
 
   const productCategoryIds = Array.from(new Set(products.map((item: CatalogItem) => item.categoryId)))
   const categories = data.categories.map(toCatalogCategory).filter((category: CatalogCategory) => productCategoryIds.includes(category.id))
@@ -59,7 +59,7 @@ function PosRegister() {
     const matchesCategory = selectedCategory === 'all' || item.categoryId === selectedCategory
     return matchesQuery && matchesCategory
   })
-  const subtotal = cart.reduce((sum, line) => sum + line.item.price * line.quantity, 0) * factor
+  const subtotal = cart.reduce((sum, line) => sum + line.item.price * line.quantity, 0)
   const total = subtotal
   const selectedCustomer = customers.find((customer: any) => customer.id === customerId)
   const cartCount = useMemo(() => cart.reduce((sum, line) => sum + line.quantity, 0), [cart])
@@ -104,14 +104,16 @@ function PosRegister() {
       setActionMessage('Ajoute au moins un produit avant d encaisser.')
       return
     }
+    if (isCheckingOut) return
 
     const cartSnapshot = cart.map((line) => ({
       name: line.item.name,
       sku: line.item.sku,
       quantity: line.quantity,
-      unitPrice: line.item.price * factor,
-      total: line.item.price * line.quantity * factor,
+      unitPrice: line.item.price,
+      total: line.item.price * line.quantity,
     }))
+    setIsCheckingOut(true)
     let saleTicket: Omit<CheckoutTicket, 'lines'>
     try {
       saleTicket = await createPosSale({
@@ -125,6 +127,8 @@ function PosRegister() {
     } catch (error: any) {
       setActionMessage(error.message || 'Impossible d encaisser cette vente.')
       return
+    } finally {
+      setIsCheckingOut(false)
     }
     const ticket: CheckoutTicket = {
       ...saleTicket,
@@ -204,7 +208,7 @@ function PosRegister() {
             {visibleProducts.length > 0 ? (
               <div className="grid grid-cols-2 gap-3 pb-6 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
                 {visibleProducts.map((item) => (
-                  <ProductButton key={item.id} item={item} factor={factor} onAdd={() => addItem(item)} />
+                  <ProductButton key={item.id} item={item} onAdd={() => addItem(item)} />
                 ))}
               </div>
             ) : (
@@ -237,7 +241,7 @@ function PosRegister() {
               </div>
             ) : (
               cart.map((line) => (
-                <CartLineRow key={line.item.id} line={line} factor={factor} onChangeQuantity={updateQuantity} />
+                <CartLineRow key={line.item.id} line={line} onChangeQuantity={updateQuantity} />
               ))
             )}
           </div>
@@ -265,11 +269,11 @@ function PosRegister() {
 
             <button
               onClick={checkout}
-              disabled={cart.length === 0}
+              disabled={cart.length === 0 || isCheckingOut}
               className="inline-flex w-full items-center justify-center gap-2 rounded bg-slate-950 px-4 py-4 text-base font-bold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400 dark:bg-cyan-400 dark:text-slate-950 dark:hover:bg-cyan-300 dark:disabled:bg-slate-700 dark:disabled:text-slate-400"
             >
               <ReceiptText className="size-5" />
-              Encaisser {total > 0 ? formatMoney(total) : ''}
+              {isCheckingOut ? 'Encaissement...' : `Encaisser ${total > 0 ? formatMoney(total) : ''}`}
             </button>
 
             {lastTicket ? (
@@ -294,7 +298,7 @@ function PosRegister() {
   )
 }
 
-function ProductButton({ item, factor, onAdd }: { item: CatalogItem; factor: number; onAdd: () => void }) {
+function ProductButton({ item, onAdd }: { item: CatalogItem; onAdd: () => void }) {
   const isLowStock = item.stock !== null && item.minStockLevel && item.stock <= item.minStockLevel
 
   return (
@@ -308,7 +312,7 @@ function ProductButton({ item, factor, onAdd }: { item: CatalogItem; factor: num
           </div>
         )}
         <span className="absolute right-2 top-2 rounded border border-slate-200 bg-white/95 px-2 py-1 text-[11px] font-bold text-slate-950 dark:border-slate-700 dark:bg-slate-950/95 dark:text-white">
-          {formatMoney(item.price * factor)}
+          {formatMoney(item.price)}
         </span>
         <span className="absolute left-2 top-2 rounded border border-slate-200 bg-white/95 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-slate-600 dark:border-slate-700 dark:bg-slate-950/95 dark:text-slate-300">
           {item.type === 'Service' ? 'Service' : 'Produit'}
@@ -318,7 +322,7 @@ function ProductButton({ item, factor, onAdd }: { item: CatalogItem; factor: num
         <p className="line-clamp-2 min-h-10 text-sm font-bold text-slate-950 dark:text-white">{item.name}</p>
         <div className="mt-3 flex items-center justify-between gap-2">
           <span className={`truncate text-xs font-semibold ${isLowStock ? 'text-rose-600' : 'text-slate-500 dark:text-slate-400'}`}>
-            {item.stock === null ? 'Prestation' : `${Math.ceil(item.stock * factor)} en stock`}
+            {item.stock === null ? 'Prestation' : `${item.stock} en stock`}
           </span>
           <span className="grid size-8 place-items-center rounded bg-slate-950 text-white transition group-hover:bg-slate-800 dark:bg-cyan-400 dark:text-slate-950 dark:group-hover:bg-cyan-300">
             <Plus className="size-4" />
@@ -329,7 +333,7 @@ function ProductButton({ item, factor, onAdd }: { item: CatalogItem; factor: num
   )
 }
 
-function CartLineRow({ line, factor, onChangeQuantity }: { line: CartLine; factor: number; onChangeQuantity: (itemId: string, delta: number) => void }) {
+function CartLineRow({ line, onChangeQuantity }: { line: CartLine; onChangeQuantity: (itemId: string, delta: number) => void }) {
   return (
     <div className="px-5 py-4">
       <div className="mb-3 flex items-start justify-between gap-3">
@@ -339,7 +343,7 @@ function CartLineRow({ line, factor, onChangeQuantity }: { line: CartLine; facto
           </div>
           <div className="min-w-0">
             <p className="truncate text-sm font-bold text-slate-950 dark:text-white">{line.item.name}</p>
-            <p className="text-xs text-slate-500 dark:text-slate-400">{formatMoney(line.item.price * factor)} / unite</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">{formatMoney(line.item.price)} / unite</p>
           </div>
         </div>
         <button onClick={() => onChangeQuantity(line.item.id, -line.quantity)} className="rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-950 dark:hover:bg-slate-900 dark:hover:text-white" aria-label="Retirer du panier">
@@ -356,7 +360,7 @@ function CartLineRow({ line, factor, onChangeQuantity }: { line: CartLine; facto
             <Plus className="size-3" />
           </button>
         </div>
-        <span className="text-right font-bold text-slate-950 dark:text-white">{formatMoney(line.item.price * line.quantity * factor)}</span>
+        <span className="text-right font-bold text-slate-950 dark:text-white">{formatMoney(line.item.price * line.quantity)}</span>
       </div>
     </div>
   )

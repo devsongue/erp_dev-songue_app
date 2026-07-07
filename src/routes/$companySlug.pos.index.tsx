@@ -10,10 +10,8 @@ export const Route = createFileRoute('/$companySlug/pos/')({
 
 function PosDashboard() {
   const { companySlug } = Route.useParams()
-  const { tickets, items } = Route.useLoaderData()
-  const total = tickets.reduce((sum: number, ticket: any) => sum + ticket.amount, 0)
-  const ticketCount = tickets.length
-  const averageBasket = ticketCount > 0 ? total / ticketCount : 0
+  const { tickets, items, today } = Route.useLoaderData()
+  const averageBasket = today.count > 0 ? today.total / today.count : 0
   const lowStock = items.filter((item: any) => item.type === 'Product' && item.stock !== null && item.minStockLevel !== null && item.stock <= item.minStockLevel)
   const recentTickets = tickets.slice(0, 5)
 
@@ -32,9 +30,9 @@ function PosDashboard() {
       </div>
 
       <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-4">
-        <PosMetric title="Caisse" value={formatMoney(total)} icon={Wallet} />
-        <PosMetric title="Tickets" value={ticketCount.toString()} icon={ReceiptText} />
-        <PosMetric title="Panier moyen" value={formatMoney(averageBasket)} icon={BarChart3} />
+        <PosMetric title="Caisse du jour" value={formatMoney(today.total)} icon={Wallet} />
+        <PosMetric title="Tickets du jour" value={today.count.toString()} icon={ReceiptText} />
+        <PosMetric title="Panier moyen du jour" value={formatMoney(averageBasket)} icon={BarChart3} />
         <PosMetric title="Alertes stock" value={lowStock.length.toString()} icon={Boxes} />
       </div>
 

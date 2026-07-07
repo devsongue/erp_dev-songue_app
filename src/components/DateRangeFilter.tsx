@@ -78,6 +78,11 @@ export function todayInputValue() {
   return toInputDate(new Date())
 }
 
+export function getDateRangeBounds(preset: DatePreset, customStart = '', customEnd = '') {
+  const { start, end } = getDateRange(preset, customStart, customEnd)
+  return { start: start.toISOString(), end: end.toISOString() }
+}
+
 function getDateRange(preset: DatePreset, customStart: string, customEnd: string) {
   const now = new Date()
   const start = startOfDay(now)

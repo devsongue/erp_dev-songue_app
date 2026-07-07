@@ -1,9 +1,7 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { AlertTriangle, ArrowRight, ArrowRightLeft, Boxes, Package, PackageCheck, PackagePlus, Truck } from 'lucide-react'
+import { AlertTriangle, ArrowRight, ArrowRightLeft, Boxes, Package, PackageCheck, Truck } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { type CatalogItem } from '~/domain/catalogData'
-import { posPurchaseOrders } from '~/domain/posData'
-import { getCompanyFactor, useCompany } from '~/context/CompanyContext'
 import { getInventoryData } from '~/server/dataFetchers'
 import { formatMoney } from '~/utils/currency'
 
@@ -15,34 +13,23 @@ export const Route = createFileRoute('/$companySlug/inventory/')({
 function InventoryDashboard() {
   const { companySlug } = Route.useParams()
   const data = Route.useLoaderData()
-  const { activeCompanyId } = useCompany()
-  const factor = getCompanyFactor(activeCompanyId)
   const products = data.items.map(toCatalogItem).filter((item: CatalogItem) => item.type === 'Product')
   const movements = data.movements
   const [stockView, setStockView] = useState<'priority' | 'all'>('priority')
-  const [message, setMessage] = useState('')
 
   const outOfStock = products.filter((item) => item.stock === 0)
   const lowStockProducts = products.filter((item) => item.stock !== null && item.minStockLevel !== undefined && item.stock > 0 && item.stock <= item.minStockLevel)
   const priorityProducts = [...outOfStock, ...lowStockProducts]
   const displayedProducts = stockView === 'priority' ? priorityProducts : products
   const totalStockItems = products.reduce((sum, item) => sum + (item.stock || 0), 0)
-  const stockValue = products.reduce((sum, item) => sum + (item.stock ?? 0) * item.cost * factor, 0)
-  const reorderEstimate = priorityProducts.reduce((sum, item) => sum + getSuggestedOrder(item) * item.cost * factor, 0)
+  const stockValue = products.reduce((sum, item) => sum + (item.stock ?? 0) * item.cost, 0)
+  const reorderEstimate = priorityProducts.reduce((sum, item) => sum + getSuggestedOrder(item) * item.cost, 0)
   const suppliers = Array.from(new Set(products.map((item) => item.supplier).filter(Boolean)))
 
   const supplierText = useMemo(() => {
     if (suppliers.length === 0) return 'Aucun fournisseur'
     return `${suppliers.length} fournisseurs`
   }, [suppliers.length])
-
-  function createPurchaseList() {
-    if (priorityProducts.length === 0) {
-      setMessage('Aucun produit prioritaire a commander pour le moment.')
-      return
-    }
-    setMessage(`${priorityProducts.length} produits ajoutes a la liste de commande fournisseur.`)
-  }
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
@@ -56,21 +43,15 @@ function InventoryDashboard() {
             <Package className="size-4" />
             Produits
           </Link>
-          <button onClick={createPurchaseList} className="inline-flex items-center gap-2 rounded bg-slate-950 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800">
+          <Link to="/$companySlug/purchases" params={{ companySlug }} className="inline-flex items-center gap-2 rounded bg-slate-950 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800">
             <Truck className="size-4" />
             Commander stock
-          </button>
+          </Link>
         </div>
       </div>
 
-      {message ? (
-        <div className="mb-6 rounded border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">
-          {message}
-        </div>
-      ) : null}
-
       <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-4">
-        <StatCard title="Articles en stock" value={Math.floor(totalStockItems * factor).toString()} icon={Boxes} detail="Quantite disponible" />
+        <StatCard title="Articles en stock" value={totalStockItems.toString()} icon={Boxes} detail="Quantite disponible" />
         <StatCard title="Valeur stock" value={formatMoney(stockValue)} icon={PackageCheck} detail="Cout d'achat estime" />
         <StatCard title="Alertes" value={priorityProducts.length.toString()} icon={AlertTriangle} detail={`${outOfStock.length} ruptures`} alert={priorityProducts.length > 0} />
         <StatCard title="A commander" value={formatMoney(reorderEstimate)} icon={Truck} detail={supplierText} alert={reorderEstimate > 0} />
@@ -145,27 +126,6 @@ function InventoryDashboard() {
 
         <aside className="space-y-6">
           <section className="rounded border border-slate-200 bg-white">
-            <div className="border-b border-slate-100 px-5 py-4">
-              <h2 className="font-bold text-slate-950">Commandes fournisseur</h2>
-              <p className="text-xs text-slate-500">Les derniers bons de commande lies au stock.</p>
-            </div>
-            <div className="divide-y divide-slate-100">
-              {posPurchaseOrders.map((order) => (
-                <div key={order.id} className="list-row px-5 py-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="font-bold text-slate-950">{order.reference}</p>
-                      <p className="mt-1 truncate text-xs text-slate-500">{order.supplier} - ETA {order.eta}</p>
-                    </div>
-                    <span className="rounded bg-slate-100 px-2 py-1 text-xs font-bold text-slate-600">{order.status}</span>
-                  </div>
-                  <p className="mt-3 text-sm font-bold text-slate-950">{formatMoney(order.amount * factor)}</p>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          <section className="rounded border border-slate-200 bg-white">
             <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
               <h2 className="font-bold text-slate-950">Mouvements recents</h2>
               <Link to="/$companySlug/inventory/transfers" params={{ companySlug }} className="inline-flex items-center gap-1 text-xs font-bold text-slate-500 hover:text-slate-950">
@@ -184,7 +144,7 @@ function InventoryDashboard() {
                       <p className="text-xs text-slate-500">{movement.type === 'In' ? 'Entree' : movement.type === 'Out' ? 'Sortie' : 'Transfert'}</p>
                     </div>
                   </div>
-                  <span className="text-sm font-bold text-slate-950">{Math.ceil(movement.quantity * factor)}</span>
+                  <span className="text-sm font-bold text-slate-950">{movement.quantity}</span>
                 </div>
               ))}
             </div>
