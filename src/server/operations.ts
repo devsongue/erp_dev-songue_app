@@ -9,6 +9,12 @@ async function getCompany(companySlug: string, permission: string) {
   return company
 }
 
+async function getCompanyContext(companySlug: string, permission: string) {
+  const { requireCompanyAccess } = await import('./access')
+  const { company, user } = await requireCompanyAccess(companySlug, permission)
+  return { company, user }
+}
+
 async function ensureAccount(companyId: string, type: string, name: string) {
   const existing = await prisma.bankAccount.findFirst({ where: { companyId, type, name } })
   if (existing) return existing
@@ -110,7 +116,7 @@ export const createCatalogItem = createServerFn({ method: 'POST' })
     status: z.enum(['Active', 'Draft', 'Archived']).default('Active'),
   }))
   .handler(async ({ data }) => {
-    const company = await getCompany(data.companySlug, 'inventory.manage')
+    const { company, user } = await getCompanyContext(data.companySlug, 'inventory.manage')
     if (data.categoryId) {
       const category = await prisma.category.findFirst({
         where: { id: data.categoryId, companyId: company.id, type: data.type },
@@ -157,6 +163,7 @@ export const createCatalogItem = createServerFn({ method: 'POST' })
     await prisma.auditLog.create({
       data: {
         companyId: company.id,
+        actorId: user.id,
         action: 'catalog.created',
         entity: 'CatalogItem',
         entityId: item.id,
@@ -174,7 +181,7 @@ export const updateCatalogItemStatus = createServerFn({ method: 'POST' })
     status: z.enum(['Active', 'Draft', 'Archived']),
   }))
   .handler(async ({ data }) => {
-    const company = await getCompany(data.companySlug, 'inventory.manage')
+    const { company, user } = await getCompanyContext(data.companySlug, 'inventory.manage')
     const item = await prisma.catalogItem.update({
       where: { id: data.itemId, companyId: company.id },
       data: { status: data.status },
@@ -183,6 +190,7 @@ export const updateCatalogItemStatus = createServerFn({ method: 'POST' })
     await prisma.auditLog.create({
       data: {
         companyId: company.id,
+        actorId: user.id,
         action: 'catalog.status_updated',
         entity: 'CatalogItem',
         entityId: item.id,
@@ -200,7 +208,7 @@ export const restockCatalogItem = createServerFn({ method: 'POST' })
     reason: z.string().optional(),
   }))
   .handler(async ({ data }) => {
-    const company = await getCompany(data.companySlug, 'inventory.manage')
+    const { company, user } = await getCompanyContext(data.companySlug, 'inventory.manage')
     const existing = await prisma.catalogItem.findFirst({
       where: { id: data.itemId, companyId: company.id, type: 'Product' },
     })
@@ -232,6 +240,7 @@ export const restockCatalogItem = createServerFn({ method: 'POST' })
       await tx.auditLog.create({
         data: {
           companyId: company.id,
+          actorId: user.id,
           action: 'catalog.restocked',
           entity: 'CatalogItem',
           entityId: existing.id,

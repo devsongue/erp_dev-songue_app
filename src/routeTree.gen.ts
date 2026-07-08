@@ -16,6 +16,8 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as CompanySlugRouteImport } from './routes/$companySlug'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CompanySlugIndexRouteImport } from './routes/$companySlug.index'
+import { Route as ResetTokenRouteImport } from './routes/reset.$token'
+import { Route as InviteTokenRouteImport } from './routes/invite.$token'
 import { Route as CompanySlugUsersRouteImport } from './routes/$companySlug.users'
 import { Route as CompanySlugSettingsRouteImport } from './routes/$companySlug.settings'
 import { Route as CompanySlugSalesRouteImport } from './routes/$companySlug.sales'
@@ -109,6 +111,16 @@ const CompanySlugIndexRoute = CompanySlugIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => CompanySlugRoute,
+} as any)
+const ResetTokenRoute = ResetTokenRouteImport.update({
+  id: '/reset/$token',
+  path: '/reset/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InviteTokenRoute = InviteTokenRouteImport.update({
+  id: '/invite/$token',
+  path: '/invite/$token',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const CompanySlugUsersRoute = CompanySlugUsersRouteImport.update({
   id: '/users',
@@ -447,6 +459,8 @@ export interface FileRoutesByFullPath {
   '/$companySlug/sales': typeof CompanySlugSalesRouteWithChildren
   '/$companySlug/settings': typeof CompanySlugSettingsRoute
   '/$companySlug/users': typeof CompanySlugUsersRoute
+  '/invite/$token': typeof InviteTokenRoute
+  '/reset/$token': typeof ResetTokenRoute
   '/$companySlug/': typeof CompanySlugIndexRoute
   '/$companySlug/accounting/chart-of-accounts': typeof CompanySlugAccountingChartOfAccountsRoute
   '/$companySlug/accounting/ledger': typeof CompanySlugAccountingLedgerRoute
@@ -505,6 +519,8 @@ export interface FileRoutesByTo {
   '/$companySlug/reports': typeof CompanySlugReportsRoute
   '/$companySlug/settings': typeof CompanySlugSettingsRoute
   '/$companySlug/users': typeof CompanySlugUsersRoute
+  '/invite/$token': typeof InviteTokenRoute
+  '/reset/$token': typeof ResetTokenRoute
   '/$companySlug': typeof CompanySlugIndexRoute
   '/$companySlug/accounting/chart-of-accounts': typeof CompanySlugAccountingChartOfAccountsRoute
   '/$companySlug/accounting/ledger': typeof CompanySlugAccountingLedgerRoute
@@ -573,6 +589,8 @@ export interface FileRoutesById {
   '/$companySlug/sales': typeof CompanySlugSalesRouteWithChildren
   '/$companySlug/settings': typeof CompanySlugSettingsRoute
   '/$companySlug/users': typeof CompanySlugUsersRoute
+  '/invite/$token': typeof InviteTokenRoute
+  '/reset/$token': typeof ResetTokenRoute
   '/$companySlug/': typeof CompanySlugIndexRoute
   '/$companySlug/accounting/chart-of-accounts': typeof CompanySlugAccountingChartOfAccountsRoute
   '/$companySlug/accounting/ledger': typeof CompanySlugAccountingLedgerRoute
@@ -642,6 +660,8 @@ export interface FileRouteTypes {
     | '/$companySlug/sales'
     | '/$companySlug/settings'
     | '/$companySlug/users'
+    | '/invite/$token'
+    | '/reset/$token'
     | '/$companySlug/'
     | '/$companySlug/accounting/chart-of-accounts'
     | '/$companySlug/accounting/ledger'
@@ -700,6 +720,8 @@ export interface FileRouteTypes {
     | '/$companySlug/reports'
     | '/$companySlug/settings'
     | '/$companySlug/users'
+    | '/invite/$token'
+    | '/reset/$token'
     | '/$companySlug'
     | '/$companySlug/accounting/chart-of-accounts'
     | '/$companySlug/accounting/ledger'
@@ -767,6 +789,8 @@ export interface FileRouteTypes {
     | '/$companySlug/sales'
     | '/$companySlug/settings'
     | '/$companySlug/users'
+    | '/invite/$token'
+    | '/reset/$token'
     | '/$companySlug/'
     | '/$companySlug/accounting/chart-of-accounts'
     | '/$companySlug/accounting/ledger'
@@ -818,6 +842,8 @@ export interface RootRouteChildren {
   PrivacyRoute: typeof PrivacyRoute
   RegisterRoute: typeof RegisterRoute
   SetupRoute: typeof SetupRoute
+  InviteTokenRoute: typeof InviteTokenRoute
+  ResetTokenRoute: typeof ResetTokenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -870,6 +896,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/$companySlug/'
       preLoaderRoute: typeof CompanySlugIndexRouteImport
       parentRoute: typeof CompanySlugRoute
+    }
+    '/reset/$token': {
+      id: '/reset/$token'
+      path: '/reset/$token'
+      fullPath: '/reset/$token'
+      preLoaderRoute: typeof ResetTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/invite/$token': {
+      id: '/invite/$token'
+      path: '/invite/$token'
+      fullPath: '/invite/$token'
+      preLoaderRoute: typeof InviteTokenRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/$companySlug/users': {
       id: '/$companySlug/users'
@@ -1495,6 +1535,8 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyRoute: PrivacyRoute,
   RegisterRoute: RegisterRoute,
   SetupRoute: SetupRoute,
+  InviteTokenRoute: InviteTokenRoute,
+  ResetTokenRoute: ResetTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

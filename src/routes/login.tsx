@@ -37,6 +37,8 @@ function LoginPage() {
   const search = Route.useSearch()
   const [email, setEmail] = React.useState('')
   const [password, setPassword] = React.useState('')
+  const [totpCode, setTotpCode] = React.useState('')
+  const [needsTotp, setNeedsTotp] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = React.useState(false)
 
@@ -45,11 +47,18 @@ function LoginPage() {
     setIsSubmitting(true)
     setError(null)
 
-    const result = await login({ data: { email, password } })
+    const result = await login({ data: { email, password, totpCode: totpCode || undefined } })
     setIsSubmitting(false)
 
     if (result?.needsSetup) {
       await navigate({ to: '/register' })
+      return
+    }
+
+    if (result?.needsTotp) {
+      // Le mot de passe est bon mais un code 2FA est attendu.
+      if (needsTotp) setError(result.message)
+      setNeedsTotp(true)
       return
     }
 
@@ -74,6 +83,10 @@ function LoginPage() {
         <div className="mt-7 grid gap-4">
           <Field icon={Mail} label="Email" value={email} onChange={setEmail} type="email" autoComplete="email" placeholder="nom@entreprise.com" />
           <Field icon={LockKeyhole} label="Mot de passe" value={password} onChange={setPassword} type="password" autoComplete="current-password" placeholder="Votre mot de passe" />
+
+          {needsTotp ? (
+            <Field icon={LockKeyhole} label="Code de verification (2FA)" value={totpCode} onChange={setTotpCode} type="text" autoComplete="one-time-code" placeholder="Code a 6 chiffres" />
+          ) : null}
 
           {error ? (
             <div className="rounded border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-200">

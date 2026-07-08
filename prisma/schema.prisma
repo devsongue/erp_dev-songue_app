@@ -7,18 +7,23 @@ datasource db {
 }
 
 model User {
-  id              String              @id @default(cuid())
-  email           String              @unique
-  name            String
-  passwordHash    String              @default("")
-  isOwner         Boolean             @default(false)
-  createdAt       DateTime            @default(now())
-  updatedAt       DateTime            @updatedAt
-  sessions        Session[]
-  memberships     CompanyMembership[]
-  ownedWorkspaces Workspace[]         @relation("WorkspaceOwner")
-  invitations     CompanyInvitation[]
-  auditLogs       AuditLog[]          @relation("AuditActor")
+  id                 String               @id @default(cuid())
+  email              String               @unique
+  name               String
+  passwordHash       String               @default("")
+  isOwner            Boolean              @default(false)
+  totpSecret         String?
+  totpEnabledAt      DateTime?
+  mustChangePassword Boolean              @default(false)
+  lastLoginAt        DateTime?
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  sessions           Session[]
+  memberships        CompanyMembership[]
+  ownedWorkspaces    Workspace[]          @relation("WorkspaceOwner")
+  invitations        CompanyInvitation[]
+  auditLogs          AuditLog[]           @relation("AuditActor")
+  passwordResets     PasswordResetToken[]
 }
 
 model Session {
@@ -26,11 +31,40 @@ model Session {
   userId    String
   tokenHash String   @unique
   expiresAt DateTime
+  ip        String?
+  userAgent String?
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([expiresAt])
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdBy String?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model LoginEvent {
+  id        String   @id @default(cuid())
+  userId    String?
+  email     String
+  ip        String?
+  success   Boolean
+  reason    String?
+  createdAt DateTime @default(now())
+
+  @@index([email, createdAt])
+  @@index([userId, createdAt])
 }
 
 model Workspace {

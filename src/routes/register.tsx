@@ -60,7 +60,7 @@ function RegisterPage() {
           <Field icon={Building2} label="Entreprise" value={companyName} onChange={setCompanyName} placeholder="Nom de l'entreprise" />
           <Field icon={UserRound} label="Responsable" value={ownerName} onChange={setOwnerName} placeholder="Nom complet" />
           <Field icon={Mail} label="Email" value={ownerEmail} onChange={setOwnerEmail} type="email" placeholder="nom@entreprise.com" />
-          <Field icon={LockKeyhole} label="Mot de passe" value={password} onChange={setPassword} type="password" placeholder="8 caracteres minimum" />
+          <Field icon={LockKeyhole} label="Mot de passe" value={password} onChange={setPassword} type="password" placeholder="10 caracteres minimum" />
         </div>
 
         {error ? (

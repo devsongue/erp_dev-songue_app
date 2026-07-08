@@ -1,11 +1,11 @@
 import { createHash, randomBytes } from 'node:crypto'
 import { createServerFn } from '@tanstack/react-start'
-import { deleteCookie, getCookie, getRequestIP, setCookie } from '@tanstack/react-start/server'
+import { deleteCookie, getCookie, getRequestHeader, getRequestIP, setCookie } from '@tanstack/react-start/server'
 import { z } from 'zod'
 import { prisma } from './db'
 import { getSessionContext, invalidateSessionCache, invalidateSessionToken } from './access'
 import { hashPassword, verifyPassword } from './password'
-import { isBlocked, recordFailure, recordSuccess } from './rateLimit'
+import { isBlocked, recordFailure, recordSuccess, throttle } from './rateLimit'
 import type { Permission } from '@prisma/client'
 
 const sessionCookieName = 'erp_session'
@@ -95,10 +95,21 @@ export const getAuthState = createServerFn({ method: 'GET' }).handler(async () =
   return readAuthState()
 })
 
+// Une fois l'installation faite, elle ne peut pas "se defaire" : on memorise
+// le resultat pour ne pas requeter la base a chaque visite de /login ou /
+// (cible favorite des scanners automatises).
+let installationConfirmed = false
+
+async function isInstalled() {
+  if (installationConfirmed) return true
+  const usersCount = await prisma.user.count()
+  if (usersCount > 0) installationConfirmed = true
+  return installationConfirmed
+}
+
 export const getInstallationState = createServerFn({ method: 'GET' }).handler(async () => {
   try {
-    const usersCount = await prisma.user.count()
-    return { needsSetup: usersCount === 0 }
+    return { needsSetup: !(await isInstalled()) }
   } catch (error) {
     console.error('Database connection error in getInstallationState:', error)
     // We assume setup is needed or database is unreachable
@@ -119,17 +130,37 @@ export const getCompanyAuthState = createServerFn({ method: 'GET' })
     }
   })
 
+async function recordLoginEvent(input: {
+  userId?: string | null
+  email: string
+  ip: string
+  success: boolean
+  reason?: string
+}) {
+  // Le journal de connexion ne doit jamais faire echouer le login lui-meme.
+  await prisma.loginEvent.create({
+    data: {
+      userId: input.userId ?? null,
+      email: input.email,
+      ip: input.ip,
+      success: input.success,
+      reason: input.reason ?? null,
+    },
+  }).catch(() => {})
+}
+
 export const login = createServerFn({ method: 'POST' })
   .inputValidator(
     z.object({
       email: z.string().email(),
       password: z.string().min(1),
+      totpCode: z.string().optional(),
     }),
   )
   .handler(async ({ data }) => {
     const usersCount = await prisma.user.count()
     if (usersCount === 0) {
-      return { ok: false, message: 'Premiere installation requise.', needsSetup: true }
+      return { ok: false, message: 'Premiere installation requise.', needsSetup: true, needsTotp: false }
     }
 
     const email = data.email.toLowerCase().trim()
@@ -140,7 +171,7 @@ export const login = createServerFn({ method: 'POST' })
       const { blocked, retryAfterSeconds } = isBlocked(key)
       if (blocked) {
         const minutes = Math.max(1, Math.ceil(retryAfterSeconds / 60))
-        return { ok: false, message: `Trop de tentatives. Reessaie dans ${minutes} min.`, needsSetup: false }
+        return { ok: false, message: `Trop de tentatives. Reessaie dans ${minutes} min.`, needsSetup: false, needsTotp: false }
       }
     }
 
@@ -150,7 +181,27 @@ export const login = createServerFn({ method: 'POST' })
 
     if (!user || !(await verifyPassword(data.password, user.passwordHash))) {
       rateLimitKeys.forEach(recordFailure)
-      return { ok: false, message: 'Email ou mot de passe incorrect.', needsSetup: false }
+      await recordLoginEvent({
+        userId: user?.id,
+        email,
+        ip: clientIp,
+        success: false,
+        reason: user ? 'password' : 'unknown_user',
+      })
+      return { ok: false, message: 'Email ou mot de passe incorrect.', needsSetup: false, needsTotp: false }
+    }
+
+    // Double authentification : exigee si l'utilisateur l'a activee.
+    if (user.totpSecret && user.totpEnabledAt) {
+      const { verifyTotp } = await import('./totp')
+      if (!data.totpCode) {
+        return { ok: false, message: 'Saisis le code de ton application d authentification.', needsSetup: false, needsTotp: true }
+      }
+      if (!verifyTotp(user.totpSecret, data.totpCode)) {
+        rateLimitKeys.forEach(recordFailure)
+        await recordLoginEvent({ userId: user.id, email, ip: clientIp, success: false, reason: 'totp' })
+        return { ok: false, message: 'Code de verification invalide.', needsSetup: false, needsTotp: true }
+      }
     }
 
     rateLimitKeys.forEach(recordSuccess)
@@ -163,10 +214,15 @@ export const login = createServerFn({ method: 'POST' })
         userId: user.id,
         tokenHash: hashToken(token),
         expiresAt,
+        ip: clientIp,
+        userAgent: getRequestHeader('user-agent') ?? null,
       },
     })
 
     setSessionCookie(token, expiresAt)
+
+    await prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } }).catch(() => {})
+    await recordLoginEvent({ userId: user.id, email, ip: clientIp, success: true })
 
     const membership = await prisma.companyMembership.findFirst({
       where: { userId: user.id, status: 'ACTIVE' },
@@ -177,6 +233,7 @@ export const login = createServerFn({ method: 'POST' })
     return {
       ok: true,
       needsSetup: false,
+      needsTotp: false,
       redirectTo: membership ? `/${membership.company.slug}/dashboard` : '/',
     }
   })
@@ -186,15 +243,20 @@ export const setupOwnerAccount = createServerFn({ method: 'POST' })
     z.object({
       ownerName: z.string().min(2),
       ownerEmail: z.string().email(),
-      password: z.string().min(8),
+      password: z.string().min(10),
       workspaceName: z.string().min(2),
       companyName: z.string().min(2),
       companySlug: z.string().min(2).regex(/^[a-z0-9-]+$/),
     }),
   )
   .handler(async ({ data }) => {
-    const usersCount = await prisma.user.count()
-    if (usersCount > 0) {
+    const setupIp = getRequestIP({ xForwardedFor: true }) ?? 'unknown'
+    const setupThrottle = throttle(`setup:ip:${setupIp}`, 5, 60 * 60 * 1000)
+    if (!setupThrottle.allowed) {
+      return { ok: false, message: 'Trop de tentatives. Reessaie plus tard.' }
+    }
+
+    if (await isInstalled()) {
       return { ok: false, message: 'Cette installation est deja configuree.' }
     }
 
@@ -225,6 +287,7 @@ export const setupOwnerAccount = createServerFn({ method: 'POST' })
     })
 
     await createSessionForUser(owner.id)
+    installationConfirmed = true
 
     return { ok: true, redirectTo: `/${company.slug}/dashboard` }
   })
@@ -308,10 +371,24 @@ export const getCompanyAdministration = createServerFn({ method: 'GET' })
       },
     })
 
-    const permissions = await prisma.permission.findMany({ orderBy: { key: 'asc' } })
+    const [permissions, invitations] = await Promise.all([
+      prisma.permission.findMany({ orderBy: { key: 'asc' } }),
+      company
+        ? prisma.companyInvitation.findMany({
+            where: { companyId: company.id, acceptedAt: null, expiresAt: { gt: new Date() } },
+            orderBy: { createdAt: 'desc' },
+          })
+        : Promise.resolve([]),
+    ])
 
     return {
       ok: true,
+      invitations: invitations.map((invitation) => ({
+        id: invitation.id,
+        email: invitation.email,
+        roleName: invitation.roleName,
+        expiresAt: invitation.expiresAt.toISOString(),
+      })),
       company: company
         ? {
             id: company.id,
@@ -333,6 +410,7 @@ export const getCompanyAdministration = createServerFn({ method: 'GET' })
           email: membership.user.email,
           status: membership.status,
           roles: membership.roles.map((role) => role.role.name),
+          lastLoginAt: membership.user.lastLoginAt?.toISOString() ?? null,
         })) ?? [],
       roles:
         company?.roles.map((role) => ({
@@ -526,54 +604,6 @@ export const createRole = createServerFn({ method: 'POST' })
     return { ok: true }
   })
 
-export const addManager = createServerFn({ method: 'POST' })
-  .inputValidator(
-    z.object({
-      companySlug: z.string().min(1),
-      name: z.string().min(2),
-      email: z.string().email(),
-      roleId: z.string().min(1),
-      temporaryPassword: z.string().min(8),
-    }),
-  )
-  .handler(async ({ data }) => {
-    const auth = await readAuthState()
-    const access = auth.companies.find((company) => company.slug === data.companySlug)
-    if (!auth.user?.isOwner && !access?.permissions.includes('company.manage')) {
-      return { ok: false, message: 'Permission insuffisante.' }
-    }
-
-    const company = await prisma.company.findUnique({ where: { slug: data.companySlug } })
-    if (!company) return { ok: false, message: 'Entreprise introuvable.' }
-
-    const role = await prisma.role.findFirst({ where: { id: data.roleId, companyId: company.id } })
-    if (!role) return { ok: false, message: 'Role introuvable.' }
-
-    const user = await prisma.user.upsert({
-      where: { email: data.email.toLowerCase().trim() },
-      update: { name: data.name.trim() },
-      create: {
-        name: data.name.trim(),
-        email: data.email.toLowerCase().trim(),
-        passwordHash: await hashPassword(data.temporaryPassword),
-      },
-    })
-
-    const membership = await prisma.companyMembership.upsert({
-      where: { userId_companyId: { userId: user.id, companyId: company.id } },
-      update: { status: 'ACTIVE' },
-      create: { userId: user.id, companyId: company.id, status: 'ACTIVE' },
-    })
-
-    await prisma.userRole.upsert({
-      where: { membershipId_roleId: { membershipId: membership.id, roleId: role.id } },
-      update: {},
-      create: { membershipId: membership.id, roleId: role.id },
-    })
-
-    invalidateSessionCache()
-    return { ok: true }
-  })
 
 async function createSessionForUser(userId: string) {
   const token = createSessionToken()
@@ -584,6 +614,8 @@ async function createSessionForUser(userId: string) {
       userId,
       tokenHash: hashToken(token),
       expiresAt,
+      ip: getRequestIP({ xForwardedFor: true }) ?? null,
+      userAgent: getRequestHeader('user-agent') ?? null,
     },
   })
 

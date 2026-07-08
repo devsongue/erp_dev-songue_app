@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto'
-import { getCookie } from '@tanstack/react-start/server'
+import { getCookie, getRequestIP } from '@tanstack/react-start/server'
 import { prisma } from './db'
+import { throttle } from './rateLimit'
 
 const sessionCookieName = 'erp_session'
 
@@ -108,7 +109,19 @@ async function loadSessionContext(tokenHash: string): Promise<SessionContext | n
   }
 }
 
+// Garde anti-flood globale : borne genereuse (un usage normal reste tres en
+// dessous), mais bloque un scanner ou un script qui martele les endpoints
+// depuis une meme IP.
+const floodLimit = 600
+const floodWindowMs = 60 * 1000
+
 export async function getSessionContext(): Promise<SessionContext | null> {
+  const ip = getRequestIP({ xForwardedFor: true }) ?? 'unknown'
+  const flood = throttle(`flood:ip:${ip}`, floodLimit, floodWindowMs)
+  if (!flood.allowed) {
+    throw new Error('Trop de requetes. Reessaie dans un instant.')
+  }
+
   const token = getCookie(sessionCookieName)
   if (!token) return null
 
