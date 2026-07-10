@@ -44,6 +44,24 @@ const TanStackRouterDevtools = import.meta.env.PROD
     )
 
 function RootDocument({ children }: { children: React.ReactNode }) {
+  // Apres un redeploy, les chunks hashes changent de nom : un onglet deja ouvert
+  // qui charge une route en lazy demande un ancien fichier qui n'existe plus (404)
+  // -> "Failed to fetch dynamically imported module". Vite emet `vite:preloadError`
+  // dans ce cas : on recharge une seule fois pour recuperer le HTML et les assets
+  // frais (garde anti-boucle si le chunk manque toujours apres rechargement).
+  React.useEffect(() => {
+    function onPreloadError(event: Event) {
+      const key = 'chunk-reload-at'
+      const last = Number(sessionStorage.getItem(key) ?? 0)
+      if (Date.now() - last < 10000) return
+      sessionStorage.setItem(key, String(Date.now()))
+      event.preventDefault()
+      window.location.reload()
+    }
+    window.addEventListener('vite:preloadError', onPreloadError)
+    return () => window.removeEventListener('vite:preloadError', onPreloadError)
+  }, [])
+
   return (
     <html>
       <head>
