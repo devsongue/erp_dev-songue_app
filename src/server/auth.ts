@@ -107,13 +107,19 @@ async function isInstalled() {
   return installationConfirmed
 }
 
+// L'inscription publique (self-service) reste desactivee par defaut : sur un ERP
+// c'est une decision de securite explicite. On l'active via ALLOW_PUBLIC_REGISTRATION.
+function publicRegistrationEnabled() {
+  return String(process.env.ALLOW_PUBLIC_REGISTRATION ?? '').trim().toLowerCase() === 'true'
+}
+
 export const getInstallationState = createServerFn({ method: 'GET' }).handler(async () => {
   try {
-    return { needsSetup: !(await isInstalled()) }
+    return { needsSetup: !(await isInstalled()), allowRegistration: publicRegistrationEnabled() }
   } catch (error) {
     console.error('Database connection error in getInstallationState:', error)
     // We assume setup is needed or database is unreachable
-    return { needsSetup: true, error: true }
+    return { needsSetup: true, allowRegistration: false, error: true }
   }
 })
 
@@ -260,36 +266,59 @@ export const setupOwnerAccount = createServerFn({ method: 'POST' })
       return { ok: false, message: 'Cette installation est deja configuree.' }
     }
 
-    await ensureCoreDefinitions()
-
-    const owner = await prisma.user.create({
-      data: {
-        name: data.ownerName.trim(),
-        email: data.ownerEmail.toLowerCase().trim(),
-        passwordHash: await hashPassword(data.password),
-        isOwner: true,
-      },
-    })
-
-    const workspace = await prisma.workspace.create({
-      data: {
-        name: data.workspaceName.trim(),
-        slug: slugify(data.workspaceName),
-        ownerId: owner.id,
-      },
-    })
-
-    const company = await createCompanyForOwner({
-      workspaceId: workspace.id,
-      ownerId: owner.id,
-      name: data.companyName.trim(),
-      slug: data.companySlug,
-    })
-
-    await createSessionForUser(owner.id)
+    const company = await provisionOwnerWorkspace(data)
     installationConfirmed = true
 
     return { ok: true, redirectTo: `/${company.slug}/dashboard` }
+  })
+
+// Inscription publique en self-service : chaque nouveau compte cree son propre
+// espace (workspace + entreprise) et en devient proprietaire. Contrairement a
+// l'installation initiale, les emails et slugs peuvent deja exister, donc on
+// verifie l'unicite et on desambigue les slugs.
+export const registerAccount = createServerFn({ method: 'POST' })
+  .inputValidator(
+    z.object({
+      ownerName: z.string().min(2),
+      ownerEmail: z.string().email(),
+      password: z.string().min(10),
+      workspaceName: z.string().min(2),
+      companyName: z.string().min(2),
+      companySlug: z.string().min(2).regex(/^[a-z0-9-]+$/),
+    }),
+  )
+  .handler(async ({ data }) => {
+    if (!publicRegistrationEnabled()) {
+      return { ok: false, message: 'Les inscriptions sont desactivees.' }
+    }
+
+    const registerIp = getRequestIP({ xForwardedFor: true }) ?? 'unknown'
+    const registerThrottle = throttle(`register:ip:${registerIp}`, 5, 60 * 60 * 1000)
+    if (!registerThrottle.allowed) {
+      return { ok: false, message: 'Trop de tentatives. Reessaie plus tard.' }
+    }
+
+    // Un compte proprietaire initial doit exister avant d'ouvrir les inscriptions.
+    if (!(await isInstalled())) {
+      return { ok: false, message: 'Configuration initiale requise.', needsSetup: true }
+    }
+
+    const email = data.ownerEmail.toLowerCase().trim()
+    if (await prisma.user.findUnique({ where: { email } })) {
+      return { ok: false, message: 'Un compte existe deja avec cet email.' }
+    }
+
+    try {
+      const company = await provisionOwnerWorkspace(data)
+      return { ok: true, redirectTo: `/${company.slug}/dashboard` }
+    } catch (error: any) {
+      // Course entre la verification et la creation (email/slug pris entre-temps).
+      if (error?.code === 'P2002') {
+        return { ok: false, message: 'Un compte existe deja avec cet email.' }
+      }
+      console.error('registerAccount error:', error)
+      return { ok: false, message: 'Impossible de creer le compte pour le moment.' }
+    }
   })
 
 export const logout = createServerFn({ method: 'POST' }).handler(async () => {
@@ -604,6 +633,62 @@ export const createRole = createServerFn({ method: 'POST' })
     return { ok: true }
   })
 
+
+// Cree le proprietaire, son workspace et sa premiere entreprise, puis ouvre une
+// session. Partage par l'installation initiale et l'inscription publique.
+async function provisionOwnerWorkspace(input: {
+  ownerName: string
+  ownerEmail: string
+  password: string
+  workspaceName: string
+  companyName: string
+  companySlug: string
+}) {
+  await ensureCoreDefinitions()
+
+  const owner = await prisma.user.create({
+    data: {
+      name: input.ownerName.trim(),
+      email: input.ownerEmail.toLowerCase().trim(),
+      passwordHash: await hashPassword(input.password),
+      isOwner: true,
+    },
+  })
+
+  const workspace = await prisma.workspace.create({
+    data: {
+      name: input.workspaceName.trim(),
+      slug: await uniqueSlug(slugify(input.workspaceName), 'workspace'),
+      ownerId: owner.id,
+    },
+  })
+
+  const company = await createCompanyForOwner({
+    workspaceId: workspace.id,
+    ownerId: owner.id,
+    name: input.companyName.trim(),
+    slug: await uniqueSlug(input.companySlug, 'company'),
+  })
+
+  await createSessionForUser(owner.id)
+  return company
+}
+
+// Renvoie un slug libre en suffixant un compteur si la base contient deja le slug.
+async function uniqueSlug(base: string, kind: 'workspace' | 'company') {
+  const root = base && base.length > 0 ? base : kind === 'company' ? 'entreprise' : 'espace'
+  let candidate = root
+  for (let n = 2; n < 1000; n += 1) {
+    const taken =
+      kind === 'workspace'
+        ? await prisma.workspace.findUnique({ where: { slug: candidate } })
+        : await prisma.company.findUnique({ where: { slug: candidate } })
+    if (!taken) return candidate
+    const suffix = `-${n}`
+    candidate = `${root.slice(0, 60 - suffix.length)}${suffix}`
+  }
+  return `${root.slice(0, 51)}-${randomBytes(4).toString('hex')}`
+}
 
 async function createSessionForUser(userId: string) {
   const token = createSessionToken()

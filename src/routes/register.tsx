@@ -1,19 +1,22 @@
 import { Link, createFileRoute, redirect } from '@tanstack/react-router'
 import { Building2, LockKeyhole, Mail, UserRound } from 'lucide-react'
 import * as React from 'react'
-import { getInstallationState, setupOwnerAccount } from '~/server/auth'
+import { getInstallationState, registerAccount, setupOwnerAccount } from '~/server/auth'
 
 export const Route = createFileRoute('/register')({
   beforeLoad: async () => {
     const installation = await getInstallationState()
-    if (!installation?.needsSetup) {
+    // Accessible pour l'installation initiale, ou quand l'inscription publique est ouverte.
+    if (!installation?.needsSetup && !installation?.allowRegistration) {
       throw redirect({ to: '/login', search: { redirect: undefined } })
     }
+    return { needsSetup: Boolean(installation?.needsSetup) }
   },
   component: RegisterPage,
 })
 
 function RegisterPage() {
+  const { needsSetup } = Route.useRouteContext()
   const [companyName, setCompanyName] = React.useState('')
   const [ownerName, setOwnerName] = React.useState('')
   const [ownerEmail, setOwnerEmail] = React.useState('')
@@ -26,7 +29,8 @@ function RegisterPage() {
     setIsSubmitting(true)
     setError(null)
 
-    const result = await setupOwnerAccount({
+    const submit = needsSetup ? setupOwnerAccount : registerAccount
+    const result = await submit({
       data: {
         ownerName,
         ownerEmail,
@@ -52,8 +56,12 @@ function RegisterPage() {
         <BrandMark />
 
         <div className="mt-8">
-          <h1 className="text-2xl font-bold text-slate-950 dark:text-slate-50">Creer l'espace</h1>
-          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Renseignez les informations de base.</p>
+          <h1 className="text-2xl font-bold text-slate-950 dark:text-slate-50">
+            {needsSetup ? "Creer l'espace" : 'Creer un compte'}
+          </h1>
+          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+            {needsSetup ? 'Renseignez les informations de base.' : 'Creez votre espace entreprise.'}
+          </p>
         </div>
 
         <div className="mt-7 grid gap-4">
@@ -74,7 +82,7 @@ function RegisterPage() {
           disabled={isSubmitting}
           className="mt-6 inline-flex h-11 w-full items-center justify-center rounded bg-slate-950 px-4 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-emerald-400 dark:text-slate-950 dark:hover:bg-emerald-300"
         >
-          {isSubmitting ? 'Creation...' : "Creer l'espace"}
+          {isSubmitting ? 'Creation...' : needsSetup ? "Creer l'espace" : 'Creer le compte'}
         </button>
 
         <p className="mt-6 text-center text-sm text-slate-500 dark:text-slate-400">
