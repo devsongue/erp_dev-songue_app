@@ -73,6 +73,10 @@ function CompanyLayout() {
   )
 }
 
+// Liens de navigation reserves aux gestionnaires (permission company.manage).
+// Les autres membres ne les voient pas ; le serveur reste la garde ultime.
+const adminOnlyPaths = new Set(['/users'])
+
 const mobileLinks = [
   { path: '/pos/register', label: 'Caisse' },
   { path: '/dashboard', label: 'Resume' },
@@ -206,6 +210,23 @@ function ErpAppShell({ children, companySlug }: { children: React.ReactNode, com
   const dropdownRef = React.useRef<HTMLDivElement>(null)
   const auth = Route.useRouteContext()
   const currentSubPath = `/${pathname.split('/').filter(Boolean).slice(1).join('/')}`
+  const canManage = Boolean(
+    auth.user?.isOwner || auth.activeCompany?.permissions?.includes('company.manage'),
+  )
+  const navigation = React.useMemo(() => {
+    if (canManage) return erpNavigation
+    return erpNavigation
+      .map((group) => ({
+        ...group,
+        sections: group.sections
+          .map((section) => ({
+            ...section,
+            children: section.children.filter((child) => !adminOnlyPaths.has(child.path)),
+          }))
+          .filter((section) => section.children.length > 0),
+      }))
+      .filter((group) => group.sections.length > 0)
+  }, [canManage])
 
   function buildCompanyPath(nextCompanySlug: string) {
     const parts = pathname.split('/').filter(Boolean)
@@ -313,7 +334,7 @@ function ErpAppShell({ children, companySlug }: { children: React.ReactNode, com
           </div>
 
           <div className="mt-5 space-y-4">
-            {erpNavigation.map((group) => (
+            {navigation.map((group) => (
               <div key={group.label}>
                 <h2 className="px-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">
                   {group.label}

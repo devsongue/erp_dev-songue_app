@@ -34,14 +34,27 @@ const settingsTabs = [
 
 function SettingsPage() {
   const { companySlug } = Route.useParams()
-  const [activeTab, setActiveTab] = React.useState<SettingsTab>('general')
+  // Permissions issues du contexte de route parent ($companySlug) : evite un
+  // appel reseau et permet de cacher les onglets d'administration.
+  const context = Route.useRouteContext() as {
+    user?: { isOwner?: boolean } | null
+    activeCompany?: { permissions?: string[] } | null
+  }
+  const canManage = Boolean(
+    context.user?.isOwner || context.activeCompany?.permissions?.includes('company.manage'),
+  )
+  // L'onglet "Securite" gere le compte personnel (mot de passe, 2FA, sessions) :
+  // toujours accessible. Les autres onglets sont reserves aux gestionnaires.
+  const visibleTabs = canManage ? settingsTabs : settingsTabs.filter((tab) => tab.key === 'security')
+  const [activeTab, setActiveTab] = React.useState<SettingsTab>(canManage ? 'general' : 'security')
   const [data, setData] = React.useState<AdministrationData | null>(null)
   const [message, setMessage] = React.useState<string | null>(null)
 
   const refresh = React.useCallback(async () => {
+    if (!canManage) return
     const administrationData = await getCompanyAdministration({ data: { companySlug } })
     setData(administrationData)
-  }, [companySlug])
+  }, [companySlug, canManage])
 
   React.useEffect(() => {
     void refresh()
@@ -120,7 +133,7 @@ function SettingsPage() {
       <div className="flex flex-col gap-8 lg:flex-row">
         <nav className="shrink-0 lg:w-60">
           <div className="space-y-1">
-            {settingsTabs.map((tab) => (
+            {visibleTabs.map((tab) => (
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
@@ -137,7 +150,10 @@ function SettingsPage() {
         </nav>
 
         <div className="min-w-0 flex-1">
-          {data === null ? (
+          {activeTab === 'security' ? (
+            // Onglet personnel : independant des donnees d'administration.
+            <SecuritySettings onMessage={setMessage} />
+          ) : data === null ? (
             <SettingsSection title="Chargement" description="Recuperation des informations d'administration.">
               <p className="text-sm text-slate-500">Patiente un instant...</p>
             </SettingsSection>
@@ -149,7 +165,6 @@ function SettingsPage() {
             <>
               {activeTab === 'general' && <GeneralSettings companySlug={companySlug} data={data} onSubmit={handleUpdateCompany} />}
               {activeTab === 'users' && <UsersSettings companySlug={companySlug} data={data} onMessage={setMessage} onRefresh={refresh} />}
-              {activeTab === 'security' && <SecuritySettings onMessage={setMessage} />}
               {activeTab === 'roles' && <RolesSettings data={data} onSubmit={handleCreateRole} />}
               {activeTab === 'notifications' && <NotificationsSettings />}
             </>

@@ -382,6 +382,11 @@ export const getCompanyAdministration = createServerFn({ method: 'GET' })
     if (!auth.user || !companyAccess) {
       return { ok: false, message: 'Acces refuse.', users: [], roles: [], permissions: [] }
     }
+    // Le panneau d'administration expose la liste des membres (emails), les roles
+    // et les invitations : reserve aux gestionnaires, pas a tout membre de l'entreprise.
+    if (!auth.user.isOwner && !companyAccess.permissions.includes('company.manage')) {
+      return { ok: false, message: 'Permission insuffisante.', users: [], roles: [], permissions: [] }
+    }
 
     const company = await prisma.company.findUnique({
       where: { slug: data.companySlug },
