@@ -136,7 +136,7 @@ export function GlobalSearch({ companySlug }: { companySlug: string }) {
               })}
             </div>
           ) : (
-            <div className="px-4 py-4 text-sm font-semibold text-slate-500">Aucun resultat trouve.</div>
+            <div className="px-4 py-4 text-sm font-semibold text-slate-500">Aucun résultat trouve.</div>
           )}
         </div>
       ) : null}

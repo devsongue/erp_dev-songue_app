@@ -12,7 +12,7 @@ const documentPrefixes = {
 // Numerotation continue par entreprise, type de document et annee
 // (FAC-2026-00001...). L'upsert SQL est atomique : deux ventes simultanees ne
 // peuvent pas obtenir le meme numero. A appeler dans la transaction qui cree le
-// document, pour qu'un echec n'en consomme pas un (pas de trou).
+// document, pour qu'un échec n'en consomme pas un (pas de trou).
 async function nextDocumentReference(tx: Prisma.TransactionClient, companyId: string, kind: keyof typeof documentPrefixes) {
   const year = new Date().getFullYear()
   const key = `${kind}:${year}`
@@ -56,7 +56,7 @@ async function ensureWarehouse(companyId: string) {
   return prisma.warehouse.create({
     data: {
       companyId,
-      name: 'Depot principal',
+      name: 'Dépôt principal',
       location: 'Boutique',
       capacity: 1000,
       usedCapacity: 0,
@@ -73,7 +73,7 @@ async function ensureQuoteSettings(companyId: string, companyName: string) {
       companyId,
       legalName: companyName,
       footerNote: 'Merci pour votre confiance.',
-      paymentTerms: 'Validite 30 jours. Paiement selon accord commercial.',
+      paymentTerms: 'Validité 30 jours. Paiement selon accord commercial.',
       accentColor: '#0f172a',
       nextNumber: 1,
     },
@@ -157,7 +157,7 @@ export const createCatalogItem = createServerFn({ method: 'POST' })
       const category = await prisma.category.findFirst({
         where: { id: data.categoryId, companyId: company.id, type: data.type },
       })
-      if (!category) throw new Error('Categorie invalide pour ce type.')
+      if (!category) throw new Error('Catégorie invalide pour ce type.')
     }
 
     const item = await prisma.catalogItem.create({
@@ -250,7 +250,7 @@ export const updateCatalogItem = createServerFn({ method: 'POST' })
     if (!existing) throw new Error('Article introuvable.')
     if (data.categoryId) {
       const category = await prisma.category.findFirst({ where: { id: data.categoryId, companyId: company.id, type: data.type } })
-      if (!category) throw new Error('Categorie invalide pour ce type.')
+      if (!category) throw new Error('Catégorie invalide pour ce type.')
     }
     const nextStock = data.type === 'Product' ? Math.round(data.stock ?? 0) : null
     const stockDelta = (nextStock ?? 0) - (existing.stock ?? 0)
@@ -468,7 +468,7 @@ export const saveQuoteSettings = createServerFn({ method: 'POST' })
         email: data.email?.trim() || null,
         taxId: data.taxId?.trim() || null,
         footerNote: data.footerNote?.trim() || 'Merci pour votre confiance.',
-        paymentTerms: data.paymentTerms?.trim() || 'Validite 30 jours. Paiement selon accord commercial.',
+        paymentTerms: data.paymentTerms?.trim() || 'Validité 30 jours. Paiement selon accord commercial.',
         accentColor: data.accentColor?.trim() || '#0f172a',
       },
     })
@@ -519,7 +519,7 @@ export const updateQuote = createServerFn({ method: 'POST' })
     const { company, user } = await getCompanyContext(data.companySlug, 'invoice.update')
     const existing = await prisma.quote.findFirst({ where: { id: data.quoteId, companyId: company.id } })
     if (!existing) throw new Error('Devis introuvable.')
-    if (existing.status === 'Accepted') throw new Error('Un devis accepte doit etre duplique ou annule, pas modifie.')
+    if (existing.status === 'Accepted') throw new Error('Un devis accepte doit être duplique ou annule, pas modifie.')
     await assertCompanyCustomer(company.id, data.customerId)
     await assertCompanyItems(company.id, data.lines.map((line) => line.itemId))
     const subtotal = data.lines.reduce((sum, line) => sum + Math.round(line.quantity * line.unitPrice), 0)
@@ -544,7 +544,7 @@ export const deleteQuote = createServerFn({ method: 'POST' })
     const { company, user } = await getCompanyContext(data.companySlug, 'invoice.delete')
     const quote = await prisma.quote.findFirst({ where: { id: data.quoteId, companyId: company.id } })
     if (!quote) throw new Error('Devis introuvable.')
-    if (quote.status === 'Accepted') throw new Error('Un devis accepte ne peut pas etre supprime.')
+    if (quote.status === 'Accepted') throw new Error('Un devis accepte ne peut pas être supprime.')
     await prisma.$transaction(async (tx) => {
       await tx.auditLog.create({ data: { companyId: company.id, actorId: user.id, action: 'quote.deleted', entity: 'Quote', entityId: quote.id, metadata: JSON.stringify({ reference: quote.reference }) } })
       await tx.quote.delete({ where: { id: quote.id } })
@@ -613,7 +613,7 @@ export const deleteCrmDeal = createServerFn({ method: 'POST' })
   .handler(async ({ data }) => {
     const { company, user } = await getCompanyContext(data.companySlug, 'customer.delete')
     const deal = await prisma.deal.findFirst({ where: { id: data.dealId, companyId: company.id } })
-    if (!deal) throw new Error('Opportunite introuvable.')
+    if (!deal) throw new Error('Opportunité introuvable.')
     await prisma.$transaction(async (tx) => { await tx.auditLog.create({ data: { companyId: company.id, actorId: user.id, action: 'deal.deleted', entity: 'Deal', entityId: deal.id, metadata: JSON.stringify({ title: deal.title }) } }); await tx.deal.delete({ where: { id: deal.id } }) })
     return { ok: true }
   })
@@ -809,7 +809,7 @@ export const createSalesInvoice = createServerFn({ method: 'POST' })
     await assertCompanyItems(company.id, data.lines.map((line) => line.itemId))
     const customerId = await resolveInvoiceCustomer(company.id, data.customerId, data.customerName)
     const totals = computeDocumentTotals(data.lines, data.discountRate, data.taxRate)
-    if (data.issue && totals.total <= 0) throw new Error('Une facture emise doit avoir un montant positif.')
+    if (data.issue && totals.total <= 0) throw new Error('Une facture émise doit avoir un montant positif.')
 
     return prisma.$transaction(async (tx) => {
       const number = data.issue ? await nextDocumentReference(tx, company.id, 'sales_invoice') : draftNumber()
@@ -845,11 +845,11 @@ export const updateSalesInvoice = createServerFn({ method: 'POST' })
     const { company, user } = await getCompanyContext(data.companySlug, 'invoice.update')
     const existing = await prisma.salesInvoice.findFirst({ where: { id: data.invoiceId, companyId: company.id } })
     if (!existing) throw new Error('Facture introuvable.')
-    if (existing.status !== 'Draft') throw new Error('Seul un brouillon peut etre modifie. Annule la facture pour en refaire une.')
+    if (existing.status !== 'Draft') throw new Error('Seul un brouillon peut être modifie. Annule la facture pour en refaire une.')
     await assertCompanyItems(company.id, data.lines.map((line) => line.itemId))
     const customerId = await resolveInvoiceCustomer(company.id, data.customerId, data.customerName)
     const totals = computeDocumentTotals(data.lines, data.discountRate, data.taxRate)
-    if (data.issue && totals.total <= 0) throw new Error('Une facture emise doit avoir un montant positif.')
+    if (data.issue && totals.total <= 0) throw new Error('Une facture émise doit avoir un montant positif.')
 
     return prisma.$transaction(async (tx) => {
       await tx.salesInvoiceLine.deleteMany({ where: { invoiceId: existing.id } })
@@ -885,8 +885,8 @@ export const issueSalesInvoice = createServerFn({ method: 'POST' })
     const { company, user } = await getCompanyContext(data.companySlug, 'invoice.update')
     const existing = await prisma.salesInvoice.findFirst({ where: { id: data.invoiceId, companyId: company.id } })
     if (!existing) throw new Error('Facture introuvable.')
-    if (existing.status !== 'Draft') throw new Error('Cette facture est deja emise.')
-    if (existing.totalCents <= 0) throw new Error('Une facture emise doit avoir un montant positif.')
+    if (existing.status !== 'Draft') throw new Error('Cette facture est déjà émise.')
+    if (existing.totalCents <= 0) throw new Error('Une facture émise doit avoir un montant positif.')
     return prisma.$transaction(async (tx) => {
       const now = new Date()
       const number = await nextDocumentReference(tx, company.id, 'sales_invoice')
@@ -910,22 +910,22 @@ export const recordSalesInvoicePayment = createServerFn({ method: 'POST' })
     const { company, user } = await getCompanyContext(data.companySlug, 'invoice.update')
     const invoice = await prisma.salesInvoice.findFirst({ where: { id: data.invoiceId, companyId: company.id }, include: { customer: true } })
     if (!invoice) throw new Error('Facture introuvable.')
-    if (!['Sent', 'PartiallyPaid', 'Overdue'].includes(invoice.status)) throw new Error('Seule une facture emise et non soldee peut recevoir un paiement.')
+    if (!['Sent', 'PartiallyPaid', 'Overdue'].includes(invoice.status)) throw new Error('Seule une facture émise et non soldee peut recevoir un paiement.')
     const account = await prisma.bankAccount.findFirst({ where: { id: data.accountId, companyId: company.id } })
     if (!account) throw new Error('Compte introuvable.')
     const amount = Math.round(data.amount)
     const remaining = invoice.totalCents - invoice.paidCents
-    if (amount > remaining) throw new Error('Le montant depasse le reste a payer.')
+    if (amount > remaining) throw new Error('Le montant depasse le reste à payer.')
     const date = data.date ? new Date(data.date) : new Date()
 
     return prisma.$transaction(async (tx) => {
-      // Garde concurrente : le paiement n'est accepte que si le deja-paye n'a
+      // Garde concurrente : le paiement n'est accepte que si le déjà-paye n'a
       // pas change entre la lecture et l'ecriture.
       const paid = await tx.salesInvoice.updateMany({
         where: { id: invoice.id, paidCents: invoice.paidCents },
         data: { paidCents: { increment: amount }, status: amount === remaining ? 'Paid' : 'PartiallyPaid' },
       })
-      if (!paid.count) throw new Error('La facture a ete modifiee entre-temps. Recharge la page.')
+      if (!paid.count) throw new Error('La facture a été modifiée entre-temps. Recharge la page.')
       const transaction = await tx.transaction.create({
         data: {
           companyId: company.id, accountId: account.id, date,
@@ -951,9 +951,9 @@ export const cancelSalesInvoice = createServerFn({ method: 'POST' })
     const { company, user } = await getCompanyContext(data.companySlug, 'invoice.update')
     const invoice = await prisma.salesInvoice.findFirst({ where: { id: data.invoiceId, companyId: company.id } })
     if (!invoice) throw new Error('Facture introuvable.')
-    if (invoice.status === 'Draft') throw new Error('Un brouillon se supprime, il ne s annule pas.')
-    if (invoice.status === 'Cancelled') throw new Error('Cette facture est deja annulee.')
-    if (invoice.paidCents > 0) throw new Error('Cette facture a deja recu des paiements : elle ne peut pas etre annulee.')
+    if (invoice.status === 'Draft') throw new Error('Un brouillon se supprime, il ne s’annule pas.')
+    if (invoice.status === 'Cancelled') throw new Error('Cette facture est déjà annulée.')
+    if (invoice.paidCents > 0) throw new Error('Cette facture a déjà reçu des paiements : elle ne peut pas être annulée.')
     return prisma.$transaction(async (tx) => {
       const result = await tx.salesInvoice.update({ where: { id: invoice.id }, data: { status: 'Cancelled', cancelledAt: new Date() }, include: invoiceInclude })
       await tx.auditLog.create({ data: { companyId: company.id, actorId: user.id, action: 'invoice.cancelled', entity: 'SalesInvoice', entityId: invoice.id, metadata: JSON.stringify({ number: invoice.number }) } })
@@ -967,7 +967,7 @@ export const deleteSalesInvoice = createServerFn({ method: 'POST' })
     const { company, user } = await getCompanyContext(data.companySlug, 'invoice.delete')
     const invoice = await prisma.salesInvoice.findFirst({ where: { id: data.invoiceId, companyId: company.id } })
     if (!invoice) throw new Error('Facture introuvable.')
-    if (invoice.status !== 'Draft') throw new Error('Une facture emise ne peut pas etre supprimee : annule-la.')
+    if (invoice.status !== 'Draft') throw new Error('Une facture émise ne peut pas être supprimée : annule-la.')
     await prisma.$transaction(async (tx) => {
       await tx.auditLog.create({ data: { companyId: company.id, actorId: user.id, action: 'invoice.deleted', entity: 'SalesInvoice', entityId: invoice.id, metadata: JSON.stringify({ number: invoice.number }) } })
       await tx.salesInvoice.delete({ where: { id: invoice.id } })
@@ -984,8 +984,8 @@ export const createInvoiceFromQuote = createServerFn({ method: 'POST' })
       include: { lines: { orderBy: { sortOrder: 'asc' } }, invoices: { where: { status: { not: 'Cancelled' } }, select: { id: true } } },
     })
     if (!quote) throw new Error('Devis introuvable.')
-    if (['Rejected', 'Expired'].includes(quote.status)) throw new Error('Un devis refuse ou expire ne peut pas etre facture.')
-    if (quote.invoices.length) throw new Error('Ce devis a deja ete facture.')
+    if (['Rejected', 'Expired'].includes(quote.status)) throw new Error('Un devis refuse ou expire ne peut pas être facture.')
+    if (quote.invoices.length) throw new Error('Ce devis a déjà été facture.')
     const totals = computeDocumentTotals(quote.lines, quote.discountRate, quote.taxRate)
 
     return prisma.$transaction(async (tx) => {
@@ -1169,7 +1169,7 @@ export const updatePosTicket = createServerFn({ method: 'POST' })
     })
     if (!ticket?.transaction) throw new Error('Ticket modifiable introuvable.')
     const quantities = new Map(data.lines.map((line) => [line.lineId, line.quantity]))
-    if (quantities.size !== data.lines.length || quantities.size !== ticket.lines.length || data.lines.some((line) => !ticket.lines.some((existing) => existing.id === line.lineId))) throw new Error('Toutes les lignes du ticket doivent etre conservees.')
+    if (quantities.size !== data.lines.length || quantities.size !== ticket.lines.length || data.lines.some((line) => !ticket.lines.some((existing) => existing.id === line.lineId))) throw new Error('Toutes les lignes du ticket doivent être conservees.')
     if (data.customerId && !await prisma.customer.findFirst({ where: { id: data.customerId, companyId: company.id } })) throw new Error('Client introuvable.')
 
     const updatedLines = ticket.lines.filter((line) => quantities.has(line.id)).map((line) => ({ ...line, nextQuantity: quantities.get(line.id)! }))
@@ -1331,7 +1331,7 @@ export const deleteCustomer = createServerFn({ method: 'POST' })
     if (history.salesInvoices || history.quotes || history.posTickets || history.deals || history.orders) {
       // Supprimer ferait perdre le lien client sur des documents deja emis
       // (ou les opportunites, supprimees en cascade).
-      throw new Error(`${customer.name} a deja des documents (factures, devis, tickets ou opportunites) : il ne peut pas etre supprime.`)
+      throw new Error(`${customer.name} a déjà des documents (factures, devis, tickets ou opportunités) : il ne peut pas être supprime.`)
     }
     await prisma.$transaction(async (tx) => {
       await tx.auditLog.create({ data: { companyId: company.id, actorId: user.id, action: 'customer.deleted', entity: 'Customer', entityId: customer.id, metadata: JSON.stringify({ name: customer.name }) } })
@@ -1396,7 +1396,7 @@ export const deleteBankAccount = createServerFn({ method: 'POST' })
     // Les transactions et paiements sont supprimes en cascade avec le compte :
     // un compte qui a servi doit etre archive pour garder l'historique.
     if (account._count.payments || account._count.transactions) {
-      throw new Error('Ce compte a deja des operations : archive-le plutot que de le supprimer.')
+      throw new Error('Ce compte a déjà des opérations : archive-le plutot que de le supprimer.')
     }
     await prisma.$transaction(async (tx) => {
       await tx.auditLog.create({ data: { companyId: company.id, actorId: user.id, action: 'bank_account.deleted', entity: 'BankAccount', entityId: account.id, metadata: JSON.stringify({ name: account.name }) } })
@@ -1446,12 +1446,12 @@ async function findManualTransaction(companyId: string, transactionId: string) {
     where: { id: transactionId, companyId },
     include: { _count: { select: { payments: true } }, posTicket: { select: { id: true } } },
   })
-  if (!transaction) throw new Error('Operation introuvable.')
+  if (!transaction) throw new Error('Opération introuvable.')
   if (transaction._count.payments || transaction.posTicket) {
-    throw new Error('Cette operation vient d une facture, d un achat ou de la caisse : corrige-la depuis le document d origine.')
+    throw new Error('Cette opération vient d’une facture, d’un achat ou de la caisse : corrige-la depuis le document d’origine.')
   }
   if (!['Income', 'Expense'].includes(transaction.type)) {
-    throw new Error('Les virements et soldes d ouverture ne se modifient pas.')
+    throw new Error('Les virements et soldes d’ouverture ne se modifient pas.')
   }
   return transaction
 }
@@ -1508,7 +1508,7 @@ export const deleteFinanceTransaction = createServerFn({ method: 'POST' })
 
 async function findPurchaseInvoice(companyId: string, invoiceId: string) {
   const invoice = await prisma.purchaseInvoice.findFirst({ where: { id: invoiceId, companyId } })
-  if (!invoice) throw new Error('Facture d achat introuvable.')
+  if (!invoice) throw new Error('Facture d’achat introuvable.')
   return invoice
 }
 
@@ -1527,8 +1527,8 @@ export const updatePurchaseInvoice = createServerFn({ method: 'POST' })
   .handler(async ({ data }) => {
     const { company, user } = await getCompanyContext(data.companySlug, 'finance.manage')
     const invoice = await findPurchaseInvoice(company.id, data.invoiceId)
-    if (invoice.paidCents > 0) throw new Error('Cette facture a deja des paiements : elle ne peut plus etre modifiee.')
-    if (invoice.status === 'Cancelled') throw new Error('Une facture annulee ne se modifie pas.')
+    if (invoice.paidCents > 0) throw new Error('Cette facture a déjà des paiements : elle ne peut plus être modifiée.')
+    if (invoice.status === 'Cancelled') throw new Error('Une facture annulée ne se modifie pas.')
     const vendor = await prisma.vendor.findFirst({ where: { companyId: company.id, name: data.vendorName } })
     const updated = await prisma.purchaseInvoice.update({
       where: { id: invoice.id },
@@ -1560,12 +1560,12 @@ export const recordPurchaseInvoicePayment = createServerFn({ method: 'POST' })
   .handler(async ({ data }) => {
     const { company, user } = await getCompanyContext(data.companySlug, 'finance.manage')
     const invoice = await findPurchaseInvoice(company.id, data.invoiceId)
-    if (!['Pending', 'PartiallyPaid', 'Overdue'].includes(invoice.status)) throw new Error('Cette facture n a plus rien a payer.')
+    if (!['Pending', 'PartiallyPaid', 'Overdue'].includes(invoice.status)) throw new Error('Cette facture n’a plus rien à payer.')
     const account = await prisma.bankAccount.findFirst({ where: { id: data.accountId, companyId: company.id } })
     if (!account) throw new Error('Compte introuvable.')
     const amount = Math.round(data.amount)
     const remaining = invoice.totalCents - invoice.paidCents
-    if (amount > remaining) throw new Error('Le montant depasse le reste a payer.')
+    if (amount > remaining) throw new Error('Le montant depasse le reste à payer.')
     const date = data.date ? new Date(data.date) : new Date()
 
     return prisma.$transaction(async (tx) => {
@@ -1573,7 +1573,7 @@ export const recordPurchaseInvoicePayment = createServerFn({ method: 'POST' })
         where: { id: invoice.id, paidCents: invoice.paidCents },
         data: { paidCents: { increment: amount }, status: amount === remaining ? 'Paid' : 'PartiallyPaid' },
       })
-      if (!paid.count) throw new Error('La facture a ete modifiee entre-temps. Recharge la page.')
+      if (!paid.count) throw new Error('La facture a été modifiée entre-temps. Recharge la page.')
       const transaction = await tx.transaction.create({
         data: { companyId: company.id, accountId: account.id, date, description: `${invoice.vendorName} - ${invoice.reference}`, amount, type: 'Expense', category: invoice.category, reference: invoice.reference, status: 'Completed' },
       })
@@ -1591,7 +1591,7 @@ export const cancelPurchaseInvoice = createServerFn({ method: 'POST' })
   .handler(async ({ data }) => {
     const { company, user } = await getCompanyContext(data.companySlug, 'finance.manage')
     const invoice = await findPurchaseInvoice(company.id, data.invoiceId)
-    if (invoice.paidCents > 0) throw new Error('Cette facture a deja des paiements : elle ne peut pas etre annulee.')
+    if (invoice.paidCents > 0) throw new Error('Cette facture a déjà des paiements : elle ne peut pas être annulée.')
     await prisma.$transaction(async (tx) => {
       await tx.purchaseInvoice.update({ where: { id: invoice.id }, data: { status: 'Cancelled' } })
       await tx.auditLog.create({ data: { companyId: company.id, actorId: user.id, action: 'purchase_invoice.cancelled', entity: 'PurchaseInvoice', entityId: invoice.id, metadata: JSON.stringify({ reference: invoice.reference }) } })
@@ -1606,7 +1606,7 @@ export const deletePurchaseInvoice = createServerFn({ method: 'POST' })
     const invoice = await findPurchaseInvoice(company.id, data.invoiceId)
     // Les paiements sont supprimes en cascade avec la facture, mais pas leurs
     // transactions ni l'effet sur le solde : interdit des qu'un paiement existe.
-    if (invoice.paidCents > 0) throw new Error('Cette facture a deja des paiements : elle ne peut pas etre supprimee.')
+    if (invoice.paidCents > 0) throw new Error('Cette facture a déjà des paiements : elle ne peut pas être supprimée.')
     await prisma.$transaction(async (tx) => {
       await tx.auditLog.create({ data: { companyId: company.id, actorId: user.id, action: 'purchase_invoice.deleted', entity: 'PurchaseInvoice', entityId: invoice.id, metadata: JSON.stringify({ reference: invoice.reference, total: invoice.totalCents }) } })
       await tx.purchaseInvoice.delete({ where: { id: invoice.id } })
@@ -1668,7 +1668,7 @@ export const deleteEmployee = createServerFn({ method: 'POST' })
   .handler(async ({ data }) => {
     const { company, user } = await getCompanyContext(data.companySlug, 'employee.delete')
     const employee = await prisma.employee.findFirst({ where: { id: data.employeeId, companyId: company.id } })
-    if (!employee) throw new Error('Employe introuvable.')
+    if (!employee) throw new Error('Employé introuvable.')
     await prisma.$transaction(async (tx) => {
       await tx.auditLog.create({ data: { companyId: company.id, actorId: user.id, action: 'employee.deleted', entity: 'Employee', entityId: employee.id, metadata: JSON.stringify({ name: `${employee.firstName} ${employee.lastName}` }) } })
       await tx.employee.delete({ where: { id: employee.id } })
@@ -1688,7 +1688,7 @@ export const updateCatalogCategory = createServerFn({ method: 'POST' })
   .handler(async ({ data }) => {
     const company = await getCompany(data.companySlug, 'inventory.manage')
     const duplicate = await prisma.category.findFirst({ where: { companyId: company.id, name: data.name, id: { not: data.categoryId } } })
-    if (duplicate) throw new Error('Une autre categorie porte deja ce nom.')
+    if (duplicate) throw new Error('Une autre catégorie porte déjà ce nom.')
     return prisma.category.update({ where: { id: data.categoryId, companyId: company.id }, data: { name: data.name, color: data.color } })
   })
 
@@ -1697,8 +1697,8 @@ export const deleteCatalogCategory = createServerFn({ method: 'POST' })
   .handler(async ({ data }) => {
     const { company, user } = await getCompanyContext(data.companySlug, 'inventory.manage')
     const category = await prisma.category.findFirst({ where: { id: data.categoryId, companyId: company.id }, include: { _count: { select: { items: true } } } })
-    if (!category) throw new Error('Categorie introuvable.')
-    // Les articles ne sont pas supprimes : ils passent simplement "sans categorie".
+    if (!category) throw new Error('Catégorie introuvable.')
+    // Les articles ne sont pas supprimes : ils passent simplement "sans catégorie".
     await prisma.$transaction(async (tx) => {
       await tx.auditLog.create({ data: { companyId: company.id, actorId: user.id, action: 'category.deleted', entity: 'Category', entityId: category.id, metadata: JSON.stringify({ name: category.name, items: category._count.items }) } })
       await tx.category.delete({ where: { id: category.id } })

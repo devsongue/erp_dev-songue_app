@@ -52,10 +52,10 @@ function InventoryDashboard() {
       </div>
 
       <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-4">
-        <StatCard title="Articles en stock" value={totalStockItems.toString()} icon={Boxes} detail="Quantite disponible" />
+        <StatCard title="Articles en stock" value={totalStockItems.toString()} icon={Boxes} detail="Quantité disponible" />
         <StatCard title="Valeur stock" value={formatMoney(stockValue)} icon={PackageCheck} detail="Cout d'achat estime" />
         <StatCard title="Alertes" value={priorityProducts.length.toString()} icon={AlertTriangle} detail={`${outOfStock.length} ruptures`} alert={priorityProducts.length > 0} />
-        <StatCard title="A commander" value={formatMoney(reorderEstimate)} icon={Truck} detail={supplierText} alert={reorderEstimate > 0} />
+        <StatCard title="À commander" value={formatMoney(reorderEstimate)} icon={Truck} detail={supplierText} alert={reorderEstimate > 0} />
       </div>
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1fr_380px]">
@@ -79,7 +79,7 @@ function InventoryDashboard() {
                     <th className="px-5 py-3 font-semibold">Produit</th>
                     <th className="px-5 py-3 text-right font-semibold">Stock</th>
                     <th className="px-5 py-3 text-right font-semibold">Seuil</th>
-                    <th className="px-5 py-3 text-right font-semibold">A commander</th>
+                    <th className="px-5 py-3 text-right font-semibold">À commander</th>
                     <th className="px-5 py-3 text-right font-semibold">Etat</th>
                   </tr>
                 </thead>

@@ -86,7 +86,7 @@ export const createImageUploadUrl = createServerFn({ method: 'POST' })
     try {
       access = await requireCompanyAccess(data.companySlug)
     } catch {
-      return { ok: false as const, message: 'Acces refuse.' }
+      return { ok: false as const, message: 'Accès refuse.' }
     }
 
     const extension = allowedContentTypes[data.contentType]

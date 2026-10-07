@@ -30,7 +30,7 @@ function DashboardPage() {
     },
     {
       title: 'Ajouter un produit',
-      text: 'Creer ou modifier un article vendu.',
+      text: 'Créer ou modifier un article vendu.',
       icon: Boxes,
       to: '/$companySlug/products-services' as const,
     },
@@ -46,7 +46,7 @@ function DashboardPage() {
     <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
       <div className="mb-6">
         <p className="text-sm font-semibold text-slate-500">{activeCompany.name}</p>
-        <h1 className="mt-1 text-2xl font-bold text-slate-950">Resume du jour</h1>
+        <h1 className="mt-1 text-2xl font-bold text-slate-950">Résumé du jour</h1>
         <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
           Les chiffres utiles pour piloter les ventes, le stock et les paiements sans bruit.
         </p>
@@ -54,7 +54,7 @@ function DashboardPage() {
 
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <MetricCard icon={Banknote} label="Argent disponible" value={formatMoney(balance)} />
-        <MetricCard icon={ReceiptText} label="Ventes enregistrees" value={formatMoney(monthIncome)} />
+        <MetricCard icon={ReceiptText} label="Ventes enregistrées" value={formatMoney(monthIncome)} />
         <MetricCard icon={Boxes} label="Stock bas" value={lowStockCount.toString()} />
         <MetricCard icon={Contact} label="Clients a suivre" value={openDealsCount.toString()} />
       </section>
@@ -77,7 +77,7 @@ function DashboardPage() {
               <ActionRow
                 key={transaction.id}
                 title={transaction.description}
-                text={`Paiement a verifier: ${formatMoney(transaction.amount)}`}
+                text={`Paiement à vérifier: ${formatMoney(transaction.amount)}`}
                 to={`/${companySlug}/finance`}
               />
             ))}

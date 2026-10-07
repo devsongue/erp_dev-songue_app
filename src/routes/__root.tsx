@@ -43,6 +43,8 @@ const TanStackRouterDevtools = import.meta.env.PROD
       })),
     )
 
+const themeBootstrap = `(function(){try{var s=localStorage.getItem('erp-theme');var d=s?s==='dark':window.matchMedia('(prefers-color-scheme: dark)').matches;var c=document.documentElement.classList;c.toggle('theme-dark',d);c.toggle('theme-light',!d);document.documentElement.style.colorScheme=d?'dark':'light'}catch(e){}})()`
+
 function RootDocument({ children }: { children: React.ReactNode }) {
   // Apres un redeploy, les chunks hashes changent de nom : un onglet deja ouvert
   // qui charge une route en lazy demande un ancien fichier qui n'existe plus (404)
@@ -63,8 +65,11 @@ function RootDocument({ children }: { children: React.ReactNode }) {
   }, [])
 
   return (
-    <html>
+    <html lang="fr" suppressHydrationWarning>
       <head>
+        {/* Theme pose avant le premier rendu (pas de flash) : choix memorise,
+            sinon reglage du telephone / de l'ordinateur, sinon clair. */}
+        <script dangerouslySetInnerHTML={{ __html: themeBootstrap }} />
         <HeadContent />
       </head>
       <body>

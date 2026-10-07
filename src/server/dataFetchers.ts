@@ -137,7 +137,7 @@ export const getQuoteData = createServerFn({ method: 'GET' })
       email: null,
       taxId: null,
       footerNote: 'Merci pour votre confiance.',
-      paymentTerms: 'Validite 30 jours. Paiement selon accord commercial.',
+      paymentTerms: 'Validité 30 jours. Paiement selon accord commercial.',
       accentColor: '#0f172a',
       nextNumber: 1,
       createdAt: company.createdAt,
@@ -337,7 +337,7 @@ export const getPosReportData = createServerFn({ method: 'GET' })
     const start = new Date(data.start)
     const end = new Date(data.end)
     if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || start > end) {
-      throw new Error('Periode invalide.')
+      throw new Error('Période invalide.')
     }
 
     const where = {

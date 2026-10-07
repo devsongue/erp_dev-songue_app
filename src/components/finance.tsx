@@ -131,7 +131,7 @@ export function FinanceFlowPage({ companySlug, data, kind }: { companySlug: stri
   }, [rows])
 
   function exportCsv() {
-    downloadCsv(income ? 'entrees.csv' : 'depenses.csv', rows, [
+    downloadCsv(income ? 'entrées.csv' : 'dépenses.csv', rows, [
       { header: 'Date', value: (tx) => formatDate(tx.date) },
       { header: 'Libellé', value: (tx) => tx.description },
       { header: 'Catégorie', value: (tx) => tx.category },
@@ -239,7 +239,7 @@ export function TransactionFormModal({ companySlug, type, accounts, transaction,
     >
       <form onSubmit={submit} className="grid gap-4 sm:grid-cols-2">
         <Field label="Libellé" className="sm:col-span-2">
-          <input name="description" required autoFocus defaultValue={transaction?.description ?? ''} placeholder={type === 'Income' ? 'Ex. : apport du gérant' : 'Ex. : loyer d octobre'} className={inputClass} />
+          <input name="description" required autoFocus defaultValue={transaction?.description ?? ''} placeholder={type === 'Income' ? 'Ex. : apport du gérant' : 'Ex. : loyer d’octobre'} className={inputClass} />
         </Field>
         <Field label="Montant">
           <input name="amount" type="number" min="1" required defaultValue={transaction?.amount ?? ''} className={inputClass} />

@@ -130,7 +130,7 @@ export async function getSessionContext(): Promise<SessionContext | null> {
   const ip = getRequestIP({ xForwardedFor: true }) ?? 'unknown'
   const flood = throttle(`flood:ip:${ip}`, floodLimit, floodWindowMs)
   if (!flood.allowed) {
-    throw new Error('Trop de requetes. Reessaie dans un instant.')
+    throw new Error('Trop de requetes. Réessaie dans un instant.')
   }
 
   const token = getCookie(sessionCookieName)

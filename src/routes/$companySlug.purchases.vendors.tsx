@@ -156,7 +156,7 @@ function VendorsPage() {
       router.invalidate()
     } catch (err) {
       console.error(err)
-      alert("Erreur lors de la creation du fournisseur")
+      alert("Erreur lors de la création du fournisseur")
     }
   }
 
@@ -184,7 +184,7 @@ function VendorsPage() {
       router.invalidate()
     } catch (err) {
       console.error(err)
-      alert("Erreur lors de la mise a jour")
+      alert("Erreur lors de la mise à jour")
     }
   }
 
@@ -264,8 +264,8 @@ function VendorsPage() {
               <thead className="border-b border-slate-200 bg-slate-50 text-slate-500">
                 <tr>
                   <th className="px-4 py-3 font-semibold">Fournisseur</th>
-                  <th className="px-4 py-3 font-semibold">Categorie</th>
-                  <th className="px-4 py-3 font-semibold">Depense</th>
+                  <th className="px-4 py-3 font-semibold">Catégorie</th>
+                  <th className="px-4 py-3 font-semibold">Dépense</th>
                   <th className="px-4 py-3 font-semibold">Livraison</th>
                   <th className="px-4 py-3 font-semibold">Qualite</th>
                   <th className="px-4 py-3 font-semibold">Risque</th>
@@ -417,7 +417,7 @@ function VendorsPage() {
                   <input required value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className="w-full rounded border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 outline-none focus:border-slate-950" />
                 </label>
                 <label className="block">
-                  <span className="mb-1 block text-xs font-bold uppercase tracking-wide text-slate-400">Categorie *</span>
+                  <span className="mb-1 block text-xs font-bold uppercase tracking-wide text-slate-400">Catégorie *</span>
                   <input required value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value })} className="w-full rounded border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 outline-none focus:border-slate-950" />
                 </label>
                 <label className="block">
@@ -433,7 +433,7 @@ function VendorsPage() {
                   <input type="email" required value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} className="w-full rounded border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 outline-none focus:border-slate-950" />
                 </label>
                 <label className="block">
-                  <span className="mb-1 block text-xs font-bold uppercase tracking-wide text-slate-400">Telephone *</span>
+                  <span className="mb-1 block text-xs font-bold uppercase tracking-wide text-slate-400">Téléphone *</span>
                   <input required value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} className="w-full rounded border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 outline-none focus:border-slate-950" />
                 </label>
                 <label className="block">
@@ -458,7 +458,7 @@ function VendorsPage() {
                 </button>
                 <button type="submit" className="inline-flex items-center justify-center gap-2 rounded bg-slate-950 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800">
                   <Check className="size-4" />
-                  Creer le fournisseur
+                  Créer le fournisseur
                 </button>
               </div>
             </form>

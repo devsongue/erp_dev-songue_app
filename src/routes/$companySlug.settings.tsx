@@ -33,7 +33,7 @@ const settingsTabs = [
   { key: 'general' as const, label: 'General', icon: Building2 },
   { key: 'users' as const, label: 'Utilisateurs', icon: Users },
   { key: 'security' as const, label: 'Securite', icon: LockKeyhole },
-  { key: 'roles' as const, label: 'Roles & permissions', icon: ShieldCheck },
+  { key: 'roles' as const, label: 'Rôles & permissions', icon: ShieldCheck },
   { key: 'modules' as const, label: 'Modules', icon: ToggleRight },
   { key: 'notifications' as const, label: 'Notifications', icon: Mail },
 ]
@@ -79,7 +79,7 @@ function SettingsPage() {
         permissionKeys,
       },
     })
-    setMessage(result.ok ? 'Role cree.' : result.message)
+    setMessage(result.ok ? 'Rôle cree.' : result.message)
     if (result.ok) {
       formElement.reset()
       await refresh()
@@ -115,21 +115,21 @@ function SettingsPage() {
           website,
         },
       })
-      setMessage(result.ok ? 'Informations entreprise mises a jour.' : result.message)
+      setMessage(result.ok ? 'Informations entreprise mises à jour.' : result.message)
       if (result.ok) {
         setData((current) => current?.ok ? { ...current, company: result.company } : current)
         await refresh()
       }
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'Impossible de mettre a jour les informations.')
+      setMessage(error instanceof Error ? error.message : 'Impossible de mettre à jour les informations.')
     }
   }
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-950">Parametres</h1>
-        <p className="text-sm text-slate-500 mt-1">Gestion de l'entreprise, des roles, permissions et gestionnaires.</p>
+        <h1 className="text-2xl font-bold text-slate-950">Paramètres</h1>
+        <p className="text-sm text-slate-500 mt-1">Gestion de l'entreprise, des rôles, permissions et gestionnaires.</p>
       </div>
 
       {message ? (
@@ -166,7 +166,7 @@ function SettingsPage() {
               <p className="text-sm text-slate-500">Patiente un instant...</p>
             </SettingsSection>
           ) : !data.ok ? (
-            <SettingsSection title="Acces impossible" description="Les parametres de cette entreprise ne sont pas disponibles.">
+            <SettingsSection title="Accès impossible" description="Les paramètres de cette entreprise ne sont pas disponibles.">
               <p className="text-sm font-semibold text-slate-700">{data.message}</p>
             </SettingsSection>
           ) : (
@@ -247,7 +247,7 @@ function GeneralSettings({
                 ))}
               </select>
               <span className="mt-1 block text-xs text-slate-400">
-                Utilisee pour tous les montants affiches. Ne convertit pas les montants deja enregistres.
+                Utilisee pour tous les montants affiches. Ne convertit pas les montants déjà enregistres.
               </span>
             </label>
             <label className="block">
@@ -283,7 +283,7 @@ function GeneralSettings({
         <div className="grid gap-4 sm:grid-cols-2">
           <ReadOnlyField label="Slug" value={companySlug} />
           <ReadOnlyField label="Type" value="Self-hosted" />
-          <ReadOnlyField label="Isolation" value="companyId obligatoire sur les donnees metier" />
+          <ReadOnlyField label="Isolation" value="companyId obligatoire sur les données metier" />
         </div>
       </SettingsSection>
     </div>
@@ -332,13 +332,13 @@ function UsersSettings({
       setGeneratedLink(result.delivered ? null : `${window.location.origin}${result.invitePath}`)
       onMessage(
         result.delivered
-          ? "Invitation envoyee par email a la personne concernee."
-          : "Invitation creee. L'email n'a pas pu etre envoye : copie le lien et transmets-le toi-meme.",
+          ? "Invitation envoyée par email a la personne concernee."
+          : "Invitation créée. L'email n'a pas pu être envoyé : copie le lien et transmets-le toi-meme.",
       )
       formElement.reset()
       await onRefresh()
     } catch (error: any) {
-      onMessage(error?.message ?? 'Impossible de creer l invitation.')
+      onMessage(error?.message ?? 'Impossible de créer l’invitation.')
     } finally {
       setIsSubmitting(false)
     }
@@ -360,8 +360,8 @@ function UsersSettings({
       setResetLink(result.delivered ? null : { email, url: `${window.location.origin}${result.resetPath}` })
       onMessage(
         result.delivered
-          ? `Lien de reinitialisation envoye a ${email} (valide ${result.expiresInMinutes} min, usage unique).`
-          : `Lien genere pour ${email} (valide ${result.expiresInMinutes} min, usage unique). L'email n'a pas pu etre envoye : transmets-le toi-meme.`,
+          ? `Lien de réinitialisation envoyé a ${email} (valide ${result.expiresInMinutes} min, usage unique).`
+          : `Lien généré pour ${email} (valide ${result.expiresInMinutes} min, usage unique). L'email n'a pas pu être envoyé : transmets-le toi-meme.`,
       )
     } catch (error: any) {
       onMessage(error?.message ?? 'Impossible de generer le lien.')
@@ -379,7 +379,7 @@ function UsersSettings({
         roleIds: form.getAll('roleIds').map(String),
         status: String(form.get('status')) as 'ACTIVE' | 'SUSPENDED',
       } })
-      onMessage(result.ok ? 'Acces du membre mis a jour.' : result.message)
+      onMessage(result.ok ? 'Accès du membre mis à jour.' : result.message)
       if (result.ok) { setEditingMemberId(null); await onRefresh() }
     } finally { setIsSubmitting(false) }
   }
@@ -389,7 +389,7 @@ function UsersSettings({
     setIsSubmitting(true)
     try {
       const result = await removeMembership({ data: { companySlug, membershipId: user.id } })
-      onMessage(result.ok ? 'Membre retire de l entreprise.' : result.message)
+      onMessage(result.ok ? 'Membre retire de l’entreprise.' : result.message)
       if (result.ok) await onRefresh()
     } finally { setIsSubmitting(false) }
   }
@@ -398,18 +398,18 @@ function UsersSettings({
 
   return (
     <div className="space-y-6">
-      <SettingsSection title="Inviter un membre" description="Genere un lien d'invitation a transmettre : la personne choisit elle-meme son mot de passe. Le lien expire dans 7 jours.">
+      <SettingsSection title="Inviter un membre" description="Généré un lien d'invitation a transmettre : la personne choisit elle-meme son mot de passe. Le lien expire dans 7 jours.">
         <form onSubmit={handleInvite} className="grid gap-3 lg:grid-cols-[2fr_1fr_auto]">
           <input name="email" required type="email" placeholder="Email de la personne" className="rounded border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-950" />
           <select name="roleId" required className="rounded border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-950">
-            <option value="">Role</option>
+            <option value="">Rôle</option>
             {roles.map((role) => (
               <option key={role.id} value={role.id}>{role.name}</option>
             ))}
           </select>
           <button disabled={isSubmitting} className="inline-flex items-center justify-center gap-2 rounded bg-slate-950 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60">
             <Plus className="size-4" />
-            {isSubmitting ? 'Creation...' : 'Inviter'}
+            {isSubmitting ? 'Création...' : 'Inviter'}
           </button>
         </form>
 
@@ -434,8 +434,8 @@ function UsersSettings({
       </SettingsSection>
 
       {resetLink ? (
-        <SettingsSection title="Lien de reinitialisation" description={`A transmettre a ${resetLink.email}. Valide 30 minutes, usage unique. Toutes ses sessions seront deconnectees.`}>
-          <CopyableLink label="Lien de reinitialisation (visible une seule fois)" url={resetLink.url} />
+        <SettingsSection title="Lien de réinitialisation" description={`A transmettre a ${resetLink.email}. Valide 30 minutes, usage unique. Toutes ses sessions seront deconnectees.`}>
+          <CopyableLink label="Lien de réinitialisation (visible une seule fois)" url={resetLink.url} />
         </SettingsSection>
       ) : null}
 
@@ -444,9 +444,9 @@ function UsersSettings({
           <thead className="border-b border-slate-200 bg-slate-50 text-slate-600">
             <tr>
               <th className="px-4 py-3 font-semibold">Utilisateur</th>
-              <th className="px-4 py-3 font-semibold">Roles</th>
+              <th className="px-4 py-3 font-semibold">Rôles</th>
               <th className="px-4 py-3 font-semibold">Statut</th>
-              <th className="px-4 py-3 font-semibold">Derniere connexion</th>
+              <th className="px-4 py-3 font-semibold">Dernière connexion</th>
               <th className="px-4 py-3 text-right font-semibold">Actions</th>
             </tr>
           </thead>
@@ -466,13 +466,13 @@ function UsersSettings({
                 </td>
                 <td className="px-4 py-3 text-right">
                   <div className="inline-flex flex-wrap justify-end gap-2">
-                  <button onClick={() => void handleResetLink(user.email)} className="inline-flex items-center gap-1.5 rounded border border-slate-300 px-2.5 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50" title="Generer un lien de reinitialisation de mot de passe">
+                  <button onClick={() => void handleResetLink(user.email)} className="inline-flex items-center gap-1.5 rounded border border-slate-300 px-2.5 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50" title="Generer un lien de réinitialisation de mot de passe">
                     <KeyRound className="size-3.5" />
                     Lien de reinit.
                   </button>
                   {!user.isOwner ? (
                     <>
-                      <button onClick={() => setEditingMemberId(user.id)} className="inline-flex items-center gap-1.5 rounded border border-slate-300 px-2.5 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50"><Pencil className="size-3.5" />Acces</button>
+                      <button onClick={() => setEditingMemberId(user.id)} className="inline-flex items-center gap-1.5 rounded border border-slate-300 px-2.5 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50"><Pencil className="size-3.5" />Accès</button>
                       <button onClick={() => void handleRemoveMember(user)} className="inline-flex items-center gap-1.5 rounded border border-rose-200 px-2.5 py-1.5 text-xs font-semibold text-rose-600 hover:bg-rose-50"><Trash2 className="size-3.5" />Retirer</button>
                     </>
                   ) : null}
@@ -484,7 +484,7 @@ function UsersSettings({
         </table>
       </div>
       {editingMember ? (
-        <SettingsSection title={`Acces de ${editingMember.name}`} description="Attribue ses roles et controle son acces a cette entreprise.">
+        <SettingsSection title={`Accès de ${editingMember.name}`} description="Attribue ses rôles et controle son accès a cette entreprise.">
           <form onSubmit={handleMemberUpdate} className="space-y-4">
             <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
               {roles.map((role) => (
@@ -579,7 +579,7 @@ function SecuritySettings({ onMessage }: { onMessage: (message: string) => void 
   async function handleDisableTotp(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const result = await disableTotp({ data: { code: totpCode } })
-    onMessage(result.ok ? 'Double authentification desactivee.' : result.message)
+    onMessage(result.ok ? 'Double authentification désactivée.' : result.message)
     if (result.ok) {
       setTotpCode('')
       await refresh()
@@ -596,7 +596,7 @@ function SecuritySettings({ onMessage }: { onMessage: (message: string) => void 
     setIsBusy(true)
     try {
       const result = await changePassword({ data: { currentPassword, newPassword } })
-      onMessage(result.ok ? 'Mot de passe modifie. Les autres sessions ont ete deconnectees.' : result.message)
+      onMessage(result.ok ? 'Mot de passe modifie. Les autres sessions ont été deconnectees.' : result.message)
       if (result.ok) {
         setCurrentPassword('')
         setNewPassword('')
@@ -616,7 +616,7 @@ function SecuritySettings({ onMessage }: { onMessage: (message: string) => void 
 
   async function handleRevokeOthers() {
     await revokeOtherSessions()
-    onMessage('Toutes les autres sessions ont ete deconnectees.')
+    onMessage('Toutes les autres sessions ont été deconnectees.')
     await refresh()
   }
 
@@ -626,7 +626,7 @@ function SecuritySettings({ onMessage }: { onMessage: (message: string) => void 
     <div className="space-y-6">
       <SettingsSection
         title="Double authentification (2FA)"
-        description="Un code a 6 chiffres genere par une application (Google Authenticator, Aegis, 1Password...) sera demande a chaque connexion."
+        description="Un code a 6 chiffres généré par une application (Google Authenticator, Aegis, 1Password...) sera demande a chaque connexion."
       >
         {overview === null ? (
           <p className="text-sm text-slate-500">Chargement...</p>
@@ -649,7 +649,7 @@ function SecuritySettings({ onMessage }: { onMessage: (message: string) => void 
             <div className="rounded border border-slate-200 bg-slate-50 p-4">
               <p className="text-sm font-semibold text-slate-800">1. Ajoute ce compte dans ton application d'authentification :</p>
               <p className="mt-2 select-all break-all rounded border border-slate-200 bg-white px-3 py-2 font-mono text-sm font-bold tracking-wider text-slate-900">{totpSetup.secret}</p>
-              <p className="mt-2 text-xs text-slate-500">Saisie manuelle : choisis « Cle de configuration » dans l'application, ou utilise ce lien :</p>
+              <p className="mt-2 text-xs text-slate-500">Saisie manuelle : choisis « Clé de configuration » dans l'application, ou utilise ce lien :</p>
               <p className="mt-1 select-all break-all font-mono text-[11px] text-slate-500">{totpSetup.uri}</p>
             </div>
             <div className="flex items-end gap-3">
@@ -783,7 +783,7 @@ function RolesSettings({
           permissionKeys: form.getAll('permissionKeys').map(String),
         },
       })
-      onMessage(result.ok ? 'Role modifie.' : result.message)
+      onMessage(result.ok ? 'Rôle modifie.' : result.message)
       if (result.ok) {
         setEditingRoleId(null)
         await onRefresh()
@@ -794,11 +794,11 @@ function RolesSettings({
   }
 
   async function handleDelete(roleId: string, roleName: string) {
-    if (isBusy || !window.confirm(`Supprimer definitivement le role « ${roleName} » ?`)) return
+    if (isBusy || !window.confirm(`Supprimer definitivement le rôle « ${roleName} » ?`)) return
     setIsBusy(true)
     try {
       const result = await deleteRole({ data: { companySlug, roleId } })
-      onMessage(result.ok ? 'Role supprime.' : result.message)
+      onMessage(result.ok ? 'Rôle supprime.' : result.message)
       if (result.ok) await onRefresh()
     } finally {
       setIsBusy(false)
@@ -807,10 +807,10 @@ function RolesSettings({
 
   return (
     <div className="space-y-6">
-      <SettingsSection title="Nouveau role" description="Compose un role avec des permissions precises pour cette entreprise.">
+      <SettingsSection title="Nouveau rôle" description="Compose un rôle avec des permissions precises pour cette entreprise.">
         <form onSubmit={onSubmit} className="grid gap-4">
           <div className="grid gap-3 sm:grid-cols-2">
-            <input name="name" required placeholder="Nom du role" className="rounded border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-950" />
+            <input name="name" required placeholder="Nom du rôle" className="rounded border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-950" />
             <input name="description" placeholder="Description" className="rounded border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-950" />
           </div>
           <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
@@ -823,7 +823,7 @@ function RolesSettings({
           </div>
           <button className="inline-flex w-fit items-center gap-2 rounded bg-slate-950 px-4 py-2 text-sm font-semibold text-white">
             <Plus className="size-4" />
-            Creer le role
+            Créer le rôle
           </button>
         </form>
       </SettingsSection>
@@ -855,7 +855,7 @@ function RolesSettings({
             <div className="flex items-start justify-between gap-4">
               <div>
                 <h3 className="font-bold text-slate-950">{role.name}</h3>
-                <p className="mt-1 text-xs text-slate-500">{role.description || 'Role personnalise'}</p>
+                <p className="mt-1 text-xs text-slate-500">{role.description || 'Rôle personnalise'}</p>
               </div>
               <span className="rounded bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-600">{role.users} utilisateur{role.users > 1 ? 's' : ''}</span>
             </div>
@@ -867,7 +867,7 @@ function RolesSettings({
             </div>
                 <div className="mt-4 flex gap-2 border-t border-slate-100 pt-4">
                   {role.systemKey ? (
-                    <span className="text-xs font-semibold text-slate-400">Role systeme protege</span>
+                    <span className="text-xs font-semibold text-slate-400">Rôle système protege</span>
                   ) : (
                     <>
                       <button type="button" onClick={() => setEditingRoleId(role.id)} className="inline-flex items-center gap-1.5 rounded border border-slate-300 px-2.5 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50"><Pencil className="size-3.5" />Modifier</button>

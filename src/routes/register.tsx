@@ -42,7 +42,7 @@ function RegisterPage() {
     const result = await registerOwner({ data: { name, email, password } })
 
     if (!result?.ok) {
-      setError(result?.message ?? 'Erreur lors de la creation du compte.')
+      setError(result?.message ?? 'Erreur lors de la création du compte.')
       setIsSubmitting(false)
       return
     }
@@ -59,7 +59,7 @@ function RegisterPage() {
 
   return (
     <AuthShell>
-      <BrandMark subtitle="Creation de votre espace" />
+      <BrandMark subtitle="Création de votre espace" />
       <AuthCard>
         <Stepper current={1} />
         <PageHeading title="Creez votre compte" description="Commencons par vous. La boutique arrive juste apres." />
@@ -82,7 +82,7 @@ function RegisterPage() {
             type="email"
             placeholder="nom@entreprise.com"
             autoComplete="email"
-            hint="Un code de confirmation y sera envoye."
+            hint="Un code de confirmation y sera envoyé."
           />
           <Field
             icon={LockKeyhole}
@@ -99,7 +99,7 @@ function RegisterPage() {
 
           <div className="mt-2">
             <SubmitButton isSubmitting={isSubmitting} icon={ArrowRight}>
-              {isSubmitting ? 'Creation...' : 'Continuer'}
+              {isSubmitting ? 'Création...' : 'Continuer'}
             </SubmitButton>
           </div>
         </form>

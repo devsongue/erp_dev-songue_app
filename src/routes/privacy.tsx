@@ -7,24 +7,24 @@ export const Route = createFileRoute('/privacy')({
 
 const sections = [
   {
-    title: 'Donnees collectees',
-    body: "Repere Plus peut traiter les informations necessaires a la creation et a l'utilisation d'un espace de travail: nom, email, entreprise, role utilisateur, donnees clients, produits, ventes, factures, stocks et operations saisies dans l'application.",
+    title: 'Données collectees',
+    body: "Repere Plus peut traiter les informations necessaires a la création et a l'utilisation d'un espace de travail: nom, email, entreprise, rôle utilisateur, données clients, produits, ventes, factures, stocks et opérations saisies dans l'application.",
   },
   {
-    title: 'Utilisation des donnees',
-    body: "Ces donnees sont utilisees pour fournir les fonctionnalites de gestion, securiser l'acces aux comptes, afficher les tableaux de bord, generer les documents commerciaux et ameliorer la fiabilite du service.",
+    title: 'Utilisation des données',
+    body: "Ces données sont utilisees pour fournir les fonctionnalites de gestion, securiser l'accès aux comptes, afficher les tableaux de bord, generer les documents commerciaux et ameliorer la fiabilite du service.",
   },
   {
     title: 'Conservation',
-    body: "Les donnees sont conservees pendant la duree necessaire a l'exploitation du compte et aux obligations legales applicables. Un administrateur peut demander l'export ou la suppression des donnees de son espace, sous reserve des obligations de conservation.",
+    body: "Les données sont conservees pendant la duree nécessaire a l'exploitation du compte et aux obligations legales applicables. Un administrateur peut demander l'export ou la suppression des données de son espace, sous reserve des obligations de conservation.",
   },
   {
     title: 'Partage',
-    body: "Repere Plus ne vend pas les donnees personnelles. Les donnees peuvent etre partagees uniquement avec des prestataires techniques indispensables au fonctionnement du service, ou lorsque la loi l'exige.",
+    body: "Repere Plus ne vend pas les données personnelles. Les données peuvent être partagees uniquement avec des prestataires techniques indispensables au fonctionnement du service, ou lorsque la loi l'exige.",
   },
   {
     title: 'Droits des utilisateurs',
-    body: "Chaque utilisateur peut demander l'acces, la rectification ou la suppression de ses donnees personnelles. Les demandes doivent etre adressees a l'administrateur de l'espace ou au contact de confidentialite indique ci-dessous.",
+    body: "Chaque utilisateur peut demander l'accès, la rectification ou la suppression de ses données personnelles. Les demandes doivent être adressees a l'administrateur de l'espace ou au contact de confidentialite indique ci-dessous.",
   },
 ]
 
@@ -45,30 +45,30 @@ function PrivacyPage() {
         <section className="py-16 text-center sm:py-24">
           <p className="mx-auto inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-semibold text-[#6e6e73] shadow-sm">
             <ShieldCheck size={16} aria-hidden="true" />
-            Confidentialite et securite
+            Confidentialite et sécurité
           </p>
           <h1 className="mx-auto mt-7 max-w-3xl text-5xl font-semibold tracking-tight text-[#1d1d1f] sm:text-7xl">
             Politique de confidentialite
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-[#6e6e73] sm:text-xl">
-            Cette page explique comment Repere Plus collecte, utilise, protege et conserve les donnees liees a
+            Cette page explique comment Repere Plus collecte, utilise, protege et conserve les données liees a
             votre espace de gestion.
           </p>
-          <p className="mt-5 text-sm font-medium text-[#86868b]">Derniere mise a jour: 16 juin 2026</p>
+          <p className="mt-5 text-sm font-medium text-[#86868b]">Dernière mise à jour: 16 juin 2026</p>
         </section>
 
         <section className="grid gap-4 md:grid-cols-3">
           <article className="rounded-[28px] bg-white p-7 shadow-sm">
             <LockKeyhole size={28} className="text-[#0071e3]" aria-hidden="true" />
-            <h2 className="mt-8 text-2xl font-semibold">Acces controle</h2>
+            <h2 className="mt-8 text-2xl font-semibold">Accès controle</h2>
             <p className="mt-3 leading-7 text-[#6e6e73]">
-              Les espaces sont proteges par des comptes utilisateurs, des roles et des permissions adaptees aux
-              responsabilites de chaque equipe.
+              Les espaces sont proteges par des comptes utilisateurs, des rôles et des permissions adaptees aux
+              responsabilites de chaque équipe.
             </p>
           </article>
           <article className="rounded-[28px] bg-[#1d1d1f] p-7 text-white shadow-sm">
             <Database size={28} className="text-[#7dd3fc]" aria-hidden="true" />
-            <h2 className="mt-8 text-2xl font-semibold">Donnees utiles</h2>
+            <h2 className="mt-8 text-2xl font-semibold">Données utiles</h2>
             <p className="mt-3 leading-7 text-[#d2d2d7]">
               Les informations traitees servent a faire fonctionner les modules metier: caisse, ventes, achats,
               stock, clients, finances et reporting.
@@ -78,7 +78,7 @@ function PrivacyPage() {
             <Mail size={28} className="text-[#0071e3]" aria-hidden="true" />
             <h2 className="mt-8 text-2xl font-semibold">Contact</h2>
             <p className="mt-3 leading-7 text-[#6e6e73]">
-              Pour toute question ou demande relative aux donnees personnelles, contactez l'administrateur de votre
+              Pour toute question ou demande relative aux données personnelles, contactez l'administrateur de votre
               espace Repere Plus.
             </p>
           </article>

@@ -20,16 +20,16 @@ function PayrollsPage() {
       <div className="mb-6">
         <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">RH</p>
         <h1 className="mt-1 text-2xl font-bold text-slate-950">Paie</h1>
-        <p className="mt-1 text-sm text-slate-500">Synthese de masse salariale basee sur les salaires employes.</p>
+        <p className="mt-1 text-sm text-slate-500">Synthese de masse salariale basee sur les salaires employés.</p>
       </div>
       <section className="mb-6 grid gap-4 md:grid-cols-3">
         <Stat title="Masse salariale" value={formatMoney(payroll)} icon={Banknote} />
-        <Stat title="Employes payes" value={active.length.toString()} icon={Users} />
+        <Stat title="Employés payes" value={active.length.toString()} icon={Users} />
         <Stat title="Salaire moyen" value={formatMoney(average)} icon={ReceiptText} />
       </section>
       <section className="neon-surface overflow-hidden rounded">
         <div className="hidden grid-cols-[1fr_1fr_1fr_auto] gap-4 border-b border-slate-200 px-5 py-3 text-xs font-bold uppercase text-slate-400 lg:grid">
-          <span>Employe</span>
+          <span>Employé</span>
           <span>Departement</span>
           <span>Type</span>
           <span className="text-right">Salaire</span>

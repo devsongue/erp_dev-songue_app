@@ -130,7 +130,7 @@ async function isInstalled() {
 }
 
 // L'inscription publique (self-service) reste desactivee par defaut : sur un ERP
-// c'est une decision de securite explicite. On l'active via ALLOW_PUBLIC_REGISTRATION.
+// c'est une decision de sécurité explicite. On l'active via ALLOW_PUBLIC_REGISTRATION.
 function publicRegistrationEnabled() {
   return String(process.env.ALLOW_PUBLIC_REGISTRATION ?? '').trim().toLowerCase() === 'true'
 }
@@ -188,7 +188,7 @@ export const login = createServerFn({ method: 'POST' })
   .handler(async ({ data }) => {
     const usersCount = await prisma.user.count()
     if (usersCount === 0) {
-      return { ok: false, message: 'Premiere installation requise.', needsSetup: true, needsTotp: false, needsVerification: false }
+      return { ok: false, message: 'Première installation requise.', needsSetup: true, needsTotp: false, needsVerification: false }
     }
 
     const email = data.email.toLowerCase().trim()
@@ -199,7 +199,7 @@ export const login = createServerFn({ method: 'POST' })
       const { blocked, retryAfterSeconds } = isBlocked(key)
       if (blocked) {
         const minutes = Math.max(1, Math.ceil(retryAfterSeconds / 60))
-        return { ok: false, message: `Trop de tentatives. Reessaie dans ${minutes} min.`, needsSetup: false, needsTotp: false, needsVerification: false }
+        return { ok: false, message: `Trop de tentatives. Réessaie dans ${minutes} min.`, needsSetup: false, needsTotp: false, needsVerification: false }
       }
     }
 
@@ -225,7 +225,7 @@ export const login = createServerFn({ method: 'POST' })
       await issueVerificationCode(user)
       return {
         ok: false,
-        message: 'Confirme ton adresse email pour continuer.',
+        message: 'Confirme ton adresse e-mail pour continuer.',
         needsSetup: false,
         needsTotp: false,
         needsVerification: true,
@@ -237,12 +237,12 @@ export const login = createServerFn({ method: 'POST' })
     if (user.totpSecret && user.totpEnabledAt) {
       const { verifyTotp } = await import('./totp')
       if (!data.totpCode) {
-        return { ok: false, message: 'Saisis le code de ton application d authentification.', needsSetup: false, needsTotp: true, needsVerification: false }
+        return { ok: false, message: 'Saisis le code de ton application d’authentification.', needsSetup: false, needsTotp: true, needsVerification: false }
       }
       if (!verifyTotp(user.totpSecret, data.totpCode)) {
         rateLimitKeys.forEach(recordFailure)
         await recordLoginEvent({ userId: user.id, email, ip: clientIp, success: false, reason: 'totp' })
-        return { ok: false, message: 'Code de verification invalide.', needsSetup: false, needsTotp: true, needsVerification: false }
+        return { ok: false, message: 'Code de vérification invalide.', needsSetup: false, needsTotp: true, needsVerification: false }
       }
     }
 
@@ -329,7 +329,7 @@ export const registerOwner = createServerFn({ method: 'POST' })
   .handler(async ({ data }) => {
     const clientIp = getRequestIP({ xForwardedFor: true }) ?? 'unknown'
     if (!throttle(`register:ip:${clientIp}`, 5, 60 * 60 * 1000).allowed) {
-      return { ok: false, message: 'Trop de tentatives. Reessaie plus tard.' }
+      return { ok: false, message: 'Trop de tentatives. Réessaie plus tard.' }
     }
 
     // Accessible pour l'installation initiale, ou quand l'inscription publique est ouverte.
@@ -341,7 +341,7 @@ export const registerOwner = createServerFn({ method: 'POST' })
     const existing = await prisma.user.findUnique({ where: { email } })
 
     if (existing?.emailVerifiedAt) {
-      return { ok: false, message: 'Un compte existe deja avec cet email.' }
+      return { ok: false, message: 'Un compte existe déjà avec cet email.' }
     }
 
     try {
@@ -366,10 +366,10 @@ export const registerOwner = createServerFn({ method: 'POST' })
     } catch (error: any) {
       // Course entre la verification et la creation (email pris entre-temps).
       if (error?.code === 'P2002') {
-        return { ok: false, message: 'Un compte existe deja avec cet email.' }
+        return { ok: false, message: 'Un compte existe déjà avec cet email.' }
       }
       console.error('registerOwner error:', error)
-      return { ok: false, message: 'Impossible de creer le compte pour le moment.' }
+      return { ok: false, message: 'Impossible de créer le compte pour le moment.' }
     }
   })
 
@@ -380,7 +380,7 @@ export const resendVerificationCode = createServerFn({ method: 'POST' })
     const clientIp = getRequestIP({ xForwardedFor: true }) ?? 'unknown'
     for (const key of [`verify:resend:${email}`, `verify:resend:ip:${clientIp}`]) {
       if (!throttle(key, 5, 60 * 60 * 1000).allowed) {
-        return { ok: false, message: 'Trop de demandes. Reessaie dans une heure.' }
+        return { ok: false, message: 'Trop de demandes. Réessaie dans une heure.' }
       }
     }
 
@@ -412,7 +412,7 @@ export const verifyEmailCode = createServerFn({ method: 'POST' })
       const { blocked, retryAfterSeconds } = isBlocked(key)
       if (blocked) {
         const minutes = Math.max(1, Math.ceil(retryAfterSeconds / 60))
-        return { ok: false, message: `Trop de tentatives. Reessaie dans ${minutes} min.` }
+        return { ok: false, message: `Trop de tentatives. Réessaie dans ${minutes} min.` }
       }
     }
 
@@ -422,7 +422,7 @@ export const verifyEmailCode = createServerFn({ method: 'POST' })
       return { ok: false, message: 'Code invalide ou expire.' }
     }
     if (user.emailVerifiedAt) {
-      return { ok: false, message: 'Cette adresse est deja verifiee.', alreadyVerified: true }
+      return { ok: false, message: 'Cette adresse est déjà vérifiée.', alreadyVerified: true }
     }
 
     const token = await prisma.emailVerificationToken.findFirst({
@@ -438,7 +438,7 @@ export const verifyEmailCode = createServerFn({ method: 'POST' })
     // Un code a 6 chiffres se devine : au-dela de quelques essais on le brule.
     if (token.attempts >= verificationMaxAttempts) {
       await prisma.emailVerificationToken.update({ where: { id: token.id }, data: { consumedAt: new Date() } })
-      return { ok: false, message: 'Trop d essais. Demande un nouveau code.', expired: true }
+      return { ok: false, message: 'Trop d’essais. Demande un nouveau code.', expired: true }
     }
 
     if (token.codeHash !== hashToken(data.code)) {
@@ -480,7 +480,7 @@ export const checkSubdomainAvailability = createServerFn({ method: 'POST' })
   .inputValidator(z.object({ subdomain: z.string().min(1).max(40) }))
   .handler(async ({ data }) => {
     const auth = await readAuthState()
-    if (!auth.user) return { ok: false, available: false, message: 'Session expiree.' }
+    if (!auth.user) return { ok: false, available: false, message: 'Session expirée.' }
 
     const subdomain = data.subdomain.toLowerCase().trim()
     const validation = validateSubdomain(subdomain)
@@ -492,7 +492,7 @@ export const checkSubdomainAvailability = createServerFn({ method: 'POST' })
       available: !taken,
       subdomain,
       rootDomain: rootDomain(),
-      message: taken ? 'Ce sous-domaine est deja pris.' : undefined,
+      message: taken ? 'Ce sous-domaine est déjà pris.' : undefined,
     }
   })
 
@@ -509,15 +509,15 @@ export const completeOnboarding = createServerFn({ method: 'POST' })
   )
   .handler(async ({ data }) => {
     const auth = await readAuthState()
-    if (!auth.user) return { ok: false, message: 'Session expiree. Reconnecte-toi.' }
+    if (!auth.user) return { ok: false, message: 'Session expirée. Reconnecte-toi.' }
     if (auth.companies.length > 0) {
-      return { ok: false, message: 'Une boutique existe deja pour ce compte.', redirectTo: `/${auth.companies[0].slug}/dashboard` }
+      return { ok: false, message: 'Une boutique existe déjà pour ce compte.', redirectTo: `/${auth.companies[0].slug}/dashboard` }
     }
 
     // La session n'existe qu'apres verification, mais l'etape 2 cree les donnees :
     // on revalide plutot que de faire confiance au parcours.
     const user = await prisma.user.findUnique({ where: { id: auth.user.id } })
-    if (!user?.emailVerifiedAt) return { ok: false, message: 'Adresse email non verifiee.' }
+    if (!user?.emailVerifiedAt) return { ok: false, message: 'Adresse e-mail non vérifiée.' }
 
     const subdomain = data.subdomain.toLowerCase().trim()
     const validation = validateSubdomain(subdomain)
@@ -553,10 +553,10 @@ export const completeOnboarding = createServerFn({ method: 'POST' })
     } catch (error: any) {
       // Course entre la verification de disponibilite et la creation.
       if (error?.code === 'P2002') {
-        return { ok: false, message: 'Ce sous-domaine vient d etre pris. Choisis-en un autre.' }
+        return { ok: false, message: 'Ce sous-domaine vient d’être pris. Choisis-en un autre.' }
       }
       console.error('completeOnboarding error:', error)
-      return { ok: false, message: 'Impossible de creer la boutique pour le moment.' }
+      return { ok: false, message: 'Impossible de créer la boutique pour le moment.' }
     }
   })
 
@@ -586,13 +586,13 @@ export const createCompany = createServerFn({ method: 'POST' })
   )
   .handler(async ({ data }) => {
     const auth = await readAuthState()
-    if (!auth.user?.isOwner) return { ok: false, message: 'Action reservee au proprietaire.' }
+    if (!auth.user?.isOwner) return { ok: false, message: 'Action reservee au propriétaire.' }
 
     const workspace = await prisma.workspace.findFirst({ where: { ownerId: auth.user.id } })
     if (!workspace) return { ok: false, message: 'Workspace introuvable.' }
 
     const exists = await prisma.company.findUnique({ where: { slug: data.slug } })
-    if (exists) return { ok: false, message: 'Ce slug est deja utilise.' }
+    if (exists) return { ok: false, message: 'Ce slug est déjà utilise.' }
 
     await ensureCoreDefinitions()
     const company = await createCompanyForOwner({
@@ -619,7 +619,7 @@ export const getCompanyAdministration = createServerFn({ method: 'GET' })
     const auth = await readAuthState()
     const companyAccess = auth.companies.find((company) => company.slug === data.companySlug)
     if (!auth.user || !companyAccess) {
-      return { ok: false, message: 'Acces refuse.', users: [], roles: [], permissions: [] }
+      return { ok: false, message: 'Accès refuse.', users: [], roles: [], permissions: [] }
     }
     // Le panneau d'administration expose la liste des membres (emails), les roles
     // et les invitations : reserve aux gestionnaires, pas a tout membre de l'entreprise.
@@ -763,7 +763,7 @@ export const getInstallationSettings = createServerFn({ method: 'GET' })
       },
       files: [
         { label: 'Variables environnement', path: '.env / .env.example' },
-        { label: 'Schema base de donnees', path: 'prisma/schema.prisma' },
+        { label: 'Schema base de données', path: 'prisma/schema.prisma' },
         { label: 'Base locale par defaut', path: 'prisma/dev.db' },
         { label: 'Configuration Prisma', path: 'prisma.config.ts' },
         { label: 'Build serveur', path: '.output/server/index.mjs' },
@@ -890,7 +890,7 @@ export const createRole = createServerFn({ method: 'POST' })
     if (!company) return { ok: false, message: 'Entreprise introuvable.' }
 
     const existing = await prisma.role.findUnique({ where: { companyId_name: { companyId: company.id, name: data.name.trim() } } })
-    if (existing) return { ok: false, message: 'Ce role existe deja.' }
+    if (existing) return { ok: false, message: 'Ce rôle existe déjà.' }
 
     const permissions = await prisma.permission.findMany({ where: { key: { in: data.permissionKeys } } })
     await prisma.role.create({
@@ -930,13 +930,13 @@ export const updateRole = createServerFn({ method: 'POST' })
     const role = await prisma.role.findFirst({
       where: { id: data.roleId, company: { slug: data.companySlug } },
     })
-    if (!role) return { ok: false, message: 'Role introuvable.' }
-    if (role.systemKey) return { ok: false, message: 'Les roles systeme ne peuvent pas etre modifies.' }
+    if (!role) return { ok: false, message: 'Rôle introuvable.' }
+    if (role.systemKey) return { ok: false, message: 'Les rôles système ne peuvent pas être modifies.' }
 
     const duplicate = await prisma.role.findFirst({
       where: { companyId: role.companyId, name: data.name, id: { not: role.id } },
     })
-    if (duplicate) return { ok: false, message: 'Un role porte deja ce nom.' }
+    if (duplicate) return { ok: false, message: 'Un rôle porte déjà ce nom.' }
 
     const permissionKeys = Array.from(new Set(data.permissionKeys))
     const permissions = await prisma.permission.findMany({ where: { key: { in: permissionKeys } } })
@@ -958,7 +958,7 @@ export const updateRole = createServerFn({ method: 'POST' })
         data: {
           companyId: role.companyId,
           actorId,
-          action: 'role.updated',
+          action: 'rôle.updated',
           entity: 'Role',
           entityId: role.id,
           metadata: JSON.stringify({ name: data.name, permissionKeys }),
@@ -984,10 +984,10 @@ export const deleteRole = createServerFn({ method: 'POST' })
       where: { id: data.roleId, company: { slug: data.companySlug } },
       include: { _count: { select: { users: true } } },
     })
-    if (!role) return { ok: false, message: 'Role introuvable.' }
-    if (role.systemKey) return { ok: false, message: 'Les roles systeme ne peuvent pas etre supprimes.' }
+    if (!role) return { ok: false, message: 'Rôle introuvable.' }
+    if (role.systemKey) return { ok: false, message: 'Les rôles système ne peuvent pas être supprimes.' }
     if (role._count.users > 0) {
-      return { ok: false, message: 'Retire d abord ce role de tous les utilisateurs.' }
+      return { ok: false, message: 'Retire d’abord ce rôle de tous les utilisateurs.' }
     }
 
     await prisma.$transaction(async (tx) => {
@@ -995,7 +995,7 @@ export const deleteRole = createServerFn({ method: 'POST' })
         data: {
           companyId: role.companyId,
           actorId,
-          action: 'role.deleted',
+          action: 'rôle.deleted',
           entity: 'Role',
           entityId: role.id,
           metadata: JSON.stringify({ name: role.name }),
@@ -1120,7 +1120,7 @@ async function createCompanyForOwner(input: {
     data: {
       companyId: company.id,
       name: 'Administrateur',
-      description: 'Gestion des modules, utilisateurs, roles et operations.',
+      description: 'Gestion des modules, utilisateurs, rôles et opérations.',
       systemKey: 'admin',
       permissions: { create: permissions.map((permission: Permission) => ({ permissionId: permission.id })) },
     },

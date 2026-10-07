@@ -54,7 +54,7 @@ function HrEmployees() {
   }
 
   function exportCsv() {
-    downloadCsv('employes.csv', visible, [
+    downloadCsv('employés.csv', visible, [
       { header: 'Nom', value: (e) => e.lastName },
       { header: 'Prénom', value: (e) => e.firstName },
       { header: 'Poste', value: (e) => e.position },

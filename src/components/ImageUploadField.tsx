@@ -96,7 +96,7 @@ export function ImageUploadField({
       })
 
       if (!response.ok) {
-        setError("L'envoi de l'image a echoue. Reessaie.")
+        setError("L'envoi de l'image a echoue. Réessaie.")
         return
       }
 

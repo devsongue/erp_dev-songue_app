@@ -237,9 +237,10 @@ function ErpAppShell({ children, companySlug }: { children: React.ReactNode, com
   const pathname = useRouterState({ select: (state) => state.location.pathname })
   const [isDropdownOpen, setIsDropdownOpen] = React.useState(false)
   const [showCreateCompanyModal, setShowCreateCompanyModal] = React.useState(false)
+  // Le theme est deja pose sur <html> par le script du document (__root.tsx).
   const [theme, setTheme] = React.useState<'light' | 'dark'>(() => {
-    if (typeof window === 'undefined') return 'dark'
-    return window.localStorage.getItem('erp-theme') === 'light' ? 'light' : 'dark'
+    if (typeof document === 'undefined') return 'light'
+    return document.documentElement.classList.contains('theme-dark') ? 'dark' : 'light'
   })
   const { activeCompany } = useCompany()
   const dropdownRef = React.useRef<HTMLDivElement>(null)
@@ -285,8 +286,14 @@ function ErpAppShell({ children, companySlug }: { children: React.ReactNode, com
     root.classList.toggle('theme-light', theme === 'light')
     root.classList.toggle('theme-dark', theme === 'dark')
     root.style.colorScheme = theme
-    window.localStorage.setItem('erp-theme', theme)
   }, [theme])
+
+  function toggleTheme() {
+    const next = theme === 'dark' ? 'light' : 'dark'
+    setTheme(next)
+    // Memorise seulement un choix explicite : sans choix, on suit le système.
+    try { window.localStorage.setItem('erp-theme', next) } catch {}
+  }
 
   return (
     <div className="neon-grid min-h-screen text-slate-950">
@@ -411,13 +418,13 @@ function ErpAppShell({ children, companySlug }: { children: React.ReactNode, com
               <GlobalSearch companySlug={companySlug} />
             </div>
             <div className="flex items-center gap-2">
-              <ThemeSwitch theme={theme} onToggle={() => setTheme((current) => current === 'dark' ? 'light' : 'dark')} />
+              <ThemeSwitch theme={theme} onToggle={toggleTheme} />
               <Link
                 to="/$companySlug/settings"
                 params={{ companySlug }}
                 className="hidden h-9 items-center rounded border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-600 transition-colors hover:bg-slate-50 sm:inline-flex"
               >
-                Parametres
+                Paramètres
               </Link>
               <div className="flex size-9 items-center justify-center rounded bg-slate-950 text-xs font-bold text-white" title={auth.user?.email ?? ''}>
                 {(auth.user?.email ?? 'U').slice(0, 1).toUpperCase()}
@@ -687,7 +694,7 @@ function CreateCompanyModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
       <div className="absolute inset-0 bg-slate-950/40 backdrop-blur-sm" onClick={onClose} />
       <div className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded border border-slate-200 bg-white p-4 sm:p-5">
-        <h2 className="text-lg font-bold text-slate-950">Creation rapide d'entreprise</h2>
+        <h2 className="text-lg font-bold text-slate-950">Création rapide d'entreprise</h2>
         <p className="mt-1 text-xs text-slate-500">Creez une entreprise avec son logo et ses informations principales.</p>
         
         <form onSubmit={handleSubmit} className="mt-4 space-y-4">
@@ -746,7 +753,7 @@ function CreateCompanyModal({
               />
             </label>
             <label className="block">
-              <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-400">Telephone</span>
+              <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-400">Téléphone</span>
               <input
                 type="tel"
                 value={phone}
@@ -762,7 +769,7 @@ function CreateCompanyModal({
             onClick={() => setShowMore((value) => !value)}
             className="text-xs font-bold uppercase tracking-wide text-slate-500 hover:text-slate-950"
           >
-            {showMore ? 'Masquer les details' : 'Ajouter adresse, NIF et site web'}
+            {showMore ? 'Masquer les détails' : 'Ajouter adresse, NIF et site web'}
           </button>
 
           {showMore ? (

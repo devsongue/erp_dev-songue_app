@@ -7,7 +7,7 @@ export function NotFound({ children }: { children?: any }) {
         <p className="text-xs font-bold uppercase tracking-widest text-slate-400">Erreur 404</p>
         <h1 className="mt-2 text-xl font-bold text-slate-950">Page introuvable</h1>
         <div className="mt-2 text-sm leading-6 text-slate-500">
-          {children || <p>Cette page n'existe pas ou a ete deplacee.</p>}
+          {children || <p>Cette page n'existe pas ou a été deplacee.</p>}
         </div>
         <div className="mt-5 flex flex-wrap justify-center gap-2">
           <button

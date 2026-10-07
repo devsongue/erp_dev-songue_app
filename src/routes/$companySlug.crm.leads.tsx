@@ -62,16 +62,16 @@ function CrmLeads() {
     <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-950 dark:text-white">Nouveaux clients</h1>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Creation CRM synchronisee avec les clients utilisables en caisse.</p>
+          <h1 className="text-2xl font-bold text-slate-950">Nouveaux clients</h1>
+          <p className="mt-1 text-sm text-slate-500">Création CRM synchronisee avec les clients utilisables en caisse.</p>
         </div>
-        <button onClick={() => setIsModalOpen(true)} className="inline-flex items-center gap-2 rounded bg-slate-950 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 dark:bg-cyan-400 dark:text-slate-950 dark:hover:bg-cyan-300">
+        <button onClick={() => setIsModalOpen(true)} className="inline-flex items-center gap-2 rounded bg-slate-950 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800">
           <Plus className="size-4" />
           Ajouter
         </button>
       </div>
 
-      {message ? <div className="mb-6 rounded border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-200">{message}</div> : null}
+      {message ? <div className="mb-6 rounded border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">{message}</div> : null}
 
       <div className="neon-surface mb-6 rounded p-3">
         <div className="relative max-w-md">
@@ -81,7 +81,7 @@ function CrmLeads() {
             onChange={(event) => setQuery(event.target.value)}
             type="text"
             placeholder="Rechercher un client..."
-            className="w-full rounded border border-slate-300 bg-white py-2 pl-9 pr-4 text-sm outline-none focus:border-slate-950 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:focus:border-cyan-400"
+            className="w-full rounded border border-slate-300 bg-white py-2 pl-9 pr-4 text-sm outline-none focus:border-slate-950"
           />
         </div>
       </div>
@@ -89,7 +89,7 @@ function CrmLeads() {
       <div className="neon-surface overflow-hidden rounded">
         <div className="overflow-x-auto">
           <table className="w-full whitespace-nowrap text-left text-sm">
-            <thead className="border-b border-slate-200 bg-slate-50 text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">
+            <thead className="border-b border-slate-200 bg-slate-50 text-slate-600">
               <tr>
                 <th className="px-4 py-3 font-semibold">Contact</th>
                 <th className="px-4 py-3 font-semibold">Entreprise</th>
@@ -97,21 +97,21 @@ function CrmLeads() {
                 <th className="px-4 py-3 text-right font-semibold">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+            <tbody className="divide-y divide-slate-100">
               {visibleLeads.map((lead) => (
                 <tr key={lead.id} className="list-row">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
-                      <div className="flex size-8 items-center justify-center rounded-full bg-slate-100 text-xs font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-200">
+                      <div className="flex size-8 items-center justify-center rounded-full bg-slate-100 text-xs font-bold text-slate-600">
                         {lead.name.charAt(0)}
                       </div>
                       <div>
-                        <p className="font-semibold text-slate-900 dark:text-white">{lead.name}</p>
-                        <p className="text-xs text-slate-500 dark:text-slate-400">{lead.email ?? '-'}</p>
+                        <p className="font-semibold text-slate-900">{lead.name}</p>
+                        <p className="text-xs text-slate-500">{lead.email ?? '-'}</p>
                       </div>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-slate-700 dark:text-slate-200">{lead.company ?? '-'}</td>
+                  <td className="px-4 py-3 text-slate-700">{lead.company ?? '-'}</td>
                   <td className="px-4 py-3">
                     <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${getLeadStatusClass(lead.status)}`}>
                       {getLeadStatusLabel(lead.status)}
@@ -119,7 +119,7 @@ function CrmLeads() {
                   </td>
                   <td className="px-4 py-3 text-right">
                     <div className="inline-flex gap-2">
-                    <button className="inline-flex items-center gap-2 rounded border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:text-slate-200 dark:hover:bg-slate-900">
+                    <button className="inline-flex items-center gap-2 rounded border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50">
                       <Mail className="size-4" />
                       Email
                     </button>
@@ -143,14 +143,14 @@ function CrmLeads() {
               <TextField label="Email" value={form.email} onChange={(value) => setForm((current) => ({ ...current, email: value }))} type="email" />
               <TextField label="Telephone" value={form.phone} onChange={(value) => setForm((current) => ({ ...current, phone: value }))} />
             </div>
-            <div className="flex flex-col-reverse gap-2 border-t border-slate-100 pt-4 sm:flex-row sm:justify-end dark:border-slate-800">
-              <button type="button" onClick={() => setIsModalOpen(false)} className="inline-flex items-center justify-center gap-2 rounded border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-900">
+            <div className="flex flex-col-reverse gap-2 border-t border-slate-100 pt-4 sm:flex-row sm:justify-end">
+              <button type="button" onClick={() => setIsModalOpen(false)} className="inline-flex items-center justify-center gap-2 rounded border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
                 <X className="size-4" />
                 Annuler
               </button>
-              <button type="submit" className="inline-flex items-center justify-center gap-2 rounded bg-slate-950 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 dark:bg-cyan-400 dark:text-slate-950 dark:hover:bg-cyan-300">
+              <button type="submit" className="inline-flex items-center justify-center gap-2 rounded bg-slate-950 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800">
                 <Check className="size-4" />
-                {editingLeadId ? 'Mettre a jour' : 'Enregistrer'}
+                {editingLeadId ? 'Mettre à jour' : 'Enregistrer'}
               </button>
             </div>
           </form>
@@ -164,7 +164,7 @@ function TextField({ label, value, onChange, ...props }: Omit<InputHTMLAttribute
   return (
     <label className="block">
       <span className="mb-1 block text-xs font-bold uppercase tracking-wide text-slate-400">{label}</span>
-      <input {...props} value={value} onChange={(event) => onChange(event.target.value)} className="w-full rounded border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 outline-none focus:border-slate-950 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:focus:border-cyan-400" />
+      <input {...props} value={value} onChange={(event) => onChange(event.target.value)} className="w-full rounded border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 outline-none focus:border-slate-950" />
     </label>
   )
 }
@@ -173,9 +173,9 @@ function Modal({ title, children, onClose }: { title: string; children: ReactNod
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-950/40 px-3 py-6 sm:items-center sm:px-4 sm:py-8" role="dialog" aria-modal="true">
       <div className="neon-surface w-full max-w-xl rounded shadow-xl">
-        <div className="flex items-center justify-between gap-4 border-b border-slate-100 px-4 py-4 sm:px-5 dark:border-slate-800">
-          <h2 className="text-lg font-bold text-slate-950 dark:text-white">{title}</h2>
-          <button type="button" onClick={onClose} className="inline-flex size-9 items-center justify-center rounded border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-900 dark:border-slate-800 dark:hover:bg-slate-900 dark:hover:text-white" aria-label="Fermer">
+        <div className="flex items-center justify-between gap-4 border-b border-slate-100 px-4 py-4 sm:px-5">
+          <h2 className="text-lg font-bold text-slate-950">{title}</h2>
+          <button type="button" onClick={onClose} className="inline-flex size-9 items-center justify-center rounded border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-900" aria-label="Fermer">
             <X className="size-4" />
           </button>
         </div>
@@ -193,8 +193,8 @@ function getLeadStatusLabel(status: string) {
 }
 
 function getLeadStatusClass(status: string) {
-  if (status === 'New') return 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200'
-  if (status === 'Contacted') return 'bg-slate-200 text-slate-800 dark:bg-slate-700 dark:text-slate-100'
-  if (status === 'Qualified') return 'bg-slate-950 text-white dark:bg-cyan-400 dark:text-slate-950'
-  return 'bg-slate-50 text-slate-500 dark:bg-slate-900 dark:text-slate-400'
+  if (status === 'New') return 'bg-slate-100 text-slate-800'
+  if (status === 'Contacted') return 'bg-slate-200 text-slate-800'
+  if (status === 'Qualified') return 'bg-slate-950 text-white'
+  return 'bg-slate-50 text-slate-500'
 }

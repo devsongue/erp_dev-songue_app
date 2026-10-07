@@ -271,7 +271,7 @@ export function FeedbackProvider({ children }: { children: React.ReactNode }) {
 
 export function useFeedback() {
   const context = React.useContext(FeedbackContext)
-  if (!context) throw new Error('useFeedback doit etre utilise sous <FeedbackProvider>.')
+  if (!context) throw new Error('useFeedback doit être utilise sous <FeedbackProvider>.')
   return context
 }
 
