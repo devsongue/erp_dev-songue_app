@@ -670,9 +670,12 @@ export const createPurchaseInvoice = createServerFn({ method: 'POST' })
     amount: z.number().positive(),
     status: z.enum(['Pending', 'Paid']).default('Paid'),
     notes: z.string().optional(),
+    issueDate: z.string().optional(),
+    dueDate: z.string().optional(),
   }))
   .handler(async ({ data }) => {
     const company = await getCompany(data.companySlug, 'finance.manage')
+    const issueDate = data.issueDate ? new Date(data.issueDate) : new Date()
     const account = data.accountId
       ? await prisma.bankAccount.findFirst({ where: { id: data.accountId, companyId: company.id } })
       : await ensureAccount(company.id, 'Cash', 'Caisse boutique')
@@ -697,6 +700,8 @@ export const createPurchaseInvoice = createServerFn({ method: 'POST' })
           paidCents: data.status === 'Paid' ? amount : 0,
           status: data.status,
           notes: data.notes?.trim() || null,
+          issueDate,
+          dueDate: data.dueDate ? new Date(data.dueDate) : null,
         },
         include: { vendor: true },
       })
@@ -706,6 +711,7 @@ export const createPurchaseInvoice = createServerFn({ method: 'POST' })
           data: {
             companyId: company.id,
             accountId: account.id,
+            date: issueDate,
             description: `${invoice.vendorName} - ${invoice.reference}`,
             amount,
             type: 'Expense',
@@ -1494,6 +1500,116 @@ export const deleteFinanceTransaction = createServerFn({ method: 'POST' })
       await tx.bankAccount.update({ where: { id: existing.accountId }, data: { balance: { increment: -signedAmount(existing.type, existing.amount) } } })
       await tx.auditLog.create({ data: { companyId: company.id, actorId: user.id, action: 'transaction.deleted', entity: 'Transaction', entityId: existing.id, metadata: JSON.stringify({ description: existing.description, amount: existing.amount, type: existing.type }) } })
       await tx.transaction.delete({ where: { id: existing.id } })
+    })
+    return { ok: true }
+  })
+
+// --- Factures d'achat : modification, paiement, annulation ------------------
+
+async function findPurchaseInvoice(companyId: string, invoiceId: string) {
+  const invoice = await prisma.purchaseInvoice.findFirst({ where: { id: invoiceId, companyId } })
+  if (!invoice) throw new Error('Facture d achat introuvable.')
+  return invoice
+}
+
+export const updatePurchaseInvoice = createServerFn({ method: 'POST' })
+  .inputValidator(z.object({
+    companySlug: z.string(),
+    invoiceId: z.string(),
+    vendorName: z.string().trim().min(1).max(200),
+    reference: z.string().trim().min(1).max(120),
+    category: z.string().trim().min(1).max(120),
+    amount: z.number().positive(),
+    issueDate: z.string().optional(),
+    dueDate: z.string().optional(),
+    notes: z.string().trim().max(2000).optional(),
+  }))
+  .handler(async ({ data }) => {
+    const { company, user } = await getCompanyContext(data.companySlug, 'finance.manage')
+    const invoice = await findPurchaseInvoice(company.id, data.invoiceId)
+    if (invoice.paidCents > 0) throw new Error('Cette facture a deja des paiements : elle ne peut plus etre modifiee.')
+    if (invoice.status === 'Cancelled') throw new Error('Une facture annulee ne se modifie pas.')
+    const vendor = await prisma.vendor.findFirst({ where: { companyId: company.id, name: data.vendorName } })
+    const updated = await prisma.purchaseInvoice.update({
+      where: { id: invoice.id },
+      data: {
+        vendorId: vendor?.id ?? null,
+        vendorName: data.vendorName,
+        reference: data.reference,
+        category: data.category,
+        totalCents: Math.round(data.amount),
+        issueDate: data.issueDate ? new Date(data.issueDate) : invoice.issueDate,
+        dueDate: data.dueDate ? new Date(data.dueDate) : null,
+        notes: data.notes || null,
+      },
+    })
+    await prisma.auditLog.create({ data: { companyId: company.id, actorId: user.id, action: 'purchase_invoice.updated', entity: 'PurchaseInvoice', entityId: invoice.id, metadata: JSON.stringify({ reference: updated.reference, total: updated.totalCents }) } })
+    return updated
+  })
+
+export const recordPurchaseInvoicePayment = createServerFn({ method: 'POST' })
+  .inputValidator(z.object({
+    companySlug: z.string(),
+    invoiceId: z.string(),
+    accountId: z.string(),
+    amount: z.number().positive(),
+    method: z.enum(paymentMethods),
+    date: z.string().optional(),
+    reference: z.string().trim().max(200).optional(),
+  }))
+  .handler(async ({ data }) => {
+    const { company, user } = await getCompanyContext(data.companySlug, 'finance.manage')
+    const invoice = await findPurchaseInvoice(company.id, data.invoiceId)
+    if (!['Pending', 'PartiallyPaid', 'Overdue'].includes(invoice.status)) throw new Error('Cette facture n a plus rien a payer.')
+    const account = await prisma.bankAccount.findFirst({ where: { id: data.accountId, companyId: company.id } })
+    if (!account) throw new Error('Compte introuvable.')
+    const amount = Math.round(data.amount)
+    const remaining = invoice.totalCents - invoice.paidCents
+    if (amount > remaining) throw new Error('Le montant depasse le reste a payer.')
+    const date = data.date ? new Date(data.date) : new Date()
+
+    return prisma.$transaction(async (tx) => {
+      const paid = await tx.purchaseInvoice.updateMany({
+        where: { id: invoice.id, paidCents: invoice.paidCents },
+        data: { paidCents: { increment: amount }, status: amount === remaining ? 'Paid' : 'PartiallyPaid' },
+      })
+      if (!paid.count) throw new Error('La facture a ete modifiee entre-temps. Recharge la page.')
+      const transaction = await tx.transaction.create({
+        data: { companyId: company.id, accountId: account.id, date, description: `${invoice.vendorName} - ${invoice.reference}`, amount, type: 'Expense', category: invoice.category, reference: invoice.reference, status: 'Completed' },
+      })
+      await tx.payment.create({
+        data: { companyId: company.id, accountId: account.id, transactionId: transaction.id, purchaseInvoiceId: invoice.id, date, amount, direction: 'Out', method: data.method, reference: data.reference || invoice.reference },
+      })
+      await tx.bankAccount.update({ where: { id: account.id }, data: { balance: { decrement: amount } } })
+      await tx.auditLog.create({ data: { companyId: company.id, actorId: user.id, action: 'purchase_invoice.payment_recorded', entity: 'PurchaseInvoice', entityId: invoice.id, metadata: JSON.stringify({ reference: invoice.reference, amount, method: data.method }) } })
+      return { ok: true }
+    })
+  })
+
+export const cancelPurchaseInvoice = createServerFn({ method: 'POST' })
+  .inputValidator(z.object({ companySlug: z.string(), invoiceId: z.string() }))
+  .handler(async ({ data }) => {
+    const { company, user } = await getCompanyContext(data.companySlug, 'finance.manage')
+    const invoice = await findPurchaseInvoice(company.id, data.invoiceId)
+    if (invoice.paidCents > 0) throw new Error('Cette facture a deja des paiements : elle ne peut pas etre annulee.')
+    await prisma.$transaction(async (tx) => {
+      await tx.purchaseInvoice.update({ where: { id: invoice.id }, data: { status: 'Cancelled' } })
+      await tx.auditLog.create({ data: { companyId: company.id, actorId: user.id, action: 'purchase_invoice.cancelled', entity: 'PurchaseInvoice', entityId: invoice.id, metadata: JSON.stringify({ reference: invoice.reference }) } })
+    })
+    return { ok: true }
+  })
+
+export const deletePurchaseInvoice = createServerFn({ method: 'POST' })
+  .inputValidator(z.object({ companySlug: z.string(), invoiceId: z.string() }))
+  .handler(async ({ data }) => {
+    const { company, user } = await getCompanyContext(data.companySlug, 'finance.manage')
+    const invoice = await findPurchaseInvoice(company.id, data.invoiceId)
+    // Les paiements sont supprimes en cascade avec la facture, mais pas leurs
+    // transactions ni l'effet sur le solde : interdit des qu'un paiement existe.
+    if (invoice.paidCents > 0) throw new Error('Cette facture a deja des paiements : elle ne peut pas etre supprimee.')
+    await prisma.$transaction(async (tx) => {
+      await tx.auditLog.create({ data: { companyId: company.id, actorId: user.id, action: 'purchase_invoice.deleted', entity: 'PurchaseInvoice', entityId: invoice.id, metadata: JSON.stringify({ reference: invoice.reference, total: invoice.totalCents }) } })
+      await tx.purchaseInvoice.delete({ where: { id: invoice.id } })
     })
     return { ok: true }
   })

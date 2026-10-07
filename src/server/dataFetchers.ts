@@ -436,19 +436,25 @@ export const getPurchasesData = createServerFn({ method: 'GET' })
     const [vendors, accounts, transactions, invoices, items] = await Promise.all([
       prisma.vendor.findMany({ where: { companyId: company.id }, orderBy: { updatedAt: 'desc' } }),
       prisma.bankAccount.findMany({ where: { companyId: company.id }, orderBy: { name: 'asc' } }),
+      // Depenses saisies directement (sans facture d'achat) : celles qui sont
+      // liees a un paiement de facture sont deja representees par la facture.
       prisma.transaction.findMany({
         where: {
           companyId: company.id,
           type: 'Expense',
+          payments: { none: {} },
         },
         orderBy: { date: 'desc' },
         take: 100,
       }),
       prisma.purchaseInvoice.findMany({
         where: { companyId: company.id },
-        include: { vendor: true },
+        include: {
+          vendor: true,
+          payments: { include: { account: { select: { id: true, name: true } } }, orderBy: { date: 'desc' } },
+        },
         orderBy: { issueDate: 'desc' },
-        take: 100,
+        take: 300,
       }),
       prisma.catalogItem.findMany({
         where: { companyId: company.id, type: 'Product' },
@@ -463,26 +469,34 @@ export const getPurchasesData = createServerFn({ method: 'GET' })
       description: transaction.description,
       reference: transaction.reference,
       category: transaction.category,
-      status: transaction.status,
+      status: 'Paid',
       amount: transaction.amount,
+      paidCents: transaction.amount,
       date: transaction.date,
+      dueDate: null as Date | null,
+      notes: null as string | null,
       vendorName: transaction.description.split(' - ')[0] ?? '',
-      source: 'transaction',
+      payments: [] as Array<{ id: string; amount: number; date: Date; method: string; reference: string | null; account: { id: string; name: string } }>,
+      source: 'transaction' as const,
     }))
     const purchaseInvoices = [
-      ...invoices.map((invoice: PurchaseInvoice & { vendor: Vendor | null }) => ({
+      ...invoices.map((invoice) => ({
         id: invoice.id,
         description: invoice.vendorName ? `${invoice.vendorName} - ${invoice.reference}` : invoice.reference,
         reference: invoice.reference,
         category: invoice.category,
         status: invoice.status,
         amount: invoice.totalCents,
+        paidCents: invoice.paidCents,
         date: invoice.issueDate,
+        dueDate: invoice.dueDate,
+        notes: invoice.notes,
         vendorName: invoice.vendor?.name ?? invoice.vendorName,
-        source: 'purchaseInvoice',
+        payments: invoice.payments.map((payment) => ({ id: payment.id, amount: payment.amount, date: payment.date, method: payment.method, reference: payment.reference, account: payment.account })),
+        source: 'purchaseInvoice' as const,
       })),
       ...legacyInvoices,
-    ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 100)
+    ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 300)
     const stockAlerts = items.filter((item: CatalogItem) =>
       item.stock !== null && item.minStockLevel !== null && item.stock <= item.minStockLevel,
     )
