@@ -1,7 +1,27 @@
 import { createServerFn } from '@tanstack/react-start'
 import { z } from 'zod'
 import { prisma } from './db'
-import type { PrismaClient } from '@prisma/client'
+import type { Prisma } from '@prisma/client'
+
+const documentPrefixes = {
+  sales_invoice: 'FAC',
+  purchase_invoice: 'ACH',
+  pos_ticket: 'POS',
+} as const
+
+// Numerotation continue par entreprise, type de document et annee
+// (FAC-2026-00001...). L'upsert SQL est atomique : deux ventes simultanees ne
+// peuvent pas obtenir le meme numero. A appeler dans la transaction qui cree le
+// document, pour qu'un echec n'en consomme pas un (pas de trou).
+async function nextDocumentReference(tx: Prisma.TransactionClient, companyId: string, kind: keyof typeof documentPrefixes) {
+  const year = new Date().getFullYear()
+  const key = `${kind}:${year}`
+  const rows = await tx.$queryRaw<Array<{ value: number }>>`
+    INSERT INTO "DocumentSequence" ("companyId", "key", "nextNumber") VALUES (${companyId}, ${key}, 2)
+    ON CONFLICT ("companyId", "key") DO UPDATE SET "nextNumber" = "DocumentSequence"."nextNumber" + 1
+    RETURNING "nextNumber" - 1 AS value`
+  return `${documentPrefixes[kind]}-${year}-${String(rows[0].value).padStart(5, '0')}`
+}
 
 async function getCompany(companySlug: string, permission: string) {
   const { requireCompanyAccess } = await import('./access')
@@ -653,12 +673,13 @@ export const createPurchaseInvoice = createServerFn({ method: 'POST' })
     if (!account) throw new Error('Compte introuvable.')
 
     const amount = Math.round(data.amount)
-    const reference = data.reference?.trim() || `ACH-${Date.now().toString().slice(-6)}`
     const vendor = await prisma.vendor.findFirst({
       where: { companyId: company.id, name: data.vendorName.trim() },
     })
 
     return prisma.$transaction(async (tx) => {
+      // La reference fournisseur saisie est conservee ; sinon numero interne.
+      const reference = data.reference?.trim() || await nextDocumentReference(tx, company.id, 'purchase_invoice')
       const invoice = await tx.purchaseInvoice.create({
         data: {
           companyId: company.id,
@@ -715,7 +736,6 @@ export const createSalesInvoice = createServerFn({ method: 'POST' })
     customerId: z.string().optional(),
     customerName: z.string().optional(),
     accountId: z.string().optional(),
-    number: z.string().optional(),
     amount: z.number().positive(),
     status: z.enum(['Draft', 'Sent', 'Paid']).default('Draft'),
     notes: z.string().optional(),
@@ -735,7 +755,6 @@ export const createSalesInvoice = createServerFn({ method: 'POST' })
     }
 
     const amount = Math.round(data.amount)
-    const number = data.number?.trim() || `FAC-${Date.now().toString().slice(-6)}`
 
     // Comme pour les factures d'achat : une facture payee impacte la
     // tresorerie (transaction + paiement + solde du compte).
@@ -747,6 +766,9 @@ export const createSalesInvoice = createServerFn({ method: 'POST' })
     if (data.status === 'Paid' && !account) throw new Error('Compte introuvable.')
 
     return prisma.$transaction(async (tx) => {
+      // Numero toujours attribue par le serveur : une facture de vente doit
+      // suivre une numerotation continue, non modifiable par l'utilisateur.
+      const number = await nextDocumentReference(tx, company.id, 'sales_invoice')
       const invoice = await tx.salesInvoice.create({
         data: {
           companyId: company.id,
@@ -837,7 +859,6 @@ export const createPosSale = createServerFn({ method: 'POST' })
       return { item, quantity, total: item.price * quantity }
     })
     const total = lineItems.reduce((sum, line) => sum + line.total, 0)
-    const reference = `POS-${Date.now().toString().slice(-6)}`
     const account = data.paymentMethod === 'mobile'
       ? await ensureAccount(company.id, 'Cash', 'Mobile money')
       : data.paymentMethod === 'card'
@@ -846,6 +867,7 @@ export const createPosSale = createServerFn({ method: 'POST' })
     const warehouse = lineItems.some((line) => line.item.stock !== null) ? await ensureWarehouse(company.id) : null
 
     const sale = await prisma.$transaction(async (tx) => {
+      const reference = await nextDocumentReference(tx, company.id, 'pos_ticket')
       for (const line of lineItems) {
         if (line.item.stock !== null) {
           // Decrement conditionnel : deux ventes simultanees du meme article ne
@@ -900,12 +922,12 @@ export const createPosSale = createServerFn({ method: 'POST' })
         include: { lines: true, customer: true },
       })
       await tx.auditLog.create({ data: { companyId: company.id, actorId: user.id, action: 'pos.sale_completed', entity: 'PosTicket', entityId: ticket.id, metadata: JSON.stringify({ reference, total, paymentMethod: data.paymentMethod }) } })
-      return { transaction, ticket }
+      return { transaction, ticket, reference }
     })
 
     const customer = data.customerId ? await prisma.customer.findFirst({ where: { id: data.customerId, companyId: company.id } }) : null
     return {
-      reference,
+      reference: sale.reference,
       customer: customer?.name ?? 'Client comptoir',
       total,
       items: data.lines.reduce((sum, line) => sum + line.quantity, 0),

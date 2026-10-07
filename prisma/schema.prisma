@@ -146,6 +146,7 @@ model Company {
   posRegisters     PosRegister[]
   posSessions      PosSession[]
   posTickets       PosTicket[]
+  sequences        DocumentSequence[]
 
   @@index([workspaceId])
 }
@@ -794,4 +795,16 @@ model PosTicketLine {
 
   @@index([ticketId])
   @@index([itemId])
+}
+
+// Compteur de numerotation par entreprise et par type de document (et par
+// annee) : factures et tickets doivent suivre une numerotation continue, sans
+// trou ni doublon. Incremente uniquement via nextDocumentReference().
+model DocumentSequence {
+  companyId  String
+  key        String
+  nextNumber Int     @default(1)
+  company    Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@id([companyId, key])
 }
