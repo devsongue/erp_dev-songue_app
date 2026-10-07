@@ -240,6 +240,26 @@ export function FormActions({ onCancel, submitLabel = 'Enregistrer', pending = f
   )
 }
 
+// Fine barre en haut de l'ecran pendant un changement de page. Elle n'apparait
+// qu'apres un court delai : une navigation instantanee ne fait rien clignoter.
+export function NavigationProgress({ active }: { active: boolean }) {
+  const [visible, setVisible] = React.useState(false)
+  React.useEffect(() => {
+    if (!active) {
+      setVisible(false)
+      return
+    }
+    const timer = window.setTimeout(() => setVisible(true), 150)
+    return () => window.clearTimeout(timer)
+  }, [active])
+  if (!visible) return null
+  return (
+    <div className="pointer-events-none fixed inset-x-0 top-0 z-[70] h-0.5 overflow-hidden" role="progressbar" aria-label="Chargement de la page">
+      <div className="nav-progress h-full w-1/3 bg-orange-500" />
+    </div>
+  )
+}
+
 // --- Confirmation -----------------------------------------------------------
 
 type ConfirmOptions = {

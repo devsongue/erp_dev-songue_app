@@ -1,5 +1,8 @@
 generator client {
   provider = "prisma-client-js"
+  // Les `include` sont resolus en une seule requete SQL (jointures) au lieu
+  // d'une requete par niveau de relation : decisif quand la base est distante.
+  previewFeatures = ["relationJoins"]
 }
 
 datasource db {

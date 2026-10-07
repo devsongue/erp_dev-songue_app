@@ -33,13 +33,35 @@ import {
 } from 'lucide-react'
 import * as React from 'react'
 import { CompanyProvider, useCompany } from '~/context/CompanyContext'
-import { FeedbackProvider } from '~/components/ui'
+import { FeedbackProvider, NavigationProgress } from '~/components/ui'
 import { GlobalSearch } from '~/components/GlobalSearch'
 import { getCompanyAuthState, logout, createCompany } from '~/server/auth'
 
+// `beforeLoad` n'est jamais mis en cache par le routeur : sans ce cache, chaque
+// clic faisait un aller-retour serveur de verification de session AVANT de
+// charger la page. Les donnees restent protegees : chaque appel serveur
+// reverifie la session et les permissions.
+// (Objet mute plutot que `let` reassigne : le composant est decoupe dans un
+// autre module par le routeur, ou une variable importee est en lecture seule.)
+type CompanyAuth = Awaited<ReturnType<typeof getCompanyAuthState>>
+const authCacheTtlMs = 30_000
+const authCache: { current: { slug: string; at: number; value: CompanyAuth } | null } = { current: null }
+
+export function clearCompanyAuthCache() {
+  authCache.current = null
+}
+
 export const Route = createFileRoute('/$companySlug')({
   beforeLoad: async ({ params, location }) => {
-    const auth = await getCompanyAuthState({ data: { companySlug: params.companySlug } })
+    const onClient = typeof window !== 'undefined'
+    const entry = authCache.current
+    const cached = onClient && entry?.slug === params.companySlug && Date.now() - entry.at < authCacheTtlMs
+      ? entry.value
+      : null
+    const auth = cached ?? await getCompanyAuthState({ data: { companySlug: params.companySlug } })
+    if (onClient && !cached && auth.user && auth.canAccessCompany) {
+      authCache.current = { slug: params.companySlug, at: Date.now(), value: auth }
+    }
 
     if (!auth.user) {
       throw redirect({
@@ -68,6 +90,14 @@ export const Route = createFileRoute('/$companySlug')({
 function CompanyLayout() {
   const { companySlug } = Route.useParams()
   const auth = Route.useRouteContext()
+
+  // Apres le rendu serveur, la session vient d'etre verifiee : on amorce le
+  // cache pour que la premiere navigation ne refasse pas cette verification.
+  React.useEffect(() => {
+    if (!authCache.current && auth.user && auth.canAccessCompany) {
+      authCache.current = { slug: companySlug, at: Date.now(), value: auth as CompanyAuth }
+    }
+  }, [auth, companySlug])
 
   return (
     <CompanyProvider activeCompanySlug={companySlug} companies={auth.companies}>
@@ -235,6 +265,7 @@ const erpNavigation: Array<{ label: string; sections: SidebarSection[] }> = [
 function ErpAppShell({ children, companySlug }: { children: React.ReactNode, companySlug: string }) {
   const navigate = useNavigate()
   const pathname = useRouterState({ select: (state) => state.location.pathname })
+  const isNavigating = useRouterState({ select: (state) => state.status === 'pending' })
   const [isDropdownOpen, setIsDropdownOpen] = React.useState(false)
   const [showCreateCompanyModal, setShowCreateCompanyModal] = React.useState(false)
   // Le theme est deja pose sur <html> par le script du document (__root.tsx).
@@ -304,6 +335,9 @@ function ErpAppShell({ children, companySlug }: { children: React.ReactNode, com
     document.title = [label, activeCompany.name, 'DevSongue Business'].filter(Boolean).join(' · ')
   }, [currentSubPath, activeCompany.name])
 
+  // En quittant l'espace entreprise (deconnexion), on rend le titre par defaut.
+  React.useEffect(() => () => { document.title = 'DevSongue Business' }, [])
+
   function toggleTheme() {
     const next = theme === 'dark' ? 'light' : 'dark'
     setTheme(next)
@@ -313,6 +347,7 @@ function ErpAppShell({ children, companySlug }: { children: React.ReactNode, com
 
   return (
     <div className="neon-grid min-h-screen text-slate-950">
+      <NavigationProgress active={isNavigating} />
       <aside className="fixed inset-y-0 left-0 z-20 hidden w-[17rem] border-r border-slate-200 bg-white lg:flex lg:flex-col">
         <div className="relative border-b border-slate-200 px-3 py-2" ref={dropdownRef}>
           <button
@@ -417,6 +452,7 @@ function ErpAppShell({ children, companySlug }: { children: React.ReactNode, com
           <button
             onClick={async () => {
               await logout()
+              clearCompanyAuthCache()
               await navigate({ to: '/login', search: { redirect: undefined } })
             }}
             className="flex w-full items-center gap-2.5 rounded px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-950"
