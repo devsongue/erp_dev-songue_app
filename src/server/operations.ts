@@ -60,6 +60,22 @@ async function ensureQuoteSettings(companyId: string, companyName: string) {
   })
 }
 
+// Tout identifiant fourni par le client doit appartenir a l'entreprise active :
+// sans ce controle, une cle etrangere valide d'une autre entreprise serait
+// acceptee par la base et ses donnees renvoyees via les `include`.
+async function assertCompanyCustomer(companyId: string, customerId?: string | null) {
+  if (!customerId) return
+  const customer = await prisma.customer.findFirst({ where: { id: customerId, companyId }, select: { id: true } })
+  if (!customer) throw new Error('Client introuvable.')
+}
+
+async function assertCompanyItems(companyId: string, itemIds: Array<string | null | undefined>) {
+  const ids = Array.from(new Set(itemIds.filter((id): id is string => Boolean(id))))
+  if (!ids.length) return
+  const count = await prisma.catalogItem.count({ where: { companyId, id: { in: ids } } })
+  if (count !== ids.length) throw new Error('Article introuvable.')
+}
+
 const quoteLineInput = z.object({
   itemId: z.string().optional(),
   description: z.string().min(1),
@@ -328,6 +344,8 @@ export const createQuote = createServerFn({ method: 'POST' })
   .handler(async ({ data }) => {
     const company = await getCompany(data.companySlug, 'invoice.create')
     const settings = await ensureQuoteSettings(company.id, company.name)
+    await assertCompanyCustomer(company.id, data.customerId)
+    await assertCompanyItems(company.id, data.lines.map((line) => line.itemId))
 
     let customerId = data.customerId || undefined
     if (!customerId && data.customerName?.trim()) {
@@ -482,10 +500,8 @@ export const updateQuote = createServerFn({ method: 'POST' })
     const existing = await prisma.quote.findFirst({ where: { id: data.quoteId, companyId: company.id } })
     if (!existing) throw new Error('Devis introuvable.')
     if (existing.status === 'Accepted') throw new Error('Un devis accepte doit etre duplique ou annule, pas modifie.')
-    if (data.customerId) {
-      const customer = await prisma.customer.findFirst({ where: { id: data.customerId, companyId: company.id } })
-      if (!customer) throw new Error('Client introuvable.')
-    }
+    await assertCompanyCustomer(company.id, data.customerId)
+    await assertCompanyItems(company.id, data.lines.map((line) => line.itemId))
     const subtotal = data.lines.reduce((sum, line) => sum + Math.round(line.quantity * line.unitPrice), 0)
     const taxable = Math.max(0, subtotal - Math.round(subtotal * data.discountRate / 100))
     const total = taxable + Math.round(taxable * data.taxRate / 100)
@@ -566,6 +582,7 @@ export const updateCrmDeal = createServerFn({ method: 'POST' })
   .inputValidator(dealInput.extend({ dealId: z.string() }))
   .handler(async ({ data }) => {
     const { company, user } = await getCompanyContext(data.companySlug, 'customer.update')
+    await assertCompanyCustomer(company.id, data.contactId)
     const deal = await prisma.deal.update({ where: { id: data.dealId, companyId: company.id }, data: { contactId: data.contactId, title: data.title.trim(), value: Math.round(data.value), stageId: data.stageId, priority: data.priority, expectedCloseDate: new Date(data.expectedCloseDate), status: data.stageId === 'won' ? 'Won' : data.stageId === 'lost' ? 'Lost' : 'Open' }, include: { customer: true } })
     await prisma.auditLog.create({ data: { companyId: company.id, actorId: user.id, action: 'deal.updated', entity: 'Deal', entityId: deal.id, metadata: JSON.stringify({ stage: deal.stageId, value: deal.value }) } })
     return deal
@@ -705,6 +722,7 @@ export const createSalesInvoice = createServerFn({ method: 'POST' })
   }))
   .handler(async ({ data }) => {
     const company = await getCompany(data.companySlug, 'invoice.create')
+    await assertCompanyCustomer(company.id, data.customerId)
     let customerId = data.customerId || undefined
     if (!customerId && data.customerName?.trim()) {
       const customer = await prisma.customer.create({
@@ -790,6 +808,7 @@ export const createPosSale = createServerFn({ method: 'POST' })
   }))
   .handler(async ({ data }) => {
     const { company, user } = await getCompanyContext(data.companySlug, 'finance.manage')
+    await assertCompanyCustomer(company.id, data.customerId)
     const register = await prisma.posRegister.upsert({
       where: { companyId_name: { companyId: company.id, name: 'Caisse principale' } },
       update: {}, create: { companyId: company.id, name: 'Caisse principale' },
