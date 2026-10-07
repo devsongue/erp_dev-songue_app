@@ -17,7 +17,9 @@ const typeIcons: Record<string, any> = {
   Service: Package,
   Facture: ReceiptText,
   Ticket: ReceiptText,
-  Depense: ReceiptText,
+  Dépense: ReceiptText,
+  Entrée: ReceiptText,
+  Mouvement: ReceiptText,
   Devis: FileCheck2,
   Fournisseur: Truck,
 }

@@ -4,7 +4,11 @@ import { getPosData } from '~/server/dataFetchers'
 import { useMoney } from '~/context/CompanyContext'
 
 export const Route = createFileRoute('/$companySlug/sales/')({
-  loader: async ({ params }) => getPosData({ data: { companySlug: params.companySlug } }),
+  // Les chiffres du jour viennent de la caisse : sans le module Caisse (ou sans
+  // pos.read), la page reste accessible avec des compteurs a zero.
+  loader: async ({ params }) => getPosData({ data: { companySlug: params.companySlug } })
+    .then((data) => ({ today: data.today }))
+    .catch(() => ({ today: { total: 0, count: 0 } })),
   component: SalesDashboard,
 })
 

@@ -18,9 +18,9 @@ function PurchasesDashboard() {
   const [startDate, setStartDate] = useState(todayInputValue())
   const [endDate, setEndDate] = useState(todayInputValue())
 
-  const periodInvoices = purchaseInvoices.filter((invoice: any) => matchesDatePreset(invoice.date, datePreset, startDate, endDate))
+  const periodInvoices = purchaseInvoices.filter((invoice: any) => invoice.status !== 'Cancelled' && matchesDatePreset(invoice.date, datePreset, startDate, endDate))
   const totalPurchases = periodInvoices.reduce((sum: number, invoice: any) => sum + invoice.amount, 0)
-  const pendingInvoices = periodInvoices.filter((invoice: any) => invoice.status === 'Pending')
+  const pendingInvoices = periodInvoices.filter((invoice: any) => ['Pending', 'PartiallyPaid', 'Overdue'].includes(invoice.status))
   const activeVendors = vendors.filter((vendor: any) => vendor.status !== 'Suspendu')
   const riskVendors = vendors.filter((vendor: any) => vendor.risk === 'Eleve' || vendor.status === 'A surveiller')
   const topCategories = Array.from(

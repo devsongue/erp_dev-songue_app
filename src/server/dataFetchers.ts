@@ -234,78 +234,66 @@ export const searchCompanyData = createServerFn({ method: 'GET' })
     const { user, company, permissions } = await requireCompanyAccess(data.companySlug)
     // La recherche croise plusieurs modules : chaque section respecte la permission de son module.
     const can = (permission: string) => user.isOwner || permissions.has(permission)
+    // PostgreSQL : `contains` est sensible a la casse par defaut ("kone" ne
+    // trouverait pas "Kone Distribution").
+    const match = { contains: query, mode: 'insensitive' as const }
 
-    const [customers, items, transactions, quotes, vendors] = await Promise.all([
+    const [customers, items, invoices, transactions, quotes, vendors] = await Promise.all([
       can('customer.read') ? prisma.customer.findMany({
-        where: {
-          companyId: company.id,
-          OR: [
-            { name: { contains: query } },
-            { email: { contains: query } },
-          ],
-        },
+        where: { companyId: company.id, OR: [{ name: match }, { email: match }, { phone: match }] },
         orderBy: { updatedAt: 'desc' },
         take: 5,
       }) : Promise.resolve([] as Customer[]),
       can('inventory.read') ? prisma.catalogItem.findMany({
-        where: {
-          companyId: company.id,
-          OR: [
-            { name: { contains: query } },
-            { sku: { contains: query } },
-            { description: { contains: query } },
-            { supplier: { contains: query } },
-          ],
-        },
+        where: { companyId: company.id, OR: [{ name: match }, { sku: match }, { description: match }, { supplier: match }] },
         orderBy: { updatedAt: 'desc' },
         take: 5,
       }) : Promise.resolve([] as CatalogItem[]),
+      can('invoice.read') ? prisma.salesInvoice.findMany({
+        where: { companyId: company.id, OR: [{ number: match }, { customer: { name: match } }] },
+        include: { customer: { select: { name: true } } },
+        orderBy: { createdAt: 'desc' },
+        take: 5,
+      }) : Promise.resolve([]),
       can('finance.read') ? prisma.transaction.findMany({
-        where: {
-          companyId: company.id,
-          OR: [
-            { description: { contains: query } },
-            { reference: { contains: query } },
-            { category: { contains: query } },
-          ],
-        },
+        where: { companyId: company.id, OR: [{ description: match }, { reference: match }, { category: match }] },
         orderBy: { date: 'desc' },
         take: 5,
       }) : Promise.resolve([] as Transaction[]),
       can('invoice.read') ? prisma.quote.findMany({
-        where: {
-          companyId: company.id,
-          OR: [
-            { reference: { contains: query } },
-            { title: { contains: query } },
-          ],
-        },
+        where: { companyId: company.id, OR: [{ reference: match }, { title: match }] },
         include: { customer: true },
         orderBy: { updatedAt: 'desc' },
         take: 5,
       }) : Promise.resolve([] as (Quote & { customer: Customer | null })[]),
       can('finance.read') ? prisma.vendor.findMany({
-        where: {
-          companyId: company.id,
-          OR: [
-            { name: { contains: query } },
-            { category: { contains: query } },
-            { owner: { contains: query } },
-            { city: { contains: query } },
-          ],
-        },
+        where: { companyId: company.id, OR: [{ name: match }, { category: match }, { owner: match }, { city: match }] },
         orderBy: { updatedAt: 'desc' },
         take: 5,
       }) : Promise.resolve([] as Vendor[]),
     ])
+
+    const transactionLabel = (transaction: Transaction) => {
+      if (transaction.category === 'POS') return { type: 'Ticket', to: `/${data.companySlug}/pos/history` }
+      if (transaction.type === 'Expense') return { type: 'Dépense', to: `/${data.companySlug}/finance/expenses` }
+      if (transaction.type === 'Income') return { type: 'Entrée', to: `/${data.companySlug}/finance/revenues` }
+      return { type: 'Mouvement', to: `/${data.companySlug}/finance` }
+    }
 
     return [
       ...customers.map((customer: Customer) => ({
         id: customer.id,
         type: 'Client',
         title: customer.name,
-        subtitle: customer.email ?? 'Fiche client',
-        to: `/${data.companySlug}/crm`,
+        subtitle: customer.phone ?? customer.email ?? 'Fiche client',
+        to: `/${data.companySlug}/crm/customers`,
+      })),
+      ...invoices.map((invoice) => ({
+        id: invoice.id,
+        type: 'Facture',
+        title: invoice.status === 'Draft' ? 'Brouillon de facture' : invoice.number,
+        subtitle: invoice.customer?.name ?? 'Client comptoir',
+        to: `/${data.companySlug}/invoices`,
       })),
       ...items.map((item: CatalogItem) => ({
         id: item.id,
@@ -316,14 +304,9 @@ export const searchCompanyData = createServerFn({ method: 'GET' })
       })),
       ...transactions.map((transaction: Transaction) => ({
         id: transaction.id,
-        type: transaction.type === 'Expense' ? 'Depense' : transaction.category === 'POS' ? 'Ticket' : 'Facture',
+        ...transactionLabel(transaction),
         title: transaction.description,
         subtitle: `${transaction.reference ?? transaction.category} - ${transaction.status}`,
-        to: transaction.category === 'POS'
-          ? `/${data.companySlug}/pos/history`
-          : transaction.type === 'Expense'
-            ? `/${data.companySlug}/finance/expenses`
-            : `/${data.companySlug}/invoices`,
       })),
       ...quotes.map((quote: Quote & { customer: Customer | null }) => ({
         id: quote.id,
