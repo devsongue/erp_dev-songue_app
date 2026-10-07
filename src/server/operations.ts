@@ -1675,3 +1675,33 @@ export const deleteEmployee = createServerFn({ method: 'POST' })
     })
     return { ok: true }
   })
+
+// --- Categories du catalogue --------------------------------------------------
+
+export const updateCatalogCategory = createServerFn({ method: 'POST' })
+  .inputValidator(z.object({
+    companySlug: z.string(),
+    categoryId: z.string(),
+    name: z.string().trim().min(1).max(80),
+    color: z.string().max(20).default('slate'),
+  }))
+  .handler(async ({ data }) => {
+    const company = await getCompany(data.companySlug, 'inventory.manage')
+    const duplicate = await prisma.category.findFirst({ where: { companyId: company.id, name: data.name, id: { not: data.categoryId } } })
+    if (duplicate) throw new Error('Une autre categorie porte deja ce nom.')
+    return prisma.category.update({ where: { id: data.categoryId, companyId: company.id }, data: { name: data.name, color: data.color } })
+  })
+
+export const deleteCatalogCategory = createServerFn({ method: 'POST' })
+  .inputValidator(z.object({ companySlug: z.string(), categoryId: z.string() }))
+  .handler(async ({ data }) => {
+    const { company, user } = await getCompanyContext(data.companySlug, 'inventory.manage')
+    const category = await prisma.category.findFirst({ where: { id: data.categoryId, companyId: company.id }, include: { _count: { select: { items: true } } } })
+    if (!category) throw new Error('Categorie introuvable.')
+    // Les articles ne sont pas supprimes : ils passent simplement "sans categorie".
+    await prisma.$transaction(async (tx) => {
+      await tx.auditLog.create({ data: { companyId: company.id, actorId: user.id, action: 'category.deleted', entity: 'Category', entityId: category.id, metadata: JSON.stringify({ name: category.name, items: category._count.items }) } })
+      await tx.category.delete({ where: { id: category.id } })
+    })
+    return { ok: true, detachedItems: category._count.items }
+  })

@@ -17,9 +17,11 @@ import {
   Plus,
   Search,
   SlidersHorizontal,
+  Tags,
   Trash2,
   X,
 } from 'lucide-react'
+import { CategoryManager } from '~/components/CategoryManager'
 import { type CatalogCategory, type CatalogItem, type CatalogItemStatus, type CatalogItemType } from '~/domain/catalogData'
 import { getCatalogData } from '~/server/dataFetchers'
 import { createCatalogCategory, createCatalogItem, deleteCatalogItem, restockCatalogItem, updateCatalogItem, updateCatalogItemStatus } from '~/server/operations'
@@ -32,7 +34,7 @@ export const Route = createFileRoute('/$companySlug/products-services')({
 })
 
 type StockFilter = 'all' | 'low' | 'out' | 'ok' | 'service'
-type CatalogModal = 'product' | 'category' | null
+type CatalogModal = 'product' | 'category' | 'categories' | null
 
 interface ProductFormState {
   name: string
@@ -386,6 +388,10 @@ function CatalogPage() {
             <Briefcase className="size-4" />
             Nouveau service
           </button>
+          <button onClick={() => setActiveModal('categories')} className="inline-flex items-center gap-2 rounded border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+            <Tags className="size-4" />
+            Catégories
+          </button>
           <Link to="/$companySlug/inventory" params={{ companySlug }} className="inline-flex items-center gap-2 rounded bg-slate-950 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800">
             <Boxes className="size-4" />
             Voir stock
@@ -582,6 +588,23 @@ function CatalogPage() {
             </div>
           </form>
         </Modal>
+      ) : null}
+
+      {activeModal === 'categories' ? (
+        <CategoryManager
+          companySlug={companySlug}
+          categories={categories}
+          itemCounts={items.reduce<Record<string, number>>((counts, item) => {
+            if (item.categoryId) counts[item.categoryId] = (counts[item.categoryId] ?? 0) + 1
+            return counts
+          }, {})}
+          onRenamed={(category) => setCategories((current) => current.map((item) => item.id === category.id ? { ...item, name: category.name, color: category.color } : item))}
+          onDeleted={(categoryId) => {
+            setCategories((current) => current.filter((item) => item.id !== categoryId))
+            setItems((current) => current.map((item) => item.categoryId === categoryId ? { ...item, categoryId: '' } : item))
+          }}
+          onClose={() => setActiveModal(null)}
+        />
       ) : null}
 
       {activeModal === 'category' ? (
