@@ -9,104 +9,79 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as VerifyRouteImport } from './routes/verify'
-import { Route as SetupRouteImport } from './routes/setup'
-import { Route as RegisterRouteImport } from './routes/register'
-import { Route as PrivacyRouteImport } from './routes/privacy'
-import { Route as OnboardingRouteImport } from './routes/onboarding'
-import { Route as LoginRouteImport } from './routes/login'
-import { Route as CompanySlugRouteImport } from './routes/$companySlug'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CompanySlugRouteImport } from './routes/$companySlug'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as RegisterRouteImport } from './routes/register'
+import { Route as SetupRouteImport } from './routes/setup'
+import { Route as VerifyRouteImport } from './routes/verify'
 import { Route as CompanySlugIndexRouteImport } from './routes/$companySlug.index'
-import { Route as ResetTokenRouteImport } from './routes/reset.$token'
-import { Route as InviteTokenRouteImport } from './routes/invite.$token'
-import { Route as CompanySlugUsersRouteImport } from './routes/$companySlug.users'
-import { Route as CompanySlugSettingsRouteImport } from './routes/$companySlug.settings'
-import { Route as CompanySlugSalesRouteImport } from './routes/$companySlug.sales'
-import { Route as CompanySlugReportsRouteImport } from './routes/$companySlug.reports'
-import { Route as CompanySlugQuotesRouteImport } from './routes/$companySlug.quotes'
-import { Route as CompanySlugPurchasesRouteImport } from './routes/$companySlug.purchases'
-import { Route as CompanySlugProjectsRouteImport } from './routes/$companySlug.projects'
-import { Route as CompanySlugProductsServicesRouteImport } from './routes/$companySlug.products-services'
-import { Route as CompanySlugPosRouteImport } from './routes/$companySlug.pos'
-import { Route as CompanySlugInvoicesRouteImport } from './routes/$companySlug.invoices'
-import { Route as CompanySlugInventoryRouteImport } from './routes/$companySlug.inventory'
-import { Route as CompanySlugHrRouteImport } from './routes/$companySlug.hr'
-import { Route as CompanySlugHelpdeskRouteImport } from './routes/$companySlug.helpdesk'
-import { Route as CompanySlugFinanceRouteImport } from './routes/$companySlug.finance'
-import { Route as CompanySlugDashboardRouteImport } from './routes/$companySlug.dashboard'
-import { Route as CompanySlugCrmRouteImport } from './routes/$companySlug.crm'
 import { Route as CompanySlugAccountingRouteImport } from './routes/$companySlug.accounting'
-import { Route as CompanySlugSalesIndexRouteImport } from './routes/$companySlug.sales.index'
-import { Route as CompanySlugPurchasesIndexRouteImport } from './routes/$companySlug.purchases.index'
-import { Route as CompanySlugPosIndexRouteImport } from './routes/$companySlug.pos.index'
-import { Route as CompanySlugInventoryIndexRouteImport } from './routes/$companySlug.inventory.index'
-import { Route as CompanySlugHrIndexRouteImport } from './routes/$companySlug.hr.index'
-import { Route as CompanySlugFinanceIndexRouteImport } from './routes/$companySlug.finance.index'
-import { Route as CompanySlugCrmIndexRouteImport } from './routes/$companySlug.crm.index'
+import { Route as CompanySlugCrmRouteImport } from './routes/$companySlug.crm'
+import { Route as CompanySlugDashboardRouteImport } from './routes/$companySlug.dashboard'
+import { Route as CompanySlugFinanceRouteImport } from './routes/$companySlug.finance'
+import { Route as CompanySlugHelpdeskRouteImport } from './routes/$companySlug.helpdesk'
+import { Route as CompanySlugHrRouteImport } from './routes/$companySlug.hr'
+import { Route as CompanySlugInventoryRouteImport } from './routes/$companySlug.inventory'
+import { Route as CompanySlugInvoicesRouteImport } from './routes/$companySlug.invoices'
+import { Route as CompanySlugPosRouteImport } from './routes/$companySlug.pos'
+import { Route as CompanySlugProductsServicesRouteImport } from './routes/$companySlug.products-services'
+import { Route as CompanySlugProjectsRouteImport } from './routes/$companySlug.projects'
+import { Route as CompanySlugPurchasesRouteImport } from './routes/$companySlug.purchases'
+import { Route as CompanySlugQuotesRouteImport } from './routes/$companySlug.quotes'
+import { Route as CompanySlugReportsRouteImport } from './routes/$companySlug.reports'
+import { Route as CompanySlugSalesRouteImport } from './routes/$companySlug.sales'
+import { Route as CompanySlugSettingsRouteImport } from './routes/$companySlug.settings'
+import { Route as CompanySlugUsersRouteImport } from './routes/$companySlug.users'
+import { Route as InviteTokenRouteImport } from './routes/invite.$token'
+import { Route as ResetTokenRouteImport } from './routes/reset.$token'
 import { Route as CompanySlugAccountingIndexRouteImport } from './routes/$companySlug.accounting.index'
-import { Route as CompanySlugSalesReturnsRouteImport } from './routes/$companySlug.sales.returns'
-import { Route as CompanySlugSalesQuotationsRouteImport } from './routes/$companySlug.sales.quotations'
-import { Route as CompanySlugSalesOrdersRouteImport } from './routes/$companySlug.sales.orders'
-import { Route as CompanySlugSalesInvoicesRouteImport } from './routes/$companySlug.sales.invoices'
-import { Route as CompanySlugPurchasesVendorsRouteImport } from './routes/$companySlug.purchases.vendors'
-import { Route as CompanySlugPurchasesReturnsRouteImport } from './routes/$companySlug.purchases.returns'
-import { Route as CompanySlugPurchasesInvoicesRouteImport } from './routes/$companySlug.purchases.invoices'
-import { Route as CompanySlugPosStockRouteImport } from './routes/$companySlug.pos.stock'
-import { Route as CompanySlugPosSalesReportRouteImport } from './routes/$companySlug.pos.sales-report'
-import { Route as CompanySlugPosRegisterRouteImport } from './routes/$companySlug.pos.register'
-import { Route as CompanySlugPosProductsRouteImport } from './routes/$companySlug.pos.products'
-import { Route as CompanySlugPosHistoryRouteImport } from './routes/$companySlug.pos.history'
-import { Route as CompanySlugPosCustomersRouteImport } from './routes/$companySlug.pos.customers'
-import { Route as CompanySlugPosAnalyticsRouteImport } from './routes/$companySlug.pos.analytics'
-import { Route as CompanySlugInventoryWarehousesRouteImport } from './routes/$companySlug.inventory.warehouses'
-import { Route as CompanySlugInventoryTransfersRouteImport } from './routes/$companySlug.inventory.transfers'
-import { Route as CompanySlugHrShiftsRouteImport } from './routes/$companySlug.hr.shifts'
-import { Route as CompanySlugHrPayrollsRouteImport } from './routes/$companySlug.hr.payrolls'
-import { Route as CompanySlugHrLeavesRouteImport } from './routes/$companySlug.hr.leaves'
-import { Route as CompanySlugHrEmployeesRouteImport } from './routes/$companySlug.hr.employees'
-import { Route as CompanySlugHrAttendancesRouteImport } from './routes/$companySlug.hr.attendances'
-import { Route as CompanySlugFinanceVendorPaymentsRouteImport } from './routes/$companySlug.finance.vendor-payments'
-import { Route as CompanySlugFinanceRevenuesRouteImport } from './routes/$companySlug.finance.revenues'
-import { Route as CompanySlugFinanceExpensesRouteImport } from './routes/$companySlug.finance.expenses'
-import { Route as CompanySlugFinanceCustomerPaymentsRouteImport } from './routes/$companySlug.finance.customer-payments'
-import { Route as CompanySlugFinanceBankAccountsRouteImport } from './routes/$companySlug.finance.bank-accounts'
-import { Route as CompanySlugCrmPipelinesRouteImport } from './routes/$companySlug.crm.pipelines'
-import { Route as CompanySlugCrmLeadsRouteImport } from './routes/$companySlug.crm.leads'
-import { Route as CompanySlugCrmDealsRouteImport } from './routes/$companySlug.crm.deals'
-import { Route as CompanySlugAccountingTrialBalanceRouteImport } from './routes/$companySlug.accounting.trial-balance'
-import { Route as CompanySlugAccountingProfitLossRouteImport } from './routes/$companySlug.accounting.profit-loss'
-import { Route as CompanySlugAccountingLedgerRouteImport } from './routes/$companySlug.accounting.ledger'
 import { Route as CompanySlugAccountingChartOfAccountsRouteImport } from './routes/$companySlug.accounting.chart-of-accounts'
+import { Route as CompanySlugAccountingLedgerRouteImport } from './routes/$companySlug.accounting.ledger'
+import { Route as CompanySlugAccountingProfitLossRouteImport } from './routes/$companySlug.accounting.profit-loss'
+import { Route as CompanySlugAccountingTrialBalanceRouteImport } from './routes/$companySlug.accounting.trial-balance'
+import { Route as CompanySlugCrmIndexRouteImport } from './routes/$companySlug.crm.index'
+import { Route as CompanySlugCrmDealsRouteImport } from './routes/$companySlug.crm.deals'
+import { Route as CompanySlugCrmLeadsRouteImport } from './routes/$companySlug.crm.leads'
+import { Route as CompanySlugCrmPipelinesRouteImport } from './routes/$companySlug.crm.pipelines'
+import { Route as CompanySlugFinanceIndexRouteImport } from './routes/$companySlug.finance.index'
+import { Route as CompanySlugFinanceBankAccountsRouteImport } from './routes/$companySlug.finance.bank-accounts'
+import { Route as CompanySlugFinanceCustomerPaymentsRouteImport } from './routes/$companySlug.finance.customer-payments'
+import { Route as CompanySlugFinanceExpensesRouteImport } from './routes/$companySlug.finance.expenses'
+import { Route as CompanySlugFinanceRevenuesRouteImport } from './routes/$companySlug.finance.revenues'
+import { Route as CompanySlugFinanceVendorPaymentsRouteImport } from './routes/$companySlug.finance.vendor-payments'
+import { Route as CompanySlugHrIndexRouteImport } from './routes/$companySlug.hr.index'
+import { Route as CompanySlugHrAttendancesRouteImport } from './routes/$companySlug.hr.attendances'
+import { Route as CompanySlugHrEmployeesRouteImport } from './routes/$companySlug.hr.employees'
+import { Route as CompanySlugHrLeavesRouteImport } from './routes/$companySlug.hr.leaves'
+import { Route as CompanySlugHrPayrollsRouteImport } from './routes/$companySlug.hr.payrolls'
+import { Route as CompanySlugHrShiftsRouteImport } from './routes/$companySlug.hr.shifts'
+import { Route as CompanySlugInventoryIndexRouteImport } from './routes/$companySlug.inventory.index'
+import { Route as CompanySlugInventoryTransfersRouteImport } from './routes/$companySlug.inventory.transfers'
+import { Route as CompanySlugInventoryWarehousesRouteImport } from './routes/$companySlug.inventory.warehouses'
+import { Route as CompanySlugPosIndexRouteImport } from './routes/$companySlug.pos.index'
+import { Route as CompanySlugPosAnalyticsRouteImport } from './routes/$companySlug.pos.analytics'
+import { Route as CompanySlugPosCustomersRouteImport } from './routes/$companySlug.pos.customers'
+import { Route as CompanySlugPosHistoryRouteImport } from './routes/$companySlug.pos.history'
+import { Route as CompanySlugPosProductsRouteImport } from './routes/$companySlug.pos.products'
+import { Route as CompanySlugPosRegisterRouteImport } from './routes/$companySlug.pos.register'
+import { Route as CompanySlugPosSalesReportRouteImport } from './routes/$companySlug.pos.sales-report'
+import { Route as CompanySlugPosStockRouteImport } from './routes/$companySlug.pos.stock'
+import { Route as CompanySlugPurchasesIndexRouteImport } from './routes/$companySlug.purchases.index'
+import { Route as CompanySlugPurchasesInvoicesRouteImport } from './routes/$companySlug.purchases.invoices'
+import { Route as CompanySlugPurchasesReturnsRouteImport } from './routes/$companySlug.purchases.returns'
+import { Route as CompanySlugPurchasesVendorsRouteImport } from './routes/$companySlug.purchases.vendors'
+import { Route as CompanySlugSalesIndexRouteImport } from './routes/$companySlug.sales.index'
+import { Route as CompanySlugSalesInvoicesRouteImport } from './routes/$companySlug.sales.invoices'
+import { Route as CompanySlugSalesOrdersRouteImport } from './routes/$companySlug.sales.orders'
+import { Route as CompanySlugSalesQuotationsRouteImport } from './routes/$companySlug.sales.quotations'
+import { Route as CompanySlugSalesReturnsRouteImport } from './routes/$companySlug.sales.returns'
 
-const VerifyRoute = VerifyRouteImport.update({
-  id: '/verify',
-  path: '/verify',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SetupRoute = SetupRouteImport.update({
-  id: '/setup',
-  path: '/setup',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RegisterRoute = RegisterRouteImport.update({
-  id: '/register',
-  path: '/register',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PrivacyRoute = PrivacyRouteImport.update({
-  id: '/privacy',
-  path: '/privacy',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const OnboardingRoute = OnboardingRouteImport.update({
-  id: '/onboarding',
-  path: '/onboarding',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CompanySlugRoute = CompanySlugRouteImport.update({
@@ -114,9 +89,34 @@ const CompanySlugRoute = CompanySlugRouteImport.update({
   path: '/$companySlug',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RegisterRoute = RegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SetupRoute = SetupRouteImport.update({
+  id: '/setup',
+  path: '/setup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VerifyRoute = VerifyRouteImport.update({
+  id: '/verify',
+  path: '/verify',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CompanySlugIndexRoute = CompanySlugIndexRouteImport.update({
@@ -124,49 +124,49 @@ const CompanySlugIndexRoute = CompanySlugIndexRouteImport.update({
   path: '/',
   getParentRoute: () => CompanySlugRoute,
 } as any)
-const ResetTokenRoute = ResetTokenRouteImport.update({
-  id: '/reset/$token',
-  path: '/reset/$token',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const InviteTokenRoute = InviteTokenRouteImport.update({
-  id: '/invite/$token',
-  path: '/invite/$token',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CompanySlugUsersRoute = CompanySlugUsersRouteImport.update({
-  id: '/users',
-  path: '/users',
+const CompanySlugAccountingRoute = CompanySlugAccountingRouteImport.update({
+  id: '/accounting',
+  path: '/accounting',
   getParentRoute: () => CompanySlugRoute,
 } as any)
-const CompanySlugSettingsRoute = CompanySlugSettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
+const CompanySlugCrmRoute = CompanySlugCrmRouteImport.update({
+  id: '/crm',
+  path: '/crm',
   getParentRoute: () => CompanySlugRoute,
 } as any)
-const CompanySlugSalesRoute = CompanySlugSalesRouteImport.update({
-  id: '/sales',
-  path: '/sales',
+const CompanySlugDashboardRoute = CompanySlugDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
   getParentRoute: () => CompanySlugRoute,
 } as any)
-const CompanySlugReportsRoute = CompanySlugReportsRouteImport.update({
-  id: '/reports',
-  path: '/reports',
+const CompanySlugFinanceRoute = CompanySlugFinanceRouteImport.update({
+  id: '/finance',
+  path: '/finance',
   getParentRoute: () => CompanySlugRoute,
 } as any)
-const CompanySlugQuotesRoute = CompanySlugQuotesRouteImport.update({
-  id: '/quotes',
-  path: '/quotes',
+const CompanySlugHelpdeskRoute = CompanySlugHelpdeskRouteImport.update({
+  id: '/helpdesk',
+  path: '/helpdesk',
   getParentRoute: () => CompanySlugRoute,
 } as any)
-const CompanySlugPurchasesRoute = CompanySlugPurchasesRouteImport.update({
-  id: '/purchases',
-  path: '/purchases',
+const CompanySlugHrRoute = CompanySlugHrRouteImport.update({
+  id: '/hr',
+  path: '/hr',
   getParentRoute: () => CompanySlugRoute,
 } as any)
-const CompanySlugProjectsRoute = CompanySlugProjectsRouteImport.update({
-  id: '/projects',
-  path: '/projects',
+const CompanySlugInventoryRoute = CompanySlugInventoryRouteImport.update({
+  id: '/inventory',
+  path: '/inventory',
+  getParentRoute: () => CompanySlugRoute,
+} as any)
+const CompanySlugInvoicesRoute = CompanySlugInvoicesRouteImport.update({
+  id: '/invoices',
+  path: '/invoices',
+  getParentRoute: () => CompanySlugRoute,
+} as any)
+const CompanySlugPosRoute = CompanySlugPosRouteImport.update({
+  id: '/pos',
+  path: '/pos',
   getParentRoute: () => CompanySlugRoute,
 } as any)
 const CompanySlugProductsServicesRoute =
@@ -175,269 +175,55 @@ const CompanySlugProductsServicesRoute =
     path: '/products-services',
     getParentRoute: () => CompanySlugRoute,
   } as any)
-const CompanySlugPosRoute = CompanySlugPosRouteImport.update({
-  id: '/pos',
-  path: '/pos',
+const CompanySlugProjectsRoute = CompanySlugProjectsRouteImport.update({
+  id: '/projects',
+  path: '/projects',
   getParentRoute: () => CompanySlugRoute,
 } as any)
-const CompanySlugInvoicesRoute = CompanySlugInvoicesRouteImport.update({
-  id: '/invoices',
-  path: '/invoices',
+const CompanySlugPurchasesRoute = CompanySlugPurchasesRouteImport.update({
+  id: '/purchases',
+  path: '/purchases',
   getParentRoute: () => CompanySlugRoute,
 } as any)
-const CompanySlugInventoryRoute = CompanySlugInventoryRouteImport.update({
-  id: '/inventory',
-  path: '/inventory',
+const CompanySlugQuotesRoute = CompanySlugQuotesRouteImport.update({
+  id: '/quotes',
+  path: '/quotes',
   getParentRoute: () => CompanySlugRoute,
 } as any)
-const CompanySlugHrRoute = CompanySlugHrRouteImport.update({
-  id: '/hr',
-  path: '/hr',
+const CompanySlugReportsRoute = CompanySlugReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
   getParentRoute: () => CompanySlugRoute,
 } as any)
-const CompanySlugHelpdeskRoute = CompanySlugHelpdeskRouteImport.update({
-  id: '/helpdesk',
-  path: '/helpdesk',
+const CompanySlugSalesRoute = CompanySlugSalesRouteImport.update({
+  id: '/sales',
+  path: '/sales',
   getParentRoute: () => CompanySlugRoute,
 } as any)
-const CompanySlugFinanceRoute = CompanySlugFinanceRouteImport.update({
-  id: '/finance',
-  path: '/finance',
+const CompanySlugSettingsRoute = CompanySlugSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => CompanySlugRoute,
 } as any)
-const CompanySlugDashboardRoute = CompanySlugDashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
+const CompanySlugUsersRoute = CompanySlugUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
   getParentRoute: () => CompanySlugRoute,
 } as any)
-const CompanySlugCrmRoute = CompanySlugCrmRouteImport.update({
-  id: '/crm',
-  path: '/crm',
-  getParentRoute: () => CompanySlugRoute,
+const InviteTokenRoute = InviteTokenRouteImport.update({
+  id: '/invite/$token',
+  path: '/invite/$token',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const CompanySlugAccountingRoute = CompanySlugAccountingRouteImport.update({
-  id: '/accounting',
-  path: '/accounting',
-  getParentRoute: () => CompanySlugRoute,
-} as any)
-const CompanySlugSalesIndexRoute = CompanySlugSalesIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => CompanySlugSalesRoute,
-} as any)
-const CompanySlugPurchasesIndexRoute =
-  CompanySlugPurchasesIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => CompanySlugPurchasesRoute,
-  } as any)
-const CompanySlugPosIndexRoute = CompanySlugPosIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => CompanySlugPosRoute,
-} as any)
-const CompanySlugInventoryIndexRoute =
-  CompanySlugInventoryIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => CompanySlugInventoryRoute,
-  } as any)
-const CompanySlugHrIndexRoute = CompanySlugHrIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => CompanySlugHrRoute,
-} as any)
-const CompanySlugFinanceIndexRoute = CompanySlugFinanceIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => CompanySlugFinanceRoute,
-} as any)
-const CompanySlugCrmIndexRoute = CompanySlugCrmIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => CompanySlugCrmRoute,
+const ResetTokenRoute = ResetTokenRouteImport.update({
+  id: '/reset/$token',
+  path: '/reset/$token',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const CompanySlugAccountingIndexRoute =
   CompanySlugAccountingIndexRouteImport.update({
     id: '/',
     path: '/',
-    getParentRoute: () => CompanySlugAccountingRoute,
-  } as any)
-const CompanySlugSalesReturnsRoute = CompanySlugSalesReturnsRouteImport.update({
-  id: '/returns',
-  path: '/returns',
-  getParentRoute: () => CompanySlugSalesRoute,
-} as any)
-const CompanySlugSalesQuotationsRoute =
-  CompanySlugSalesQuotationsRouteImport.update({
-    id: '/quotations',
-    path: '/quotations',
-    getParentRoute: () => CompanySlugSalesRoute,
-  } as any)
-const CompanySlugSalesOrdersRoute = CompanySlugSalesOrdersRouteImport.update({
-  id: '/orders',
-  path: '/orders',
-  getParentRoute: () => CompanySlugSalesRoute,
-} as any)
-const CompanySlugSalesInvoicesRoute =
-  CompanySlugSalesInvoicesRouteImport.update({
-    id: '/invoices',
-    path: '/invoices',
-    getParentRoute: () => CompanySlugSalesRoute,
-  } as any)
-const CompanySlugPurchasesVendorsRoute =
-  CompanySlugPurchasesVendorsRouteImport.update({
-    id: '/vendors',
-    path: '/vendors',
-    getParentRoute: () => CompanySlugPurchasesRoute,
-  } as any)
-const CompanySlugPurchasesReturnsRoute =
-  CompanySlugPurchasesReturnsRouteImport.update({
-    id: '/returns',
-    path: '/returns',
-    getParentRoute: () => CompanySlugPurchasesRoute,
-  } as any)
-const CompanySlugPurchasesInvoicesRoute =
-  CompanySlugPurchasesInvoicesRouteImport.update({
-    id: '/invoices',
-    path: '/invoices',
-    getParentRoute: () => CompanySlugPurchasesRoute,
-  } as any)
-const CompanySlugPosStockRoute = CompanySlugPosStockRouteImport.update({
-  id: '/stock',
-  path: '/stock',
-  getParentRoute: () => CompanySlugPosRoute,
-} as any)
-const CompanySlugPosSalesReportRoute =
-  CompanySlugPosSalesReportRouteImport.update({
-    id: '/sales-report',
-    path: '/sales-report',
-    getParentRoute: () => CompanySlugPosRoute,
-  } as any)
-const CompanySlugPosRegisterRoute = CompanySlugPosRegisterRouteImport.update({
-  id: '/register',
-  path: '/register',
-  getParentRoute: () => CompanySlugPosRoute,
-} as any)
-const CompanySlugPosProductsRoute = CompanySlugPosProductsRouteImport.update({
-  id: '/products',
-  path: '/products',
-  getParentRoute: () => CompanySlugPosRoute,
-} as any)
-const CompanySlugPosHistoryRoute = CompanySlugPosHistoryRouteImport.update({
-  id: '/history',
-  path: '/history',
-  getParentRoute: () => CompanySlugPosRoute,
-} as any)
-const CompanySlugPosCustomersRoute = CompanySlugPosCustomersRouteImport.update({
-  id: '/customers',
-  path: '/customers',
-  getParentRoute: () => CompanySlugPosRoute,
-} as any)
-const CompanySlugPosAnalyticsRoute = CompanySlugPosAnalyticsRouteImport.update({
-  id: '/analytics',
-  path: '/analytics',
-  getParentRoute: () => CompanySlugPosRoute,
-} as any)
-const CompanySlugInventoryWarehousesRoute =
-  CompanySlugInventoryWarehousesRouteImport.update({
-    id: '/warehouses',
-    path: '/warehouses',
-    getParentRoute: () => CompanySlugInventoryRoute,
-  } as any)
-const CompanySlugInventoryTransfersRoute =
-  CompanySlugInventoryTransfersRouteImport.update({
-    id: '/transfers',
-    path: '/transfers',
-    getParentRoute: () => CompanySlugInventoryRoute,
-  } as any)
-const CompanySlugHrShiftsRoute = CompanySlugHrShiftsRouteImport.update({
-  id: '/shifts',
-  path: '/shifts',
-  getParentRoute: () => CompanySlugHrRoute,
-} as any)
-const CompanySlugHrPayrollsRoute = CompanySlugHrPayrollsRouteImport.update({
-  id: '/payrolls',
-  path: '/payrolls',
-  getParentRoute: () => CompanySlugHrRoute,
-} as any)
-const CompanySlugHrLeavesRoute = CompanySlugHrLeavesRouteImport.update({
-  id: '/leaves',
-  path: '/leaves',
-  getParentRoute: () => CompanySlugHrRoute,
-} as any)
-const CompanySlugHrEmployeesRoute = CompanySlugHrEmployeesRouteImport.update({
-  id: '/employees',
-  path: '/employees',
-  getParentRoute: () => CompanySlugHrRoute,
-} as any)
-const CompanySlugHrAttendancesRoute =
-  CompanySlugHrAttendancesRouteImport.update({
-    id: '/attendances',
-    path: '/attendances',
-    getParentRoute: () => CompanySlugHrRoute,
-  } as any)
-const CompanySlugFinanceVendorPaymentsRoute =
-  CompanySlugFinanceVendorPaymentsRouteImport.update({
-    id: '/vendor-payments',
-    path: '/vendor-payments',
-    getParentRoute: () => CompanySlugFinanceRoute,
-  } as any)
-const CompanySlugFinanceRevenuesRoute =
-  CompanySlugFinanceRevenuesRouteImport.update({
-    id: '/revenues',
-    path: '/revenues',
-    getParentRoute: () => CompanySlugFinanceRoute,
-  } as any)
-const CompanySlugFinanceExpensesRoute =
-  CompanySlugFinanceExpensesRouteImport.update({
-    id: '/expenses',
-    path: '/expenses',
-    getParentRoute: () => CompanySlugFinanceRoute,
-  } as any)
-const CompanySlugFinanceCustomerPaymentsRoute =
-  CompanySlugFinanceCustomerPaymentsRouteImport.update({
-    id: '/customer-payments',
-    path: '/customer-payments',
-    getParentRoute: () => CompanySlugFinanceRoute,
-  } as any)
-const CompanySlugFinanceBankAccountsRoute =
-  CompanySlugFinanceBankAccountsRouteImport.update({
-    id: '/bank-accounts',
-    path: '/bank-accounts',
-    getParentRoute: () => CompanySlugFinanceRoute,
-  } as any)
-const CompanySlugCrmPipelinesRoute = CompanySlugCrmPipelinesRouteImport.update({
-  id: '/pipelines',
-  path: '/pipelines',
-  getParentRoute: () => CompanySlugCrmRoute,
-} as any)
-const CompanySlugCrmLeadsRoute = CompanySlugCrmLeadsRouteImport.update({
-  id: '/leads',
-  path: '/leads',
-  getParentRoute: () => CompanySlugCrmRoute,
-} as any)
-const CompanySlugCrmDealsRoute = CompanySlugCrmDealsRouteImport.update({
-  id: '/deals',
-  path: '/deals',
-  getParentRoute: () => CompanySlugCrmRoute,
-} as any)
-const CompanySlugAccountingTrialBalanceRoute =
-  CompanySlugAccountingTrialBalanceRouteImport.update({
-    id: '/trial-balance',
-    path: '/trial-balance',
-    getParentRoute: () => CompanySlugAccountingRoute,
-  } as any)
-const CompanySlugAccountingProfitLossRoute =
-  CompanySlugAccountingProfitLossRouteImport.update({
-    id: '/profit-loss',
-    path: '/profit-loss',
-    getParentRoute: () => CompanySlugAccountingRoute,
-  } as any)
-const CompanySlugAccountingLedgerRoute =
-  CompanySlugAccountingLedgerRouteImport.update({
-    id: '/ledger',
-    path: '/ledger',
     getParentRoute: () => CompanySlugAccountingRoute,
   } as any)
 const CompanySlugAccountingChartOfAccountsRoute =
@@ -446,6 +232,220 @@ const CompanySlugAccountingChartOfAccountsRoute =
     path: '/chart-of-accounts',
     getParentRoute: () => CompanySlugAccountingRoute,
   } as any)
+const CompanySlugAccountingLedgerRoute =
+  CompanySlugAccountingLedgerRouteImport.update({
+    id: '/ledger',
+    path: '/ledger',
+    getParentRoute: () => CompanySlugAccountingRoute,
+  } as any)
+const CompanySlugAccountingProfitLossRoute =
+  CompanySlugAccountingProfitLossRouteImport.update({
+    id: '/profit-loss',
+    path: '/profit-loss',
+    getParentRoute: () => CompanySlugAccountingRoute,
+  } as any)
+const CompanySlugAccountingTrialBalanceRoute =
+  CompanySlugAccountingTrialBalanceRouteImport.update({
+    id: '/trial-balance',
+    path: '/trial-balance',
+    getParentRoute: () => CompanySlugAccountingRoute,
+  } as any)
+const CompanySlugCrmIndexRoute = CompanySlugCrmIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => CompanySlugCrmRoute,
+} as any)
+const CompanySlugCrmDealsRoute = CompanySlugCrmDealsRouteImport.update({
+  id: '/deals',
+  path: '/deals',
+  getParentRoute: () => CompanySlugCrmRoute,
+} as any)
+const CompanySlugCrmLeadsRoute = CompanySlugCrmLeadsRouteImport.update({
+  id: '/leads',
+  path: '/leads',
+  getParentRoute: () => CompanySlugCrmRoute,
+} as any)
+const CompanySlugCrmPipelinesRoute = CompanySlugCrmPipelinesRouteImport.update({
+  id: '/pipelines',
+  path: '/pipelines',
+  getParentRoute: () => CompanySlugCrmRoute,
+} as any)
+const CompanySlugFinanceIndexRoute = CompanySlugFinanceIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => CompanySlugFinanceRoute,
+} as any)
+const CompanySlugFinanceBankAccountsRoute =
+  CompanySlugFinanceBankAccountsRouteImport.update({
+    id: '/bank-accounts',
+    path: '/bank-accounts',
+    getParentRoute: () => CompanySlugFinanceRoute,
+  } as any)
+const CompanySlugFinanceCustomerPaymentsRoute =
+  CompanySlugFinanceCustomerPaymentsRouteImport.update({
+    id: '/customer-payments',
+    path: '/customer-payments',
+    getParentRoute: () => CompanySlugFinanceRoute,
+  } as any)
+const CompanySlugFinanceExpensesRoute =
+  CompanySlugFinanceExpensesRouteImport.update({
+    id: '/expenses',
+    path: '/expenses',
+    getParentRoute: () => CompanySlugFinanceRoute,
+  } as any)
+const CompanySlugFinanceRevenuesRoute =
+  CompanySlugFinanceRevenuesRouteImport.update({
+    id: '/revenues',
+    path: '/revenues',
+    getParentRoute: () => CompanySlugFinanceRoute,
+  } as any)
+const CompanySlugFinanceVendorPaymentsRoute =
+  CompanySlugFinanceVendorPaymentsRouteImport.update({
+    id: '/vendor-payments',
+    path: '/vendor-payments',
+    getParentRoute: () => CompanySlugFinanceRoute,
+  } as any)
+const CompanySlugHrIndexRoute = CompanySlugHrIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => CompanySlugHrRoute,
+} as any)
+const CompanySlugHrAttendancesRoute =
+  CompanySlugHrAttendancesRouteImport.update({
+    id: '/attendances',
+    path: '/attendances',
+    getParentRoute: () => CompanySlugHrRoute,
+  } as any)
+const CompanySlugHrEmployeesRoute = CompanySlugHrEmployeesRouteImport.update({
+  id: '/employees',
+  path: '/employees',
+  getParentRoute: () => CompanySlugHrRoute,
+} as any)
+const CompanySlugHrLeavesRoute = CompanySlugHrLeavesRouteImport.update({
+  id: '/leaves',
+  path: '/leaves',
+  getParentRoute: () => CompanySlugHrRoute,
+} as any)
+const CompanySlugHrPayrollsRoute = CompanySlugHrPayrollsRouteImport.update({
+  id: '/payrolls',
+  path: '/payrolls',
+  getParentRoute: () => CompanySlugHrRoute,
+} as any)
+const CompanySlugHrShiftsRoute = CompanySlugHrShiftsRouteImport.update({
+  id: '/shifts',
+  path: '/shifts',
+  getParentRoute: () => CompanySlugHrRoute,
+} as any)
+const CompanySlugInventoryIndexRoute =
+  CompanySlugInventoryIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => CompanySlugInventoryRoute,
+  } as any)
+const CompanySlugInventoryTransfersRoute =
+  CompanySlugInventoryTransfersRouteImport.update({
+    id: '/transfers',
+    path: '/transfers',
+    getParentRoute: () => CompanySlugInventoryRoute,
+  } as any)
+const CompanySlugInventoryWarehousesRoute =
+  CompanySlugInventoryWarehousesRouteImport.update({
+    id: '/warehouses',
+    path: '/warehouses',
+    getParentRoute: () => CompanySlugInventoryRoute,
+  } as any)
+const CompanySlugPosIndexRoute = CompanySlugPosIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => CompanySlugPosRoute,
+} as any)
+const CompanySlugPosAnalyticsRoute = CompanySlugPosAnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
+  getParentRoute: () => CompanySlugPosRoute,
+} as any)
+const CompanySlugPosCustomersRoute = CompanySlugPosCustomersRouteImport.update({
+  id: '/customers',
+  path: '/customers',
+  getParentRoute: () => CompanySlugPosRoute,
+} as any)
+const CompanySlugPosHistoryRoute = CompanySlugPosHistoryRouteImport.update({
+  id: '/history',
+  path: '/history',
+  getParentRoute: () => CompanySlugPosRoute,
+} as any)
+const CompanySlugPosProductsRoute = CompanySlugPosProductsRouteImport.update({
+  id: '/products',
+  path: '/products',
+  getParentRoute: () => CompanySlugPosRoute,
+} as any)
+const CompanySlugPosRegisterRoute = CompanySlugPosRegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
+  getParentRoute: () => CompanySlugPosRoute,
+} as any)
+const CompanySlugPosSalesReportRoute =
+  CompanySlugPosSalesReportRouteImport.update({
+    id: '/sales-report',
+    path: '/sales-report',
+    getParentRoute: () => CompanySlugPosRoute,
+  } as any)
+const CompanySlugPosStockRoute = CompanySlugPosStockRouteImport.update({
+  id: '/stock',
+  path: '/stock',
+  getParentRoute: () => CompanySlugPosRoute,
+} as any)
+const CompanySlugPurchasesIndexRoute =
+  CompanySlugPurchasesIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => CompanySlugPurchasesRoute,
+  } as any)
+const CompanySlugPurchasesInvoicesRoute =
+  CompanySlugPurchasesInvoicesRouteImport.update({
+    id: '/invoices',
+    path: '/invoices',
+    getParentRoute: () => CompanySlugPurchasesRoute,
+  } as any)
+const CompanySlugPurchasesReturnsRoute =
+  CompanySlugPurchasesReturnsRouteImport.update({
+    id: '/returns',
+    path: '/returns',
+    getParentRoute: () => CompanySlugPurchasesRoute,
+  } as any)
+const CompanySlugPurchasesVendorsRoute =
+  CompanySlugPurchasesVendorsRouteImport.update({
+    id: '/vendors',
+    path: '/vendors',
+    getParentRoute: () => CompanySlugPurchasesRoute,
+  } as any)
+const CompanySlugSalesIndexRoute = CompanySlugSalesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => CompanySlugSalesRoute,
+} as any)
+const CompanySlugSalesInvoicesRoute =
+  CompanySlugSalesInvoicesRouteImport.update({
+    id: '/invoices',
+    path: '/invoices',
+    getParentRoute: () => CompanySlugSalesRoute,
+  } as any)
+const CompanySlugSalesOrdersRoute = CompanySlugSalesOrdersRouteImport.update({
+  id: '/orders',
+  path: '/orders',
+  getParentRoute: () => CompanySlugSalesRoute,
+} as any)
+const CompanySlugSalesQuotationsRoute =
+  CompanySlugSalesQuotationsRouteImport.update({
+    id: '/quotations',
+    path: '/quotations',
+    getParentRoute: () => CompanySlugSalesRoute,
+  } as any)
+const CompanySlugSalesReturnsRoute = CompanySlugSalesReturnsRouteImport.update({
+  id: '/returns',
+  path: '/returns',
+  getParentRoute: () => CompanySlugSalesRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -874,46 +874,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/verify': {
-      id: '/verify'
-      path: '/verify'
-      fullPath: '/verify'
-      preLoaderRoute: typeof VerifyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/setup': {
-      id: '/setup'
-      path: '/setup'
-      fullPath: '/setup'
-      preLoaderRoute: typeof SetupRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/register': {
-      id: '/register'
-      path: '/register'
-      fullPath: '/register'
-      preLoaderRoute: typeof RegisterRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/privacy': {
-      id: '/privacy'
-      path: '/privacy'
-      fullPath: '/privacy'
-      preLoaderRoute: typeof PrivacyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/onboarding': {
-      id: '/onboarding'
-      path: '/onboarding'
-      fullPath: '/onboarding'
-      preLoaderRoute: typeof OnboardingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/$companySlug': {
@@ -923,11 +888,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CompanySlugRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/onboarding': {
+      id: '/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof OnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/setup': {
+      id: '/setup'
+      path: '/setup'
+      fullPath: '/setup'
+      preLoaderRoute: typeof SetupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/verify': {
+      id: '/verify'
+      path: '/verify'
+      fullPath: '/verify'
+      preLoaderRoute: typeof VerifyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/$companySlug/': {
@@ -937,123 +937,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CompanySlugIndexRouteImport
       parentRoute: typeof CompanySlugRoute
     }
-    '/reset/$token': {
-      id: '/reset/$token'
-      path: '/reset/$token'
-      fullPath: '/reset/$token'
-      preLoaderRoute: typeof ResetTokenRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/invite/$token': {
-      id: '/invite/$token'
-      path: '/invite/$token'
-      fullPath: '/invite/$token'
-      preLoaderRoute: typeof InviteTokenRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/$companySlug/users': {
-      id: '/$companySlug/users'
-      path: '/users'
-      fullPath: '/$companySlug/users'
-      preLoaderRoute: typeof CompanySlugUsersRouteImport
-      parentRoute: typeof CompanySlugRoute
-    }
-    '/$companySlug/settings': {
-      id: '/$companySlug/settings'
-      path: '/settings'
-      fullPath: '/$companySlug/settings'
-      preLoaderRoute: typeof CompanySlugSettingsRouteImport
-      parentRoute: typeof CompanySlugRoute
-    }
-    '/$companySlug/sales': {
-      id: '/$companySlug/sales'
-      path: '/sales'
-      fullPath: '/$companySlug/sales'
-      preLoaderRoute: typeof CompanySlugSalesRouteImport
-      parentRoute: typeof CompanySlugRoute
-    }
-    '/$companySlug/reports': {
-      id: '/$companySlug/reports'
-      path: '/reports'
-      fullPath: '/$companySlug/reports'
-      preLoaderRoute: typeof CompanySlugReportsRouteImport
-      parentRoute: typeof CompanySlugRoute
-    }
-    '/$companySlug/quotes': {
-      id: '/$companySlug/quotes'
-      path: '/quotes'
-      fullPath: '/$companySlug/quotes'
-      preLoaderRoute: typeof CompanySlugQuotesRouteImport
-      parentRoute: typeof CompanySlugRoute
-    }
-    '/$companySlug/purchases': {
-      id: '/$companySlug/purchases'
-      path: '/purchases'
-      fullPath: '/$companySlug/purchases'
-      preLoaderRoute: typeof CompanySlugPurchasesRouteImport
-      parentRoute: typeof CompanySlugRoute
-    }
-    '/$companySlug/projects': {
-      id: '/$companySlug/projects'
-      path: '/projects'
-      fullPath: '/$companySlug/projects'
-      preLoaderRoute: typeof CompanySlugProjectsRouteImport
-      parentRoute: typeof CompanySlugRoute
-    }
-    '/$companySlug/products-services': {
-      id: '/$companySlug/products-services'
-      path: '/products-services'
-      fullPath: '/$companySlug/products-services'
-      preLoaderRoute: typeof CompanySlugProductsServicesRouteImport
-      parentRoute: typeof CompanySlugRoute
-    }
-    '/$companySlug/pos': {
-      id: '/$companySlug/pos'
-      path: '/pos'
-      fullPath: '/$companySlug/pos'
-      preLoaderRoute: typeof CompanySlugPosRouteImport
-      parentRoute: typeof CompanySlugRoute
-    }
-    '/$companySlug/invoices': {
-      id: '/$companySlug/invoices'
-      path: '/invoices'
-      fullPath: '/$companySlug/invoices'
-      preLoaderRoute: typeof CompanySlugInvoicesRouteImport
-      parentRoute: typeof CompanySlugRoute
-    }
-    '/$companySlug/inventory': {
-      id: '/$companySlug/inventory'
-      path: '/inventory'
-      fullPath: '/$companySlug/inventory'
-      preLoaderRoute: typeof CompanySlugInventoryRouteImport
-      parentRoute: typeof CompanySlugRoute
-    }
-    '/$companySlug/hr': {
-      id: '/$companySlug/hr'
-      path: '/hr'
-      fullPath: '/$companySlug/hr'
-      preLoaderRoute: typeof CompanySlugHrRouteImport
-      parentRoute: typeof CompanySlugRoute
-    }
-    '/$companySlug/helpdesk': {
-      id: '/$companySlug/helpdesk'
-      path: '/helpdesk'
-      fullPath: '/$companySlug/helpdesk'
-      preLoaderRoute: typeof CompanySlugHelpdeskRouteImport
-      parentRoute: typeof CompanySlugRoute
-    }
-    '/$companySlug/finance': {
-      id: '/$companySlug/finance'
-      path: '/finance'
-      fullPath: '/$companySlug/finance'
-      preLoaderRoute: typeof CompanySlugFinanceRouteImport
-      parentRoute: typeof CompanySlugRoute
-    }
-    '/$companySlug/dashboard': {
-      id: '/$companySlug/dashboard'
-      path: '/dashboard'
-      fullPath: '/$companySlug/dashboard'
-      preLoaderRoute: typeof CompanySlugDashboardRouteImport
+    '/$companySlug/accounting': {
+      id: '/$companySlug/accounting'
+      path: '/accounting'
+      fullPath: '/$companySlug/accounting'
+      preLoaderRoute: typeof CompanySlugAccountingRouteImport
       parentRoute: typeof CompanySlugRoute
     }
     '/$companySlug/crm': {
@@ -1063,61 +951,124 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CompanySlugCrmRouteImport
       parentRoute: typeof CompanySlugRoute
     }
-    '/$companySlug/accounting': {
-      id: '/$companySlug/accounting'
-      path: '/accounting'
-      fullPath: '/$companySlug/accounting'
-      preLoaderRoute: typeof CompanySlugAccountingRouteImport
+    '/$companySlug/dashboard': {
+      id: '/$companySlug/dashboard'
+      path: '/dashboard'
+      fullPath: '/$companySlug/dashboard'
+      preLoaderRoute: typeof CompanySlugDashboardRouteImport
       parentRoute: typeof CompanySlugRoute
     }
-    '/$companySlug/sales/': {
-      id: '/$companySlug/sales/'
-      path: '/'
-      fullPath: '/$companySlug/sales/'
-      preLoaderRoute: typeof CompanySlugSalesIndexRouteImport
-      parentRoute: typeof CompanySlugSalesRoute
+    '/$companySlug/finance': {
+      id: '/$companySlug/finance'
+      path: '/finance'
+      fullPath: '/$companySlug/finance'
+      preLoaderRoute: typeof CompanySlugFinanceRouteImport
+      parentRoute: typeof CompanySlugRoute
     }
-    '/$companySlug/purchases/': {
-      id: '/$companySlug/purchases/'
-      path: '/'
-      fullPath: '/$companySlug/purchases/'
-      preLoaderRoute: typeof CompanySlugPurchasesIndexRouteImport
-      parentRoute: typeof CompanySlugPurchasesRoute
+    '/$companySlug/helpdesk': {
+      id: '/$companySlug/helpdesk'
+      path: '/helpdesk'
+      fullPath: '/$companySlug/helpdesk'
+      preLoaderRoute: typeof CompanySlugHelpdeskRouteImport
+      parentRoute: typeof CompanySlugRoute
     }
-    '/$companySlug/pos/': {
-      id: '/$companySlug/pos/'
-      path: '/'
-      fullPath: '/$companySlug/pos/'
-      preLoaderRoute: typeof CompanySlugPosIndexRouteImport
-      parentRoute: typeof CompanySlugPosRoute
+    '/$companySlug/hr': {
+      id: '/$companySlug/hr'
+      path: '/hr'
+      fullPath: '/$companySlug/hr'
+      preLoaderRoute: typeof CompanySlugHrRouteImport
+      parentRoute: typeof CompanySlugRoute
     }
-    '/$companySlug/inventory/': {
-      id: '/$companySlug/inventory/'
-      path: '/'
-      fullPath: '/$companySlug/inventory/'
-      preLoaderRoute: typeof CompanySlugInventoryIndexRouteImport
-      parentRoute: typeof CompanySlugInventoryRoute
+    '/$companySlug/inventory': {
+      id: '/$companySlug/inventory'
+      path: '/inventory'
+      fullPath: '/$companySlug/inventory'
+      preLoaderRoute: typeof CompanySlugInventoryRouteImport
+      parentRoute: typeof CompanySlugRoute
     }
-    '/$companySlug/hr/': {
-      id: '/$companySlug/hr/'
-      path: '/'
-      fullPath: '/$companySlug/hr/'
-      preLoaderRoute: typeof CompanySlugHrIndexRouteImport
-      parentRoute: typeof CompanySlugHrRoute
+    '/$companySlug/invoices': {
+      id: '/$companySlug/invoices'
+      path: '/invoices'
+      fullPath: '/$companySlug/invoices'
+      preLoaderRoute: typeof CompanySlugInvoicesRouteImport
+      parentRoute: typeof CompanySlugRoute
     }
-    '/$companySlug/finance/': {
-      id: '/$companySlug/finance/'
-      path: '/'
-      fullPath: '/$companySlug/finance/'
-      preLoaderRoute: typeof CompanySlugFinanceIndexRouteImport
-      parentRoute: typeof CompanySlugFinanceRoute
+    '/$companySlug/pos': {
+      id: '/$companySlug/pos'
+      path: '/pos'
+      fullPath: '/$companySlug/pos'
+      preLoaderRoute: typeof CompanySlugPosRouteImport
+      parentRoute: typeof CompanySlugRoute
     }
-    '/$companySlug/crm/': {
-      id: '/$companySlug/crm/'
-      path: '/'
-      fullPath: '/$companySlug/crm/'
-      preLoaderRoute: typeof CompanySlugCrmIndexRouteImport
-      parentRoute: typeof CompanySlugCrmRoute
+    '/$companySlug/products-services': {
+      id: '/$companySlug/products-services'
+      path: '/products-services'
+      fullPath: '/$companySlug/products-services'
+      preLoaderRoute: typeof CompanySlugProductsServicesRouteImport
+      parentRoute: typeof CompanySlugRoute
+    }
+    '/$companySlug/projects': {
+      id: '/$companySlug/projects'
+      path: '/projects'
+      fullPath: '/$companySlug/projects'
+      preLoaderRoute: typeof CompanySlugProjectsRouteImport
+      parentRoute: typeof CompanySlugRoute
+    }
+    '/$companySlug/purchases': {
+      id: '/$companySlug/purchases'
+      path: '/purchases'
+      fullPath: '/$companySlug/purchases'
+      preLoaderRoute: typeof CompanySlugPurchasesRouteImport
+      parentRoute: typeof CompanySlugRoute
+    }
+    '/$companySlug/quotes': {
+      id: '/$companySlug/quotes'
+      path: '/quotes'
+      fullPath: '/$companySlug/quotes'
+      preLoaderRoute: typeof CompanySlugQuotesRouteImport
+      parentRoute: typeof CompanySlugRoute
+    }
+    '/$companySlug/reports': {
+      id: '/$companySlug/reports'
+      path: '/reports'
+      fullPath: '/$companySlug/reports'
+      preLoaderRoute: typeof CompanySlugReportsRouteImport
+      parentRoute: typeof CompanySlugRoute
+    }
+    '/$companySlug/sales': {
+      id: '/$companySlug/sales'
+      path: '/sales'
+      fullPath: '/$companySlug/sales'
+      preLoaderRoute: typeof CompanySlugSalesRouteImport
+      parentRoute: typeof CompanySlugRoute
+    }
+    '/$companySlug/settings': {
+      id: '/$companySlug/settings'
+      path: '/settings'
+      fullPath: '/$companySlug/settings'
+      preLoaderRoute: typeof CompanySlugSettingsRouteImport
+      parentRoute: typeof CompanySlugRoute
+    }
+    '/$companySlug/users': {
+      id: '/$companySlug/users'
+      path: '/users'
+      fullPath: '/$companySlug/users'
+      preLoaderRoute: typeof CompanySlugUsersRouteImport
+      parentRoute: typeof CompanySlugRoute
+    }
+    '/invite/$token': {
+      id: '/invite/$token'
+      path: '/invite/$token'
+      fullPath: '/invite/$token'
+      preLoaderRoute: typeof InviteTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset/$token': {
+      id: '/reset/$token'
+      path: '/reset/$token'
+      fullPath: '/reset/$token'
+      preLoaderRoute: typeof ResetTokenRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/$companySlug/accounting/': {
       id: '/$companySlug/accounting/'
@@ -1126,221 +1077,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CompanySlugAccountingIndexRouteImport
       parentRoute: typeof CompanySlugAccountingRoute
     }
-    '/$companySlug/sales/returns': {
-      id: '/$companySlug/sales/returns'
-      path: '/returns'
-      fullPath: '/$companySlug/sales/returns'
-      preLoaderRoute: typeof CompanySlugSalesReturnsRouteImport
-      parentRoute: typeof CompanySlugSalesRoute
-    }
-    '/$companySlug/sales/quotations': {
-      id: '/$companySlug/sales/quotations'
-      path: '/quotations'
-      fullPath: '/$companySlug/sales/quotations'
-      preLoaderRoute: typeof CompanySlugSalesQuotationsRouteImport
-      parentRoute: typeof CompanySlugSalesRoute
-    }
-    '/$companySlug/sales/orders': {
-      id: '/$companySlug/sales/orders'
-      path: '/orders'
-      fullPath: '/$companySlug/sales/orders'
-      preLoaderRoute: typeof CompanySlugSalesOrdersRouteImport
-      parentRoute: typeof CompanySlugSalesRoute
-    }
-    '/$companySlug/sales/invoices': {
-      id: '/$companySlug/sales/invoices'
-      path: '/invoices'
-      fullPath: '/$companySlug/sales/invoices'
-      preLoaderRoute: typeof CompanySlugSalesInvoicesRouteImport
-      parentRoute: typeof CompanySlugSalesRoute
-    }
-    '/$companySlug/purchases/vendors': {
-      id: '/$companySlug/purchases/vendors'
-      path: '/vendors'
-      fullPath: '/$companySlug/purchases/vendors'
-      preLoaderRoute: typeof CompanySlugPurchasesVendorsRouteImport
-      parentRoute: typeof CompanySlugPurchasesRoute
-    }
-    '/$companySlug/purchases/returns': {
-      id: '/$companySlug/purchases/returns'
-      path: '/returns'
-      fullPath: '/$companySlug/purchases/returns'
-      preLoaderRoute: typeof CompanySlugPurchasesReturnsRouteImport
-      parentRoute: typeof CompanySlugPurchasesRoute
-    }
-    '/$companySlug/purchases/invoices': {
-      id: '/$companySlug/purchases/invoices'
-      path: '/invoices'
-      fullPath: '/$companySlug/purchases/invoices'
-      preLoaderRoute: typeof CompanySlugPurchasesInvoicesRouteImport
-      parentRoute: typeof CompanySlugPurchasesRoute
-    }
-    '/$companySlug/pos/stock': {
-      id: '/$companySlug/pos/stock'
-      path: '/stock'
-      fullPath: '/$companySlug/pos/stock'
-      preLoaderRoute: typeof CompanySlugPosStockRouteImport
-      parentRoute: typeof CompanySlugPosRoute
-    }
-    '/$companySlug/pos/sales-report': {
-      id: '/$companySlug/pos/sales-report'
-      path: '/sales-report'
-      fullPath: '/$companySlug/pos/sales-report'
-      preLoaderRoute: typeof CompanySlugPosSalesReportRouteImport
-      parentRoute: typeof CompanySlugPosRoute
-    }
-    '/$companySlug/pos/register': {
-      id: '/$companySlug/pos/register'
-      path: '/register'
-      fullPath: '/$companySlug/pos/register'
-      preLoaderRoute: typeof CompanySlugPosRegisterRouteImport
-      parentRoute: typeof CompanySlugPosRoute
-    }
-    '/$companySlug/pos/products': {
-      id: '/$companySlug/pos/products'
-      path: '/products'
-      fullPath: '/$companySlug/pos/products'
-      preLoaderRoute: typeof CompanySlugPosProductsRouteImport
-      parentRoute: typeof CompanySlugPosRoute
-    }
-    '/$companySlug/pos/history': {
-      id: '/$companySlug/pos/history'
-      path: '/history'
-      fullPath: '/$companySlug/pos/history'
-      preLoaderRoute: typeof CompanySlugPosHistoryRouteImport
-      parentRoute: typeof CompanySlugPosRoute
-    }
-    '/$companySlug/pos/customers': {
-      id: '/$companySlug/pos/customers'
-      path: '/customers'
-      fullPath: '/$companySlug/pos/customers'
-      preLoaderRoute: typeof CompanySlugPosCustomersRouteImport
-      parentRoute: typeof CompanySlugPosRoute
-    }
-    '/$companySlug/pos/analytics': {
-      id: '/$companySlug/pos/analytics'
-      path: '/analytics'
-      fullPath: '/$companySlug/pos/analytics'
-      preLoaderRoute: typeof CompanySlugPosAnalyticsRouteImport
-      parentRoute: typeof CompanySlugPosRoute
-    }
-    '/$companySlug/inventory/warehouses': {
-      id: '/$companySlug/inventory/warehouses'
-      path: '/warehouses'
-      fullPath: '/$companySlug/inventory/warehouses'
-      preLoaderRoute: typeof CompanySlugInventoryWarehousesRouteImport
-      parentRoute: typeof CompanySlugInventoryRoute
-    }
-    '/$companySlug/inventory/transfers': {
-      id: '/$companySlug/inventory/transfers'
-      path: '/transfers'
-      fullPath: '/$companySlug/inventory/transfers'
-      preLoaderRoute: typeof CompanySlugInventoryTransfersRouteImport
-      parentRoute: typeof CompanySlugInventoryRoute
-    }
-    '/$companySlug/hr/shifts': {
-      id: '/$companySlug/hr/shifts'
-      path: '/shifts'
-      fullPath: '/$companySlug/hr/shifts'
-      preLoaderRoute: typeof CompanySlugHrShiftsRouteImport
-      parentRoute: typeof CompanySlugHrRoute
-    }
-    '/$companySlug/hr/payrolls': {
-      id: '/$companySlug/hr/payrolls'
-      path: '/payrolls'
-      fullPath: '/$companySlug/hr/payrolls'
-      preLoaderRoute: typeof CompanySlugHrPayrollsRouteImport
-      parentRoute: typeof CompanySlugHrRoute
-    }
-    '/$companySlug/hr/leaves': {
-      id: '/$companySlug/hr/leaves'
-      path: '/leaves'
-      fullPath: '/$companySlug/hr/leaves'
-      preLoaderRoute: typeof CompanySlugHrLeavesRouteImport
-      parentRoute: typeof CompanySlugHrRoute
-    }
-    '/$companySlug/hr/employees': {
-      id: '/$companySlug/hr/employees'
-      path: '/employees'
-      fullPath: '/$companySlug/hr/employees'
-      preLoaderRoute: typeof CompanySlugHrEmployeesRouteImport
-      parentRoute: typeof CompanySlugHrRoute
-    }
-    '/$companySlug/hr/attendances': {
-      id: '/$companySlug/hr/attendances'
-      path: '/attendances'
-      fullPath: '/$companySlug/hr/attendances'
-      preLoaderRoute: typeof CompanySlugHrAttendancesRouteImport
-      parentRoute: typeof CompanySlugHrRoute
-    }
-    '/$companySlug/finance/vendor-payments': {
-      id: '/$companySlug/finance/vendor-payments'
-      path: '/vendor-payments'
-      fullPath: '/$companySlug/finance/vendor-payments'
-      preLoaderRoute: typeof CompanySlugFinanceVendorPaymentsRouteImport
-      parentRoute: typeof CompanySlugFinanceRoute
-    }
-    '/$companySlug/finance/revenues': {
-      id: '/$companySlug/finance/revenues'
-      path: '/revenues'
-      fullPath: '/$companySlug/finance/revenues'
-      preLoaderRoute: typeof CompanySlugFinanceRevenuesRouteImport
-      parentRoute: typeof CompanySlugFinanceRoute
-    }
-    '/$companySlug/finance/expenses': {
-      id: '/$companySlug/finance/expenses'
-      path: '/expenses'
-      fullPath: '/$companySlug/finance/expenses'
-      preLoaderRoute: typeof CompanySlugFinanceExpensesRouteImport
-      parentRoute: typeof CompanySlugFinanceRoute
-    }
-    '/$companySlug/finance/customer-payments': {
-      id: '/$companySlug/finance/customer-payments'
-      path: '/customer-payments'
-      fullPath: '/$companySlug/finance/customer-payments'
-      preLoaderRoute: typeof CompanySlugFinanceCustomerPaymentsRouteImport
-      parentRoute: typeof CompanySlugFinanceRoute
-    }
-    '/$companySlug/finance/bank-accounts': {
-      id: '/$companySlug/finance/bank-accounts'
-      path: '/bank-accounts'
-      fullPath: '/$companySlug/finance/bank-accounts'
-      preLoaderRoute: typeof CompanySlugFinanceBankAccountsRouteImport
-      parentRoute: typeof CompanySlugFinanceRoute
-    }
-    '/$companySlug/crm/pipelines': {
-      id: '/$companySlug/crm/pipelines'
-      path: '/pipelines'
-      fullPath: '/$companySlug/crm/pipelines'
-      preLoaderRoute: typeof CompanySlugCrmPipelinesRouteImport
-      parentRoute: typeof CompanySlugCrmRoute
-    }
-    '/$companySlug/crm/leads': {
-      id: '/$companySlug/crm/leads'
-      path: '/leads'
-      fullPath: '/$companySlug/crm/leads'
-      preLoaderRoute: typeof CompanySlugCrmLeadsRouteImport
-      parentRoute: typeof CompanySlugCrmRoute
-    }
-    '/$companySlug/crm/deals': {
-      id: '/$companySlug/crm/deals'
-      path: '/deals'
-      fullPath: '/$companySlug/crm/deals'
-      preLoaderRoute: typeof CompanySlugCrmDealsRouteImport
-      parentRoute: typeof CompanySlugCrmRoute
-    }
-    '/$companySlug/accounting/trial-balance': {
-      id: '/$companySlug/accounting/trial-balance'
-      path: '/trial-balance'
-      fullPath: '/$companySlug/accounting/trial-balance'
-      preLoaderRoute: typeof CompanySlugAccountingTrialBalanceRouteImport
-      parentRoute: typeof CompanySlugAccountingRoute
-    }
-    '/$companySlug/accounting/profit-loss': {
-      id: '/$companySlug/accounting/profit-loss'
-      path: '/profit-loss'
-      fullPath: '/$companySlug/accounting/profit-loss'
-      preLoaderRoute: typeof CompanySlugAccountingProfitLossRouteImport
+    '/$companySlug/accounting/chart-of-accounts': {
+      id: '/$companySlug/accounting/chart-of-accounts'
+      path: '/chart-of-accounts'
+      fullPath: '/$companySlug/accounting/chart-of-accounts'
+      preLoaderRoute: typeof CompanySlugAccountingChartOfAccountsRouteImport
       parentRoute: typeof CompanySlugAccountingRoute
     }
     '/$companySlug/accounting/ledger': {
@@ -1350,12 +1091,271 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CompanySlugAccountingLedgerRouteImport
       parentRoute: typeof CompanySlugAccountingRoute
     }
-    '/$companySlug/accounting/chart-of-accounts': {
-      id: '/$companySlug/accounting/chart-of-accounts'
-      path: '/chart-of-accounts'
-      fullPath: '/$companySlug/accounting/chart-of-accounts'
-      preLoaderRoute: typeof CompanySlugAccountingChartOfAccountsRouteImport
+    '/$companySlug/accounting/profit-loss': {
+      id: '/$companySlug/accounting/profit-loss'
+      path: '/profit-loss'
+      fullPath: '/$companySlug/accounting/profit-loss'
+      preLoaderRoute: typeof CompanySlugAccountingProfitLossRouteImport
       parentRoute: typeof CompanySlugAccountingRoute
+    }
+    '/$companySlug/accounting/trial-balance': {
+      id: '/$companySlug/accounting/trial-balance'
+      path: '/trial-balance'
+      fullPath: '/$companySlug/accounting/trial-balance'
+      preLoaderRoute: typeof CompanySlugAccountingTrialBalanceRouteImport
+      parentRoute: typeof CompanySlugAccountingRoute
+    }
+    '/$companySlug/crm/': {
+      id: '/$companySlug/crm/'
+      path: '/'
+      fullPath: '/$companySlug/crm/'
+      preLoaderRoute: typeof CompanySlugCrmIndexRouteImport
+      parentRoute: typeof CompanySlugCrmRoute
+    }
+    '/$companySlug/crm/deals': {
+      id: '/$companySlug/crm/deals'
+      path: '/deals'
+      fullPath: '/$companySlug/crm/deals'
+      preLoaderRoute: typeof CompanySlugCrmDealsRouteImport
+      parentRoute: typeof CompanySlugCrmRoute
+    }
+    '/$companySlug/crm/leads': {
+      id: '/$companySlug/crm/leads'
+      path: '/leads'
+      fullPath: '/$companySlug/crm/leads'
+      preLoaderRoute: typeof CompanySlugCrmLeadsRouteImport
+      parentRoute: typeof CompanySlugCrmRoute
+    }
+    '/$companySlug/crm/pipelines': {
+      id: '/$companySlug/crm/pipelines'
+      path: '/pipelines'
+      fullPath: '/$companySlug/crm/pipelines'
+      preLoaderRoute: typeof CompanySlugCrmPipelinesRouteImport
+      parentRoute: typeof CompanySlugCrmRoute
+    }
+    '/$companySlug/finance/': {
+      id: '/$companySlug/finance/'
+      path: '/'
+      fullPath: '/$companySlug/finance/'
+      preLoaderRoute: typeof CompanySlugFinanceIndexRouteImport
+      parentRoute: typeof CompanySlugFinanceRoute
+    }
+    '/$companySlug/finance/bank-accounts': {
+      id: '/$companySlug/finance/bank-accounts'
+      path: '/bank-accounts'
+      fullPath: '/$companySlug/finance/bank-accounts'
+      preLoaderRoute: typeof CompanySlugFinanceBankAccountsRouteImport
+      parentRoute: typeof CompanySlugFinanceRoute
+    }
+    '/$companySlug/finance/customer-payments': {
+      id: '/$companySlug/finance/customer-payments'
+      path: '/customer-payments'
+      fullPath: '/$companySlug/finance/customer-payments'
+      preLoaderRoute: typeof CompanySlugFinanceCustomerPaymentsRouteImport
+      parentRoute: typeof CompanySlugFinanceRoute
+    }
+    '/$companySlug/finance/expenses': {
+      id: '/$companySlug/finance/expenses'
+      path: '/expenses'
+      fullPath: '/$companySlug/finance/expenses'
+      preLoaderRoute: typeof CompanySlugFinanceExpensesRouteImport
+      parentRoute: typeof CompanySlugFinanceRoute
+    }
+    '/$companySlug/finance/revenues': {
+      id: '/$companySlug/finance/revenues'
+      path: '/revenues'
+      fullPath: '/$companySlug/finance/revenues'
+      preLoaderRoute: typeof CompanySlugFinanceRevenuesRouteImport
+      parentRoute: typeof CompanySlugFinanceRoute
+    }
+    '/$companySlug/finance/vendor-payments': {
+      id: '/$companySlug/finance/vendor-payments'
+      path: '/vendor-payments'
+      fullPath: '/$companySlug/finance/vendor-payments'
+      preLoaderRoute: typeof CompanySlugFinanceVendorPaymentsRouteImport
+      parentRoute: typeof CompanySlugFinanceRoute
+    }
+    '/$companySlug/hr/': {
+      id: '/$companySlug/hr/'
+      path: '/'
+      fullPath: '/$companySlug/hr/'
+      preLoaderRoute: typeof CompanySlugHrIndexRouteImport
+      parentRoute: typeof CompanySlugHrRoute
+    }
+    '/$companySlug/hr/attendances': {
+      id: '/$companySlug/hr/attendances'
+      path: '/attendances'
+      fullPath: '/$companySlug/hr/attendances'
+      preLoaderRoute: typeof CompanySlugHrAttendancesRouteImport
+      parentRoute: typeof CompanySlugHrRoute
+    }
+    '/$companySlug/hr/employees': {
+      id: '/$companySlug/hr/employees'
+      path: '/employees'
+      fullPath: '/$companySlug/hr/employees'
+      preLoaderRoute: typeof CompanySlugHrEmployeesRouteImport
+      parentRoute: typeof CompanySlugHrRoute
+    }
+    '/$companySlug/hr/leaves': {
+      id: '/$companySlug/hr/leaves'
+      path: '/leaves'
+      fullPath: '/$companySlug/hr/leaves'
+      preLoaderRoute: typeof CompanySlugHrLeavesRouteImport
+      parentRoute: typeof CompanySlugHrRoute
+    }
+    '/$companySlug/hr/payrolls': {
+      id: '/$companySlug/hr/payrolls'
+      path: '/payrolls'
+      fullPath: '/$companySlug/hr/payrolls'
+      preLoaderRoute: typeof CompanySlugHrPayrollsRouteImport
+      parentRoute: typeof CompanySlugHrRoute
+    }
+    '/$companySlug/hr/shifts': {
+      id: '/$companySlug/hr/shifts'
+      path: '/shifts'
+      fullPath: '/$companySlug/hr/shifts'
+      preLoaderRoute: typeof CompanySlugHrShiftsRouteImport
+      parentRoute: typeof CompanySlugHrRoute
+    }
+    '/$companySlug/inventory/': {
+      id: '/$companySlug/inventory/'
+      path: '/'
+      fullPath: '/$companySlug/inventory/'
+      preLoaderRoute: typeof CompanySlugInventoryIndexRouteImport
+      parentRoute: typeof CompanySlugInventoryRoute
+    }
+    '/$companySlug/inventory/transfers': {
+      id: '/$companySlug/inventory/transfers'
+      path: '/transfers'
+      fullPath: '/$companySlug/inventory/transfers'
+      preLoaderRoute: typeof CompanySlugInventoryTransfersRouteImport
+      parentRoute: typeof CompanySlugInventoryRoute
+    }
+    '/$companySlug/inventory/warehouses': {
+      id: '/$companySlug/inventory/warehouses'
+      path: '/warehouses'
+      fullPath: '/$companySlug/inventory/warehouses'
+      preLoaderRoute: typeof CompanySlugInventoryWarehousesRouteImport
+      parentRoute: typeof CompanySlugInventoryRoute
+    }
+    '/$companySlug/pos/': {
+      id: '/$companySlug/pos/'
+      path: '/'
+      fullPath: '/$companySlug/pos/'
+      preLoaderRoute: typeof CompanySlugPosIndexRouteImport
+      parentRoute: typeof CompanySlugPosRoute
+    }
+    '/$companySlug/pos/analytics': {
+      id: '/$companySlug/pos/analytics'
+      path: '/analytics'
+      fullPath: '/$companySlug/pos/analytics'
+      preLoaderRoute: typeof CompanySlugPosAnalyticsRouteImport
+      parentRoute: typeof CompanySlugPosRoute
+    }
+    '/$companySlug/pos/customers': {
+      id: '/$companySlug/pos/customers'
+      path: '/customers'
+      fullPath: '/$companySlug/pos/customers'
+      preLoaderRoute: typeof CompanySlugPosCustomersRouteImport
+      parentRoute: typeof CompanySlugPosRoute
+    }
+    '/$companySlug/pos/history': {
+      id: '/$companySlug/pos/history'
+      path: '/history'
+      fullPath: '/$companySlug/pos/history'
+      preLoaderRoute: typeof CompanySlugPosHistoryRouteImport
+      parentRoute: typeof CompanySlugPosRoute
+    }
+    '/$companySlug/pos/products': {
+      id: '/$companySlug/pos/products'
+      path: '/products'
+      fullPath: '/$companySlug/pos/products'
+      preLoaderRoute: typeof CompanySlugPosProductsRouteImport
+      parentRoute: typeof CompanySlugPosRoute
+    }
+    '/$companySlug/pos/register': {
+      id: '/$companySlug/pos/register'
+      path: '/register'
+      fullPath: '/$companySlug/pos/register'
+      preLoaderRoute: typeof CompanySlugPosRegisterRouteImport
+      parentRoute: typeof CompanySlugPosRoute
+    }
+    '/$companySlug/pos/sales-report': {
+      id: '/$companySlug/pos/sales-report'
+      path: '/sales-report'
+      fullPath: '/$companySlug/pos/sales-report'
+      preLoaderRoute: typeof CompanySlugPosSalesReportRouteImport
+      parentRoute: typeof CompanySlugPosRoute
+    }
+    '/$companySlug/pos/stock': {
+      id: '/$companySlug/pos/stock'
+      path: '/stock'
+      fullPath: '/$companySlug/pos/stock'
+      preLoaderRoute: typeof CompanySlugPosStockRouteImport
+      parentRoute: typeof CompanySlugPosRoute
+    }
+    '/$companySlug/purchases/': {
+      id: '/$companySlug/purchases/'
+      path: '/'
+      fullPath: '/$companySlug/purchases/'
+      preLoaderRoute: typeof CompanySlugPurchasesIndexRouteImport
+      parentRoute: typeof CompanySlugPurchasesRoute
+    }
+    '/$companySlug/purchases/invoices': {
+      id: '/$companySlug/purchases/invoices'
+      path: '/invoices'
+      fullPath: '/$companySlug/purchases/invoices'
+      preLoaderRoute: typeof CompanySlugPurchasesInvoicesRouteImport
+      parentRoute: typeof CompanySlugPurchasesRoute
+    }
+    '/$companySlug/purchases/returns': {
+      id: '/$companySlug/purchases/returns'
+      path: '/returns'
+      fullPath: '/$companySlug/purchases/returns'
+      preLoaderRoute: typeof CompanySlugPurchasesReturnsRouteImport
+      parentRoute: typeof CompanySlugPurchasesRoute
+    }
+    '/$companySlug/purchases/vendors': {
+      id: '/$companySlug/purchases/vendors'
+      path: '/vendors'
+      fullPath: '/$companySlug/purchases/vendors'
+      preLoaderRoute: typeof CompanySlugPurchasesVendorsRouteImport
+      parentRoute: typeof CompanySlugPurchasesRoute
+    }
+    '/$companySlug/sales/': {
+      id: '/$companySlug/sales/'
+      path: '/'
+      fullPath: '/$companySlug/sales/'
+      preLoaderRoute: typeof CompanySlugSalesIndexRouteImport
+      parentRoute: typeof CompanySlugSalesRoute
+    }
+    '/$companySlug/sales/invoices': {
+      id: '/$companySlug/sales/invoices'
+      path: '/invoices'
+      fullPath: '/$companySlug/sales/invoices'
+      preLoaderRoute: typeof CompanySlugSalesInvoicesRouteImport
+      parentRoute: typeof CompanySlugSalesRoute
+    }
+    '/$companySlug/sales/orders': {
+      id: '/$companySlug/sales/orders'
+      path: '/orders'
+      fullPath: '/$companySlug/sales/orders'
+      preLoaderRoute: typeof CompanySlugSalesOrdersRouteImport
+      parentRoute: typeof CompanySlugSalesRoute
+    }
+    '/$companySlug/sales/quotations': {
+      id: '/$companySlug/sales/quotations'
+      path: '/quotations'
+      fullPath: '/$companySlug/sales/quotations'
+      preLoaderRoute: typeof CompanySlugSalesQuotationsRouteImport
+      parentRoute: typeof CompanySlugSalesRoute
+    }
+    '/$companySlug/sales/returns': {
+      id: '/$companySlug/sales/returns'
+      path: '/returns'
+      fullPath: '/$companySlug/sales/returns'
+      preLoaderRoute: typeof CompanySlugSalesReturnsRouteImport
+      parentRoute: typeof CompanySlugSalesRoute
     }
   }
 }
