@@ -16,15 +16,32 @@ export const getFinanceData = createServerFn({ method: 'GET' })
     const { company, user } = await requireCompanyAccess(data.companySlug, 'finance.read')
 
     const [accounts, transactions] = await Promise.all([
-      prisma.bankAccount.findMany({ where: { companyId: company.id } }),
+      prisma.bankAccount.findMany({
+        where: { companyId: company.id },
+        include: { _count: { select: { payments: true, transactions: { where: { type: { not: 'Opening' } } } } } },
+        orderBy: [{ status: 'asc' }, { name: 'asc' }],
+      }),
       prisma.transaction.findMany({
         where: { companyId: company.id },
+        include: {
+          account: { select: { id: true, name: true } },
+          _count: { select: { payments: true } },
+          posTicket: { select: { id: true } },
+        },
         orderBy: { date: 'desc' },
-        take: 50,
+        take: 500,
       }),
     ])
 
-    return { accounts, transactions }
+    return {
+      accounts: accounts.map(({ _count, ...account }) => ({ ...account, used: _count.payments + _count.transactions > 0 })),
+      // `editable` : operation saisie a la main (ni facture, ni achat, ni caisse,
+      // ni virement), la seule qui se corrige depuis les ecrans Finance.
+      transactions: transactions.map(({ _count, posTicket, ...transaction }) => ({
+        ...transaction,
+        editable: !_count.payments && !posTicket && ['Income', 'Expense'].includes(transaction.type),
+      })),
+    }
   })
 
 export const getHrData = createServerFn({ method: 'GET' })

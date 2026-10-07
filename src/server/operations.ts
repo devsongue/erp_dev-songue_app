@@ -627,17 +627,22 @@ export const createFinanceTransaction = createServerFn({ method: 'POST' })
     type: z.enum(['Income', 'Expense']),
     category: z.string().min(1),
     reference: z.string().optional(),
+    date: z.string().optional(),
   }))
   .handler(async ({ data }) => {
-    const company = await getCompany(data.companySlug, 'finance.manage')
-    const fallback = await ensureAccount(company.id, 'Cash', 'Caisse boutique')
-    const accountId = data.accountId || fallback.id
+    const { company, user } = await getCompanyContext(data.companySlug, 'finance.manage')
+    const account = data.accountId
+      ? await prisma.bankAccount.findFirst({ where: { id: data.accountId, companyId: company.id } })
+      : await ensureAccount(company.id, 'Cash', 'Caisse boutique')
+    if (!account) throw new Error('Compte introuvable.')
+    const accountId = account.id
     const amount = Math.round(data.amount)
     return prisma.$transaction(async (tx) => {
       const transaction = await tx.transaction.create({
         data: {
           companyId: company.id,
           accountId,
+          date: data.date ? new Date(data.date) : new Date(),
           description: data.description.trim(),
           amount,
           type: data.type,
@@ -650,6 +655,7 @@ export const createFinanceTransaction = createServerFn({ method: 'POST' })
         where: { id: accountId, companyId: company.id },
         data: { balance: { increment: data.type === 'Income' ? amount : -amount } },
       })
+      await tx.auditLog.create({ data: { companyId: company.id, actorId: user.id, action: 'transaction.created', entity: 'Transaction', entityId: transaction.id, metadata: JSON.stringify({ type: data.type, amount }) } })
       return transaction
     })
   })
@@ -1324,6 +1330,170 @@ export const deleteCustomer = createServerFn({ method: 'POST' })
     await prisma.$transaction(async (tx) => {
       await tx.auditLog.create({ data: { companyId: company.id, actorId: user.id, action: 'customer.deleted', entity: 'Customer', entityId: customer.id, metadata: JSON.stringify({ name: customer.name }) } })
       await tx.customer.delete({ where: { id: customer.id } })
+    })
+    return { ok: true }
+  })
+
+// --- Tresorerie : comptes, virements, operations manuelles ------------------
+
+const accountTypes = ['Cash', 'MobileMoney', 'Checking', 'Savings', 'CreditCard'] as const
+
+const bankAccountInput = z.object({
+  companySlug: z.string(),
+  name: z.string().trim().min(1).max(120),
+  type: z.enum(accountTypes),
+  accountNumber: z.string().trim().max(120).optional(),
+})
+
+export const createBankAccount = createServerFn({ method: 'POST' })
+  .inputValidator(bankAccountInput.extend({ openingBalance: z.number().min(0).default(0) }))
+  .handler(async ({ data }) => {
+    const { company, user } = await getCompanyContext(data.companySlug, 'finance.manage')
+    const openingBalance = Math.round(data.openingBalance)
+    return prisma.$transaction(async (tx) => {
+      const account = await tx.bankAccount.create({
+        data: { companyId: company.id, name: data.name, type: data.type, accountNumber: data.accountNumber || null, balance: openingBalance, status: 'Active' },
+      })
+      // Le solde d'ouverture est trace, mais avec un type a part : ce n'est ni
+      // une recette ni une depense, il ne doit pas fausser les rapports.
+      if (openingBalance > 0) {
+        await tx.transaction.create({
+          data: { companyId: company.id, accountId: account.id, description: `Solde d'ouverture - ${account.name}`, amount: openingBalance, type: 'Opening', category: 'Solde initial', status: 'Completed' },
+        })
+      }
+      await tx.auditLog.create({ data: { companyId: company.id, actorId: user.id, action: 'bank_account.created', entity: 'BankAccount', entityId: account.id, metadata: JSON.stringify({ name: account.name, openingBalance }) } })
+      return account
+    })
+  })
+
+export const updateBankAccount = createServerFn({ method: 'POST' })
+  .inputValidator(bankAccountInput.extend({ accountId: z.string(), status: z.enum(['Active', 'Archived']) }))
+  .handler(async ({ data }) => {
+    const { company, user } = await getCompanyContext(data.companySlug, 'finance.manage')
+    const account = await prisma.bankAccount.update({
+      where: { id: data.accountId, companyId: company.id },
+      data: { name: data.name, type: data.type, accountNumber: data.accountNumber || null, status: data.status },
+    })
+    await prisma.auditLog.create({ data: { companyId: company.id, actorId: user.id, action: 'bank_account.updated', entity: 'BankAccount', entityId: account.id, metadata: JSON.stringify({ name: account.name, status: account.status }) } })
+    return account
+  })
+
+export const deleteBankAccount = createServerFn({ method: 'POST' })
+  .inputValidator(z.object({ companySlug: z.string(), accountId: z.string() }))
+  .handler(async ({ data }) => {
+    const { company, user } = await getCompanyContext(data.companySlug, 'finance.manage')
+    const account = await prisma.bankAccount.findFirst({
+      where: { id: data.accountId, companyId: company.id },
+      include: { _count: { select: { payments: true, transactions: { where: { type: { not: 'Opening' } } } } } },
+    })
+    if (!account) throw new Error('Compte introuvable.')
+    // Les transactions et paiements sont supprimes en cascade avec le compte :
+    // un compte qui a servi doit etre archive pour garder l'historique.
+    if (account._count.payments || account._count.transactions) {
+      throw new Error('Ce compte a deja des operations : archive-le plutot que de le supprimer.')
+    }
+    await prisma.$transaction(async (tx) => {
+      await tx.auditLog.create({ data: { companyId: company.id, actorId: user.id, action: 'bank_account.deleted', entity: 'BankAccount', entityId: account.id, metadata: JSON.stringify({ name: account.name }) } })
+      await tx.bankAccount.delete({ where: { id: account.id } })
+    })
+    return { ok: true }
+  })
+
+export const transferBetweenAccounts = createServerFn({ method: 'POST' })
+  .inputValidator(z.object({
+    companySlug: z.string(),
+    fromAccountId: z.string(),
+    toAccountId: z.string(),
+    amount: z.number().positive(),
+    date: z.string().optional(),
+    note: z.string().trim().max(200).optional(),
+  }))
+  .handler(async ({ data }) => {
+    const { company, user } = await getCompanyContext(data.companySlug, 'finance.manage')
+    if (data.fromAccountId === data.toAccountId) throw new Error('Choisis deux comptes differents.')
+    const accounts = await prisma.bankAccount.findMany({ where: { companyId: company.id, id: { in: [data.fromAccountId, data.toAccountId] } } })
+    const from = accounts.find((account) => account.id === data.fromAccountId)
+    const to = accounts.find((account) => account.id === data.toAccountId)
+    if (!from || !to) throw new Error('Compte introuvable.')
+    const amount = Math.round(data.amount)
+    const date = data.date ? new Date(data.date) : new Date()
+    const reference = `VIR-${crypto.randomUUID().slice(0, 8).toUpperCase()}`
+    const note = data.note ? ` (${data.note})` : ''
+
+    return prisma.$transaction(async (tx) => {
+      // Debit conditionnel : pas de virement qui mettrait le compte source a
+      // decouvert, meme en cas d'operations simultanees.
+      const debited = await tx.bankAccount.updateMany({ where: { id: from.id, balance: { gte: amount } }, data: { balance: { decrement: amount } } })
+      if (!debited.count) throw new Error(`Solde insuffisant sur ${from.name}.`)
+      await tx.bankAccount.update({ where: { id: to.id }, data: { balance: { increment: amount } } })
+      await tx.transaction.create({ data: { companyId: company.id, accountId: from.id, date, description: `Virement vers ${to.name}${note}`, amount, type: 'TransferOut', category: 'Virement', reference, status: 'Completed' } })
+      await tx.transaction.create({ data: { companyId: company.id, accountId: to.id, date, description: `Virement depuis ${from.name}${note}`, amount, type: 'TransferIn', category: 'Virement', reference, status: 'Completed' } })
+      await tx.auditLog.create({ data: { companyId: company.id, actorId: user.id, action: 'bank_account.transfer', entity: 'BankAccount', entityId: from.id, metadata: JSON.stringify({ from: from.name, to: to.name, amount, reference }) } })
+      return { reference }
+    })
+  })
+
+// Une operation creee par une facture, un achat ou la caisse est liee a un
+// paiement ou a un ticket : elle se corrige depuis ce document, pas ici.
+async function findManualTransaction(companyId: string, transactionId: string) {
+  const transaction = await prisma.transaction.findFirst({
+    where: { id: transactionId, companyId },
+    include: { _count: { select: { payments: true } }, posTicket: { select: { id: true } } },
+  })
+  if (!transaction) throw new Error('Operation introuvable.')
+  if (transaction._count.payments || transaction.posTicket) {
+    throw new Error('Cette operation vient d une facture, d un achat ou de la caisse : corrige-la depuis le document d origine.')
+  }
+  if (!['Income', 'Expense'].includes(transaction.type)) {
+    throw new Error('Les virements et soldes d ouverture ne se modifient pas.')
+  }
+  return transaction
+}
+
+function signedAmount(type: string, amount: number) {
+  return type === 'Income' ? amount : -amount
+}
+
+export const updateFinanceTransaction = createServerFn({ method: 'POST' })
+  .inputValidator(z.object({
+    companySlug: z.string(),
+    transactionId: z.string(),
+    accountId: z.string(),
+    description: z.string().trim().min(1).max(300),
+    amount: z.number().positive(),
+    category: z.string().trim().min(1).max(120),
+    date: z.string().optional(),
+    reference: z.string().trim().max(200).optional(),
+  }))
+  .handler(async ({ data }) => {
+    const { company, user } = await getCompanyContext(data.companySlug, 'finance.manage')
+    const existing = await findManualTransaction(company.id, data.transactionId)
+    const account = await prisma.bankAccount.findFirst({ where: { id: data.accountId, companyId: company.id } })
+    if (!account) throw new Error('Compte introuvable.')
+    const amount = Math.round(data.amount)
+
+    return prisma.$transaction(async (tx) => {
+      // Annule l'effet de l'ancienne operation puis applique la nouvelle.
+      await tx.bankAccount.update({ where: { id: existing.accountId }, data: { balance: { increment: -signedAmount(existing.type, existing.amount) } } })
+      await tx.bankAccount.update({ where: { id: account.id }, data: { balance: { increment: signedAmount(existing.type, amount) } } })
+      const transaction = await tx.transaction.update({
+        where: { id: existing.id },
+        data: { accountId: account.id, description: data.description, amount, category: data.category, date: data.date ? new Date(data.date) : existing.date, reference: data.reference || null },
+      })
+      await tx.auditLog.create({ data: { companyId: company.id, actorId: user.id, action: 'transaction.updated', entity: 'Transaction', entityId: transaction.id, metadata: JSON.stringify({ previous: existing.amount, amount }) } })
+      return transaction
+    })
+  })
+
+export const deleteFinanceTransaction = createServerFn({ method: 'POST' })
+  .inputValidator(z.object({ companySlug: z.string(), transactionId: z.string() }))
+  .handler(async ({ data }) => {
+    const { company, user } = await getCompanyContext(data.companySlug, 'finance.manage')
+    const existing = await findManualTransaction(company.id, data.transactionId)
+    await prisma.$transaction(async (tx) => {
+      await tx.bankAccount.update({ where: { id: existing.accountId }, data: { balance: { increment: -signedAmount(existing.type, existing.amount) } } })
+      await tx.auditLog.create({ data: { companyId: company.id, actorId: user.id, action: 'transaction.deleted', entity: 'Transaction', entityId: existing.id, metadata: JSON.stringify({ description: existing.description, amount: existing.amount, type: existing.type }) } })
+      await tx.transaction.delete({ where: { id: existing.id } })
     })
     return { ok: true }
   })

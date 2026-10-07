@@ -1090,6 +1090,12 @@ async function createCompanyForOwner(input: {
     },
   })
 
+  // Une caisse d'office : sans compte, aucun encaissement n'est possible et le
+  // premier paiement de facture bute sur un ecran vide.
+  await prisma.bankAccount.create({
+    data: { companyId: company.id, name: 'Caisse boutique', type: 'Cash', currency: company.currency || 'FCFA', balance: 0, status: 'Active' },
+  })
+
   const modules = await prisma.moduleDefinition.findMany()
   await prisma.companyModule.createMany({
     data: modules.map((module) => ({
