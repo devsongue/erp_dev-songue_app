@@ -1,4 +1,4 @@
-import { createFileRoute, useRouter } from '@tanstack/react-router'
+import { createFileRoute, useNavigate, useRouter } from '@tanstack/react-router'
 import {
   BadgeCheck,
   Building2,
@@ -8,6 +8,7 @@ import {
   Pencil,
   Plus,
   Printer,
+  ReceiptText,
   Save,
   Search,
   Send,
@@ -17,7 +18,8 @@ import {
 } from 'lucide-react'
 import * as React from 'react'
 import { getQuoteData } from '~/server/dataFetchers'
-import { createQuote, deleteQuote, saveQuoteSettings, updateQuote, updateQuoteStatus } from '~/server/operations'
+import { createInvoiceFromQuote, createQuote, deleteQuote, saveQuoteSettings, updateQuote, updateQuoteStatus } from '~/server/operations'
+import { buttonClass, errorMessage, useFeedback } from '~/components/ui'
 import { useMoney } from '~/context/CompanyContext'
 import { ImageUploadField } from '~/components/ImageUploadField'
 
@@ -57,6 +59,8 @@ function QuotesPage() {
   const { formatMoney } = useMoney()
   const { companySlug } = Route.useParams()
   const router = useRouter()
+  const navigate = useNavigate()
+  const { confirm, notify } = useFeedback()
   const data = Route.useLoaderData()
 
   const [quotes, setQuotes] = React.useState<any[]>(data.quotes)
@@ -103,7 +107,7 @@ function QuotesPage() {
 
   async function changeStatus(quoteId: string, status: QuoteStatus) {
     const quote = quotes.find((candidate) => candidate.id === quoteId)
-    if (status === 'Accepted' && quote && !window.confirm(`Marquer le devis ${quote.reference} comme accepte ?`)) {
+    if (status === 'Accepted' && quote && !await confirm({ title: 'Accepter ce devis ?', message: `Le devis ${quote.reference} sera marqué comme accepté et ne pourra plus être modifié.`, confirmLabel: 'Accepter' })) {
       return
     }
     const updated = await updateQuoteStatus({ data: { companySlug, quoteId, status } })
@@ -112,7 +116,7 @@ function QuotesPage() {
   }
 
   async function removeQuote(quote: any) {
-    if (!window.confirm(`Supprimer definitivement le devis ${quote.reference} ?`)) return
+    if (!await confirm({ title: 'Supprimer ce devis ?', message: `Le devis ${quote.reference} sera supprimé définitivement.`, confirmLabel: 'Supprimer', danger: true })) return
     try {
       await deleteQuote({ data: { companySlug, quoteId: quote.id } })
       setQuotes((current) => current.filter((item) => item.id !== quote.id))
@@ -120,6 +124,16 @@ function QuotesPage() {
       setMessage(`Devis ${quote.reference} supprime.`)
       await refresh()
     } catch (error: any) { setMessage(error.message || 'Suppression impossible.') }
+  }
+
+  async function invoiceQuote(quote: any) {
+    try {
+      await createInvoiceFromQuote({ data: { companySlug, quoteId: quote.id } })
+      notify(`Brouillon de facture créé depuis ${quote.reference}.`)
+      await navigate({ to: '/$companySlug/invoices', params: { companySlug } })
+    } catch (error) {
+      notify(errorMessage(error), 'error')
+    }
   }
 
   return (
@@ -276,10 +290,18 @@ function QuotesPage() {
                   <h2 className="font-light text-slate-950">Apercu impression de devis</h2>
                   <p className="text-xs text-slate-500">{selectedQuote.reference}</p>
                 </div>
-                <button onClick={() => window.print()} className="inline-flex items-center gap-2 rounded bg-slate-950 px-3 py-2 text-sm font-semibold text-white">
-                  <Printer className="size-4" />
-                  Imprimer
-                </button>
+                <div className="flex flex-wrap justify-end gap-2">
+                  {!['Rejected', 'Expired'].includes(selectedQuote.status) ? (
+                    <button type="button" onClick={() => void invoiceQuote(selectedQuote)} className={buttonClass.secondary}>
+                      <ReceiptText className="size-4" />
+                      Facturer
+                    </button>
+                  ) : null}
+                  <button onClick={() => window.print()} className="inline-flex items-center gap-2 rounded bg-slate-950 px-3 py-2 text-sm font-semibold text-white">
+                    <Printer className="size-4" />
+                    Imprimer
+                  </button>
+                </div>
               </div>
               <QuotePrint quote={selectedQuote} settings={settings} companyName={data.company.name} />
             </>

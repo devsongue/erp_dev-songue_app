@@ -730,90 +730,275 @@ export const createPurchaseInvoice = createServerFn({ method: 'POST' })
     })
   })
 
-export const createSalesInvoice = createServerFn({ method: 'POST' })
-  .inputValidator(z.object({
-    companySlug: z.string(),
-    customerId: z.string().optional(),
-    customerName: z.string().optional(),
-    accountId: z.string().optional(),
-    amount: z.number().positive(),
-    status: z.enum(['Draft', 'Sent', 'Paid']).default('Draft'),
-    notes: z.string().optional(),
+// --- Factures de vente ------------------------------------------------------
+//
+// Cycle : brouillon (modifiable, supprimable, sans numero definitif) -> emise
+// (numero continu FAC-AAAA-NNNNN, plus modifiable) -> partiellement payee ->
+// payee. Une facture emise sans paiement peut etre annulee ; elle n'est jamais
+// supprimee, pour ne pas creer de trou dans la numerotation.
+
+const paymentMethods = ['Cash', 'MobileMoney', 'Card', 'BankTransfer', 'Cheque'] as const
+
+const salesInvoiceInput = z.object({
+  companySlug: z.string(),
+  customerId: z.string().optional(),
+  customerName: z.string().trim().max(200).optional(),
+  dueDate: z.string().optional(),
+  discountRate: z.number().min(0).max(100).default(0),
+  taxRate: z.number().min(0).max(100).default(0),
+  notes: z.string().trim().max(2000).optional(),
+  lines: z.array(quoteLineInput).min(1),
+  issue: z.boolean().default(false),
+})
+
+function computeDocumentTotals(lines: Array<{ quantity: number; unitPrice: number }>, discountRate: number, taxRate: number) {
+  const subtotal = lines.reduce((sum, line) => sum + Math.round(line.quantity * line.unitPrice), 0)
+  const discount = Math.round(subtotal * (discountRate / 100))
+  const taxable = Math.max(0, subtotal - discount)
+  const tax = Math.round(taxable * (taxRate / 100))
+  return { subtotal, discount, tax, total: taxable + tax }
+}
+
+function invoiceLinesCreate(lines: Array<z.infer<typeof quoteLineInput>>) {
+  return lines.map((line, index) => ({
+    itemId: line.itemId || null,
+    description: line.description.trim(),
+    quantity: line.quantity,
+    unitPrice: Math.round(line.unitPrice),
+    totalCents: Math.round(line.quantity * line.unitPrice),
+    sortOrder: index,
   }))
+}
+
+function draftNumber() {
+  return `BROUILLON-${crypto.randomUUID().slice(0, 8).toUpperCase()}`
+}
+
+async function resolveInvoiceCustomer(companyId: string, customerId?: string, customerName?: string) {
+  await assertCompanyCustomer(companyId, customerId)
+  if (customerId) return customerId
+  if (customerName?.trim()) {
+    const customer = await prisma.customer.create({ data: { companyId, name: customerName.trim() } })
+    return customer.id
+  }
+  return null
+}
+
+const invoiceInclude = {
+  customer: true,
+  lines: { orderBy: { sortOrder: 'asc' as const } },
+  payments: { include: { account: { select: { id: true, name: true } } }, orderBy: { date: 'desc' as const } },
+}
+
+export const createSalesInvoice = createServerFn({ method: 'POST' })
+  .inputValidator(salesInvoiceInput)
   .handler(async ({ data }) => {
-    const company = await getCompany(data.companySlug, 'invoice.create')
-    await assertCompanyCustomer(company.id, data.customerId)
-    let customerId = data.customerId || undefined
-    if (!customerId && data.customerName?.trim()) {
-      const customer = await prisma.customer.create({
-        data: {
-          companyId: company.id,
-          name: data.customerName.trim(),
-        },
-      })
-      customerId = customer.id
-    }
-
-    const amount = Math.round(data.amount)
-
-    // Comme pour les factures d'achat : une facture payee impacte la
-    // tresorerie (transaction + paiement + solde du compte).
-    const account = data.status === 'Paid'
-      ? data.accountId
-        ? await prisma.bankAccount.findFirst({ where: { id: data.accountId, companyId: company.id } })
-        : await ensureAccount(company.id, 'Cash', 'Caisse boutique')
-      : null
-    if (data.status === 'Paid' && !account) throw new Error('Compte introuvable.')
+    const { company, user } = await getCompanyContext(data.companySlug, 'invoice.create')
+    await assertCompanyItems(company.id, data.lines.map((line) => line.itemId))
+    const customerId = await resolveInvoiceCustomer(company.id, data.customerId, data.customerName)
+    const totals = computeDocumentTotals(data.lines, data.discountRate, data.taxRate)
+    if (data.issue && totals.total <= 0) throw new Error('Une facture emise doit avoir un montant positif.')
 
     return prisma.$transaction(async (tx) => {
-      // Numero toujours attribue par le serveur : une facture de vente doit
-      // suivre une numerotation continue, non modifiable par l'utilisateur.
-      const number = await nextDocumentReference(tx, company.id, 'sales_invoice')
+      const number = data.issue ? await nextDocumentReference(tx, company.id, 'sales_invoice') : draftNumber()
+      const now = new Date()
       const invoice = await tx.salesInvoice.create({
         data: {
           companyId: company.id,
-          customerId: customerId ?? null,
+          customerId,
           number,
-          status: data.status,
-          subtotalCents: amount,
-          totalCents: amount,
-          paidCents: data.status === 'Paid' ? amount : 0,
-          notes: data.notes?.trim() || null,
+          status: data.issue ? 'Sent' : 'Draft',
+          issueDate: now,
+          issuedAt: data.issue ? now : null,
+          dueDate: data.dueDate ? new Date(data.dueDate) : null,
+          subtotalCents: totals.subtotal,
+          discountRate: Math.round(data.discountRate),
+          discountCents: totals.discount,
+          taxRate: Math.round(data.taxRate),
+          taxCents: totals.tax,
+          totalCents: totals.total,
+          notes: data.notes || null,
+          lines: { create: invoiceLinesCreate(data.lines) },
         },
-        include: { customer: true },
+        include: invoiceInclude,
       })
+      await tx.auditLog.create({ data: { companyId: company.id, actorId: user.id, action: data.issue ? 'invoice.issued' : 'invoice.created', entity: 'SalesInvoice', entityId: invoice.id, metadata: JSON.stringify({ number, total: totals.total }) } })
+      return invoice
+    })
+  })
 
-      if (data.status === 'Paid' && account) {
-        const transaction = await tx.transaction.create({
-          data: {
-            companyId: company.id,
-            accountId: account.id,
-            description: invoice.customer ? `${invoice.customer.name} - ${number}` : `Facture ${number}`,
-            amount,
-            type: 'Income',
-            category: 'Ventes',
-            reference: number,
-            status: 'Completed',
-          },
-        })
-        await tx.payment.create({
-          data: {
-            companyId: company.id,
-            accountId: account.id,
-            transactionId: transaction.id,
-            salesInvoiceId: invoice.id,
-            amount,
-            direction: 'In',
-            method: account.type,
-            reference: number,
-          },
-        })
-        await tx.bankAccount.update({
-          where: { id: account.id },
-          data: { balance: { increment: amount } },
-        })
+export const updateSalesInvoice = createServerFn({ method: 'POST' })
+  .inputValidator(salesInvoiceInput.extend({ invoiceId: z.string() }))
+  .handler(async ({ data }) => {
+    const { company, user } = await getCompanyContext(data.companySlug, 'invoice.update')
+    const existing = await prisma.salesInvoice.findFirst({ where: { id: data.invoiceId, companyId: company.id } })
+    if (!existing) throw new Error('Facture introuvable.')
+    if (existing.status !== 'Draft') throw new Error('Seul un brouillon peut etre modifie. Annule la facture pour en refaire une.')
+    await assertCompanyItems(company.id, data.lines.map((line) => line.itemId))
+    const customerId = await resolveInvoiceCustomer(company.id, data.customerId, data.customerName)
+    const totals = computeDocumentTotals(data.lines, data.discountRate, data.taxRate)
+    if (data.issue && totals.total <= 0) throw new Error('Une facture emise doit avoir un montant positif.')
+
+    return prisma.$transaction(async (tx) => {
+      await tx.salesInvoiceLine.deleteMany({ where: { invoiceId: existing.id } })
+      const now = new Date()
+      const invoice = await tx.salesInvoice.update({
+        where: { id: existing.id },
+        data: {
+          customerId,
+          number: data.issue ? await nextDocumentReference(tx, company.id, 'sales_invoice') : existing.number,
+          status: data.issue ? 'Sent' : 'Draft',
+          issueDate: data.issue ? now : existing.issueDate,
+          issuedAt: data.issue ? now : null,
+          dueDate: data.dueDate ? new Date(data.dueDate) : null,
+          subtotalCents: totals.subtotal,
+          discountRate: Math.round(data.discountRate),
+          discountCents: totals.discount,
+          taxRate: Math.round(data.taxRate),
+          taxCents: totals.tax,
+          totalCents: totals.total,
+          notes: data.notes || null,
+          lines: { create: invoiceLinesCreate(data.lines) },
+        },
+        include: invoiceInclude,
+      })
+      await tx.auditLog.create({ data: { companyId: company.id, actorId: user.id, action: data.issue ? 'invoice.issued' : 'invoice.updated', entity: 'SalesInvoice', entityId: invoice.id, metadata: JSON.stringify({ number: invoice.number, total: totals.total }) } })
+      return invoice
+    })
+  })
+
+export const issueSalesInvoice = createServerFn({ method: 'POST' })
+  .inputValidator(z.object({ companySlug: z.string(), invoiceId: z.string() }))
+  .handler(async ({ data }) => {
+    const { company, user } = await getCompanyContext(data.companySlug, 'invoice.update')
+    const existing = await prisma.salesInvoice.findFirst({ where: { id: data.invoiceId, companyId: company.id } })
+    if (!existing) throw new Error('Facture introuvable.')
+    if (existing.status !== 'Draft') throw new Error('Cette facture est deja emise.')
+    if (existing.totalCents <= 0) throw new Error('Une facture emise doit avoir un montant positif.')
+    return prisma.$transaction(async (tx) => {
+      const now = new Date()
+      const number = await nextDocumentReference(tx, company.id, 'sales_invoice')
+      const invoice = await tx.salesInvoice.update({ where: { id: existing.id }, data: { number, status: 'Sent', issueDate: now, issuedAt: now }, include: invoiceInclude })
+      await tx.auditLog.create({ data: { companyId: company.id, actorId: user.id, action: 'invoice.issued', entity: 'SalesInvoice', entityId: invoice.id, metadata: JSON.stringify({ number, total: invoice.totalCents }) } })
+      return invoice
+    })
+  })
+
+export const recordSalesInvoicePayment = createServerFn({ method: 'POST' })
+  .inputValidator(z.object({
+    companySlug: z.string(),
+    invoiceId: z.string(),
+    accountId: z.string(),
+    amount: z.number().positive(),
+    method: z.enum(paymentMethods),
+    date: z.string().optional(),
+    reference: z.string().trim().max(200).optional(),
+  }))
+  .handler(async ({ data }) => {
+    const { company, user } = await getCompanyContext(data.companySlug, 'invoice.update')
+    const invoice = await prisma.salesInvoice.findFirst({ where: { id: data.invoiceId, companyId: company.id }, include: { customer: true } })
+    if (!invoice) throw new Error('Facture introuvable.')
+    if (!['Sent', 'PartiallyPaid', 'Overdue'].includes(invoice.status)) throw new Error('Seule une facture emise et non soldee peut recevoir un paiement.')
+    const account = await prisma.bankAccount.findFirst({ where: { id: data.accountId, companyId: company.id } })
+    if (!account) throw new Error('Compte introuvable.')
+    const amount = Math.round(data.amount)
+    const remaining = invoice.totalCents - invoice.paidCents
+    if (amount > remaining) throw new Error('Le montant depasse le reste a payer.')
+    const date = data.date ? new Date(data.date) : new Date()
+
+    return prisma.$transaction(async (tx) => {
+      // Garde concurrente : le paiement n'est accepte que si le deja-paye n'a
+      // pas change entre la lecture et l'ecriture.
+      const paid = await tx.salesInvoice.updateMany({
+        where: { id: invoice.id, paidCents: invoice.paidCents },
+        data: { paidCents: { increment: amount }, status: amount === remaining ? 'Paid' : 'PartiallyPaid' },
+      })
+      if (!paid.count) throw new Error('La facture a ete modifiee entre-temps. Recharge la page.')
+      const transaction = await tx.transaction.create({
+        data: {
+          companyId: company.id, accountId: account.id, date,
+          description: invoice.customer ? `${invoice.customer.name} - ${invoice.number}` : `Facture ${invoice.number}`,
+          amount, type: 'Income', category: 'Ventes', reference: invoice.number, status: 'Completed',
+        },
+      })
+      await tx.payment.create({
+        data: {
+          companyId: company.id, accountId: account.id, transactionId: transaction.id, salesInvoiceId: invoice.id,
+          date, amount, direction: 'In', method: data.method, reference: data.reference || invoice.number,
+        },
+      })
+      await tx.bankAccount.update({ where: { id: account.id }, data: { balance: { increment: amount } } })
+      await tx.auditLog.create({ data: { companyId: company.id, actorId: user.id, action: 'invoice.payment_recorded', entity: 'SalesInvoice', entityId: invoice.id, metadata: JSON.stringify({ number: invoice.number, amount, method: data.method }) } })
+      return tx.salesInvoice.findUniqueOrThrow({ where: { id: invoice.id }, include: invoiceInclude })
+    })
+  })
+
+export const cancelSalesInvoice = createServerFn({ method: 'POST' })
+  .inputValidator(z.object({ companySlug: z.string(), invoiceId: z.string() }))
+  .handler(async ({ data }) => {
+    const { company, user } = await getCompanyContext(data.companySlug, 'invoice.update')
+    const invoice = await prisma.salesInvoice.findFirst({ where: { id: data.invoiceId, companyId: company.id } })
+    if (!invoice) throw new Error('Facture introuvable.')
+    if (invoice.status === 'Draft') throw new Error('Un brouillon se supprime, il ne s annule pas.')
+    if (invoice.status === 'Cancelled') throw new Error('Cette facture est deja annulee.')
+    if (invoice.paidCents > 0) throw new Error('Cette facture a deja recu des paiements : elle ne peut pas etre annulee.')
+    return prisma.$transaction(async (tx) => {
+      const result = await tx.salesInvoice.update({ where: { id: invoice.id }, data: { status: 'Cancelled', cancelledAt: new Date() }, include: invoiceInclude })
+      await tx.auditLog.create({ data: { companyId: company.id, actorId: user.id, action: 'invoice.cancelled', entity: 'SalesInvoice', entityId: invoice.id, metadata: JSON.stringify({ number: invoice.number }) } })
+      return result
+    })
+  })
+
+export const deleteSalesInvoice = createServerFn({ method: 'POST' })
+  .inputValidator(z.object({ companySlug: z.string(), invoiceId: z.string() }))
+  .handler(async ({ data }) => {
+    const { company, user } = await getCompanyContext(data.companySlug, 'invoice.delete')
+    const invoice = await prisma.salesInvoice.findFirst({ where: { id: data.invoiceId, companyId: company.id } })
+    if (!invoice) throw new Error('Facture introuvable.')
+    if (invoice.status !== 'Draft') throw new Error('Une facture emise ne peut pas etre supprimee : annule-la.')
+    await prisma.$transaction(async (tx) => {
+      await tx.auditLog.create({ data: { companyId: company.id, actorId: user.id, action: 'invoice.deleted', entity: 'SalesInvoice', entityId: invoice.id, metadata: JSON.stringify({ number: invoice.number }) } })
+      await tx.salesInvoice.delete({ where: { id: invoice.id } })
+    })
+    return { ok: true }
+  })
+
+export const createInvoiceFromQuote = createServerFn({ method: 'POST' })
+  .inputValidator(z.object({ companySlug: z.string(), quoteId: z.string() }))
+  .handler(async ({ data }) => {
+    const { company, user } = await getCompanyContext(data.companySlug, 'invoice.create')
+    const quote = await prisma.quote.findFirst({
+      where: { id: data.quoteId, companyId: company.id },
+      include: { lines: { orderBy: { sortOrder: 'asc' } }, invoices: { where: { status: { not: 'Cancelled' } }, select: { id: true } } },
+    })
+    if (!quote) throw new Error('Devis introuvable.')
+    if (['Rejected', 'Expired'].includes(quote.status)) throw new Error('Un devis refuse ou expire ne peut pas etre facture.')
+    if (quote.invoices.length) throw new Error('Ce devis a deja ete facture.')
+    const totals = computeDocumentTotals(quote.lines, quote.discountRate, quote.taxRate)
+
+    return prisma.$transaction(async (tx) => {
+      const invoice = await tx.salesInvoice.create({
+        data: {
+          companyId: company.id,
+          customerId: quote.customerId,
+          quoteId: quote.id,
+          number: draftNumber(),
+          status: 'Draft',
+          subtotalCents: totals.subtotal,
+          discountRate: quote.discountRate,
+          discountCents: totals.discount,
+          taxRate: quote.taxRate,
+          taxCents: totals.tax,
+          totalCents: totals.total,
+          notes: quote.notes,
+          lines: { create: quote.lines.map((line) => ({ itemId: line.itemId, description: line.description, quantity: line.quantity, unitPrice: line.unitPrice, totalCents: line.totalCents, sortOrder: line.sortOrder })) },
+        },
+        include: invoiceInclude,
+      })
+      if (quote.status !== 'Accepted') {
+        await tx.quote.update({ where: { id: quote.id }, data: { status: 'Accepted', acceptedAt: new Date() } })
       }
-
+      await tx.auditLog.create({ data: { companyId: company.id, actorId: user.id, action: 'invoice.created_from_quote', entity: 'SalesInvoice', entityId: invoice.id, metadata: JSON.stringify({ quote: quote.reference }) } })
       return invoice
     })
   })
@@ -1074,4 +1259,71 @@ export const deleteVendor = createServerFn({ method: 'POST' })
     return prisma.vendor.delete({
       where: { id: data.id, companyId: company.id },
     })
+  })
+
+// --- Clients ---------------------------------------------------------------
+
+const optionalText = z.string().trim().max(500).optional()
+
+const customerInput = z.object({
+  companySlug: z.string(),
+  name: z.string().trim().min(1).max(200),
+  email: z.union([z.literal(''), z.string().trim().email()]).optional(),
+  phone: optionalText,
+  address: optionalText,
+  city: optionalText,
+  taxId: optionalText,
+  notes: z.string().trim().max(2000).optional(),
+})
+
+function customerData(data: z.infer<typeof customerInput>) {
+  return {
+    name: data.name,
+    email: data.email || null,
+    phone: data.phone || null,
+    address: data.address || null,
+    city: data.city || null,
+    taxId: data.taxId || null,
+    notes: data.notes || null,
+  }
+}
+
+export const createCustomer = createServerFn({ method: 'POST' })
+  .inputValidator(customerInput)
+  .handler(async ({ data }) => {
+    const { company, user } = await getCompanyContext(data.companySlug, 'customer.create')
+    const customer = await prisma.customer.create({ data: { companyId: company.id, ...customerData(data) } })
+    await prisma.auditLog.create({ data: { companyId: company.id, actorId: user.id, action: 'customer.created', entity: 'Customer', entityId: customer.id, metadata: JSON.stringify({ name: customer.name }) } })
+    return customer
+  })
+
+export const updateCustomer = createServerFn({ method: 'POST' })
+  .inputValidator(customerInput.extend({ customerId: z.string() }))
+  .handler(async ({ data }) => {
+    const { company, user } = await getCompanyContext(data.companySlug, 'customer.update')
+    const customer = await prisma.customer.update({ where: { id: data.customerId, companyId: company.id }, data: customerData(data) })
+    await prisma.auditLog.create({ data: { companyId: company.id, actorId: user.id, action: 'customer.updated', entity: 'Customer', entityId: customer.id, metadata: JSON.stringify({ name: customer.name }) } })
+    return customer
+  })
+
+export const deleteCustomer = createServerFn({ method: 'POST' })
+  .inputValidator(z.object({ companySlug: z.string(), customerId: z.string() }))
+  .handler(async ({ data }) => {
+    const { company, user } = await getCompanyContext(data.companySlug, 'customer.delete')
+    const customer = await prisma.customer.findFirst({
+      where: { id: data.customerId, companyId: company.id },
+      include: { _count: { select: { salesInvoices: true, quotes: true, posTickets: true, deals: true, orders: true } } },
+    })
+    if (!customer) throw new Error('Client introuvable.')
+    const history = customer._count
+    if (history.salesInvoices || history.quotes || history.posTickets || history.deals || history.orders) {
+      // Supprimer ferait perdre le lien client sur des documents deja emis
+      // (ou les opportunites, supprimees en cascade).
+      throw new Error(`${customer.name} a deja des documents (factures, devis, tickets ou opportunites) : il ne peut pas etre supprime.`)
+    }
+    await prisma.$transaction(async (tx) => {
+      await tx.auditLog.create({ data: { companyId: company.id, actorId: user.id, action: 'customer.deleted', entity: 'Customer', entityId: customer.id, metadata: JSON.stringify({ name: customer.name }) } })
+      await tx.customer.delete({ where: { id: customer.id } })
+    })
+    return { ok: true }
   })

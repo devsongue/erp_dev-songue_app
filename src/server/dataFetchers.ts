@@ -472,3 +472,71 @@ export const getPurchasesData = createServerFn({ method: 'GET' })
 
     return { vendors, accounts, purchaseInvoices, stockAlerts }
   })
+
+export const getCustomersData = createServerFn({ method: 'GET' })
+  .inputValidator(z.object({ companySlug: z.string() }))
+  .handler(async ({ data }) => {
+    const company = await getCompany(data.companySlug, 'customer.read')
+    const [customers, invoiceTotals, ticketTotals] = await Promise.all([
+      prisma.customer.findMany({ where: { companyId: company.id }, orderBy: { name: 'asc' } }),
+      prisma.salesInvoice.groupBy({
+        by: ['customerId'],
+        where: { companyId: company.id, status: { notIn: ['Draft', 'Cancelled'] }, customerId: { not: null } },
+        _sum: { totalCents: true, paidCents: true },
+        _count: { _all: true },
+      }),
+      prisma.posTicket.groupBy({
+        by: ['customerId'],
+        where: { companyId: company.id, status: 'Completed', customerId: { not: null } },
+        _sum: { totalCents: true },
+        _count: { _all: true },
+      }),
+    ])
+    const invoices = new Map(invoiceTotals.map((row) => [row.customerId, row]))
+    const tickets = new Map(ticketTotals.map((row) => [row.customerId, row]))
+    return {
+      customers: customers.map((customer) => {
+        const invoice = invoices.get(customer.id)
+        const ticket = tickets.get(customer.id)
+        const invoiced = invoice?._sum.totalCents ?? 0
+        const paid = invoice?._sum.paidCents ?? 0
+        return {
+          ...customer,
+          invoiceCount: invoice?._count._all ?? 0,
+          ticketCount: ticket?._count._all ?? 0,
+          revenue: invoiced + (ticket?._sum.totalCents ?? 0),
+          balanceDue: Math.max(0, invoiced - paid),
+        }
+      }),
+    }
+  })
+
+export const getSalesInvoicesData = createServerFn({ method: 'GET' })
+  .inputValidator(z.object({ companySlug: z.string() }))
+  .handler(async ({ data }) => {
+    const company = await getCompany(data.companySlug, 'invoice.read')
+    const [invoices, customers, items, accounts, settings, quotes] = await Promise.all([
+      prisma.salesInvoice.findMany({
+        where: { companyId: company.id },
+        include: {
+          customer: true,
+          quote: { select: { id: true, reference: true } },
+          lines: { orderBy: { sortOrder: 'asc' } },
+          payments: { include: { account: { select: { id: true, name: true } } }, orderBy: { date: 'desc' } },
+        },
+        orderBy: { createdAt: 'desc' },
+      }),
+      prisma.customer.findMany({ where: { companyId: company.id }, select: { id: true, name: true }, orderBy: { name: 'asc' } }),
+      prisma.catalogItem.findMany({ where: { companyId: company.id, status: 'Active' }, select: { id: true, name: true, sku: true, price: true }, orderBy: { name: 'asc' } }),
+      prisma.bankAccount.findMany({ where: { companyId: company.id, status: 'Active' }, select: { id: true, name: true, type: true }, orderBy: { name: 'asc' } }),
+      prisma.quoteSettings.findUnique({ where: { companyId: company.id } }),
+      // Devis encore facturables : ni refuses/expires, ni deja factures.
+      prisma.quote.findMany({
+        where: { companyId: company.id, status: { in: ['Draft', 'Sent', 'Accepted'] }, invoices: { none: { status: { not: 'Cancelled' } } } },
+        select: { id: true, reference: true, title: true, totalCents: true, customer: { select: { name: true } } },
+        orderBy: { createdAt: 'desc' },
+        take: 50,
+      }),
+    ])
+    return { companyName: company.name, invoices, customers, items, accounts, settings, quotes }
+  })

@@ -43,6 +43,7 @@ import { Route as CompanySlugAccountingLedgerRouteImport } from './routes/$compa
 import { Route as CompanySlugAccountingProfitLossRouteImport } from './routes/$companySlug.accounting.profit-loss'
 import { Route as CompanySlugAccountingTrialBalanceRouteImport } from './routes/$companySlug.accounting.trial-balance'
 import { Route as CompanySlugCrmIndexRouteImport } from './routes/$companySlug.crm.index'
+import { Route as CompanySlugCrmCustomersRouteImport } from './routes/$companySlug.crm.customers'
 import { Route as CompanySlugCrmDealsRouteImport } from './routes/$companySlug.crm.deals'
 import { Route as CompanySlugCrmLeadsRouteImport } from './routes/$companySlug.crm.leads'
 import { Route as CompanySlugCrmPipelinesRouteImport } from './routes/$companySlug.crm.pipelines'
@@ -253,6 +254,11 @@ const CompanySlugAccountingTrialBalanceRoute =
 const CompanySlugCrmIndexRoute = CompanySlugCrmIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => CompanySlugCrmRoute,
+} as any)
+const CompanySlugCrmCustomersRoute = CompanySlugCrmCustomersRouteImport.update({
+  id: '/customers',
+  path: '/customers',
   getParentRoute: () => CompanySlugCrmRoute,
 } as any)
 const CompanySlugCrmDealsRoute = CompanySlugCrmDealsRouteImport.update({
@@ -480,6 +486,7 @@ export interface FileRoutesByFullPath {
   '/$companySlug/accounting/ledger': typeof CompanySlugAccountingLedgerRoute
   '/$companySlug/accounting/profit-loss': typeof CompanySlugAccountingProfitLossRoute
   '/$companySlug/accounting/trial-balance': typeof CompanySlugAccountingTrialBalanceRoute
+  '/$companySlug/crm/customers': typeof CompanySlugCrmCustomersRoute
   '/$companySlug/crm/deals': typeof CompanySlugCrmDealsRoute
   '/$companySlug/crm/leads': typeof CompanySlugCrmLeadsRoute
   '/$companySlug/crm/pipelines': typeof CompanySlugCrmPipelinesRoute
@@ -542,6 +549,7 @@ export interface FileRoutesByTo {
   '/$companySlug/accounting/ledger': typeof CompanySlugAccountingLedgerRoute
   '/$companySlug/accounting/profit-loss': typeof CompanySlugAccountingProfitLossRoute
   '/$companySlug/accounting/trial-balance': typeof CompanySlugAccountingTrialBalanceRoute
+  '/$companySlug/crm/customers': typeof CompanySlugCrmCustomersRoute
   '/$companySlug/crm/deals': typeof CompanySlugCrmDealsRoute
   '/$companySlug/crm/leads': typeof CompanySlugCrmLeadsRoute
   '/$companySlug/crm/pipelines': typeof CompanySlugCrmPipelinesRoute
@@ -614,6 +622,7 @@ export interface FileRoutesById {
   '/$companySlug/accounting/ledger': typeof CompanySlugAccountingLedgerRoute
   '/$companySlug/accounting/profit-loss': typeof CompanySlugAccountingProfitLossRoute
   '/$companySlug/accounting/trial-balance': typeof CompanySlugAccountingTrialBalanceRoute
+  '/$companySlug/crm/customers': typeof CompanySlugCrmCustomersRoute
   '/$companySlug/crm/deals': typeof CompanySlugCrmDealsRoute
   '/$companySlug/crm/leads': typeof CompanySlugCrmLeadsRoute
   '/$companySlug/crm/pipelines': typeof CompanySlugCrmPipelinesRoute
@@ -687,6 +696,7 @@ export interface FileRouteTypes {
     | '/$companySlug/accounting/ledger'
     | '/$companySlug/accounting/profit-loss'
     | '/$companySlug/accounting/trial-balance'
+    | '/$companySlug/crm/customers'
     | '/$companySlug/crm/deals'
     | '/$companySlug/crm/leads'
     | '/$companySlug/crm/pipelines'
@@ -749,6 +759,7 @@ export interface FileRouteTypes {
     | '/$companySlug/accounting/ledger'
     | '/$companySlug/accounting/profit-loss'
     | '/$companySlug/accounting/trial-balance'
+    | '/$companySlug/crm/customers'
     | '/$companySlug/crm/deals'
     | '/$companySlug/crm/leads'
     | '/$companySlug/crm/pipelines'
@@ -820,6 +831,7 @@ export interface FileRouteTypes {
     | '/$companySlug/accounting/ledger'
     | '/$companySlug/accounting/profit-loss'
     | '/$companySlug/accounting/trial-balance'
+    | '/$companySlug/crm/customers'
     | '/$companySlug/crm/deals'
     | '/$companySlug/crm/leads'
     | '/$companySlug/crm/pipelines'
@@ -1112,6 +1124,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CompanySlugCrmIndexRouteImport
       parentRoute: typeof CompanySlugCrmRoute
     }
+    '/$companySlug/crm/customers': {
+      id: '/$companySlug/crm/customers'
+      path: '/customers'
+      fullPath: '/$companySlug/crm/customers'
+      preLoaderRoute: typeof CompanySlugCrmCustomersRouteImport
+      parentRoute: typeof CompanySlugCrmRoute
+    }
     '/$companySlug/crm/deals': {
       id: '/$companySlug/crm/deals'
       path: '/deals'
@@ -1384,6 +1403,7 @@ const CompanySlugAccountingRouteWithChildren =
   )
 
 interface CompanySlugCrmRouteChildren {
+  CompanySlugCrmCustomersRoute: typeof CompanySlugCrmCustomersRoute
   CompanySlugCrmDealsRoute: typeof CompanySlugCrmDealsRoute
   CompanySlugCrmLeadsRoute: typeof CompanySlugCrmLeadsRoute
   CompanySlugCrmPipelinesRoute: typeof CompanySlugCrmPipelinesRoute
@@ -1391,6 +1411,7 @@ interface CompanySlugCrmRouteChildren {
 }
 
 const CompanySlugCrmRouteChildren: CompanySlugCrmRouteChildren = {
+  CompanySlugCrmCustomersRoute: CompanySlugCrmCustomersRoute,
   CompanySlugCrmDealsRoute: CompanySlugCrmDealsRoute,
   CompanySlugCrmLeadsRoute: CompanySlugCrmLeadsRoute,
   CompanySlugCrmPipelinesRoute: CompanySlugCrmPipelinesRoute,

@@ -30,6 +30,7 @@ import {
 } from 'lucide-react'
 import * as React from 'react'
 import { CompanyProvider, useCompany } from '~/context/CompanyContext'
+import { FeedbackProvider } from '~/components/ui'
 import { GlobalSearch } from '~/components/GlobalSearch'
 import { getCompanyAuthState, logout, createCompany } from '~/server/auth'
 
@@ -67,9 +68,11 @@ function CompanyLayout() {
 
   return (
     <CompanyProvider activeCompanySlug={companySlug} companies={auth.companies}>
-      <ErpAppShell companySlug={companySlug}>
-        <Outlet />
-      </ErpAppShell>
+      <FeedbackProvider>
+        <ErpAppShell companySlug={companySlug}>
+          <Outlet />
+        </ErpAppShell>
+      </FeedbackProvider>
     </CompanyProvider>
   )
 }
@@ -131,7 +134,8 @@ const erpNavigation: Array<{ label: string; sections: SidebarSection[] }> = [
         moduleKey: 'crm',
         children: [
           { path: '/crm', label: 'Resume clients', icon: LayoutDashboard, exact: true },
-          { path: '/crm/leads', label: 'Ajouter client', icon: Plus },
+          { path: '/crm/customers', label: 'Clients', icon: Contact },
+          { path: '/crm/leads', label: 'Prospects', icon: Plus },
           { path: '/crm/deals', label: 'Opportunites', icon: Handshake },
         ],
       },
