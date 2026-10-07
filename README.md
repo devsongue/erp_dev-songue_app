@@ -1,4 +1,6 @@
-# ERP Multi-Entreprises Self-Hosted
+# DevSongue Business
+
+ERP multi-entreprises self-hosted.
 
 ERP multi-entreprises installe sur le VPS du client. Le produit vise les entrepreneurs et PME qui veulent un outil simple a utiliser, mais avec de vraies fonctionnalites metier : ventes, POS, stock, finance, comptabilite, RH, CRM, achats, projets, helpdesk et rapports.
 
