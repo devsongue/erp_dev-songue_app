@@ -137,7 +137,7 @@ function publicRegistrationEnabled() {
 
 export const getInstallationState = createServerFn({ method: 'GET' }).handler(async () => {
   try {
-    return { needsSetup: !(await isInstalled()), allowRegistration: publicRegistrationEnabled() }
+    return { needsSetup: !(await isInstalled()), allowRegistration: publicRegistrationEnabled(), emailVerification: emailVerificationRequired() }
   } catch (error) {
     console.error('Database connection error in getInstallationState:', error)
     // We assume setup is needed or database is unreachable
@@ -220,8 +220,11 @@ export const login = createServerFn({ method: 'POST' })
     }
 
     // Compte cree mais code jamais saisi : on renvoie vers /verify plutot que
-    // d'ouvrir une session, et on repart sur un code neuf.
-    if (!user.emailVerifiedAt) {
+    // d'ouvrir une session, et on repart sur un code neuf. Sans service d'e-mail,
+    // la verification est sans objet : le compte est debloque.
+    if (!user.emailVerifiedAt && !emailVerificationRequired()) {
+      await prisma.user.update({ where: { id: user.id }, data: { emailVerifiedAt: new Date() } })
+    } else if (!user.emailVerifiedAt) {
       await issueVerificationCode(user)
       return {
         ok: false,
@@ -289,6 +292,16 @@ export const login = createServerFn({ method: 'POST' })
 // Le compte existe donc en base avant d'avoir la moindre entreprise : tant que
 // `emailVerifiedAt` est nul, il ne peut ni se connecter ni rien creer.
 
+// La confirmation par code n'a de sens que si un e-mail peut partir : sans
+// service d'envoi, personne ne recevrait le code et l'inscription bloquerait.
+// REQUIRE_EMAIL_VERIFICATION=true|false force le comportement.
+function emailVerificationRequired() {
+  const flag = String(process.env.REQUIRE_EMAIL_VERIFICATION ?? '').trim().toLowerCase()
+  if (flag === 'true') return true
+  if (flag === 'false') return false
+  return mailIsConfigured()
+}
+
 function createVerificationCode() {
   // 6 chiffres tires du CSPRNG (pas Math.random) : c'est un secret d'authentification.
   return String(randomBytes(4).readUInt32BE(0) % 1_000_000).padStart(6, '0')
@@ -344,13 +357,14 @@ export const registerOwner = createServerFn({ method: 'POST' })
       return { ok: false, message: 'Un compte existe déjà avec cet email.' }
     }
 
+    const verify = emailVerificationRequired()
     try {
       // Compte non verifie deja present : l'inscription a ete abandonnee avant le
       // code. On reprend le meme compte plutot que de bloquer l'adresse a vie.
       const user = existing
         ? await prisma.user.update({
             where: { id: existing.id },
-            data: { name: data.name.trim(), passwordHash: await hashPassword(data.password) },
+            data: { name: data.name.trim(), passwordHash: await hashPassword(data.password), emailVerifiedAt: verify ? null : new Date() },
           })
         : await prisma.user.create({
             data: {
@@ -358,11 +372,19 @@ export const registerOwner = createServerFn({ method: 'POST' })
               email,
               passwordHash: await hashPassword(data.password),
               isOwner: true,
+              emailVerifiedAt: verify ? null : new Date(),
             },
           })
 
+      // Sans envoi d'e-mail : pas d'etape de code, la session s'ouvre et on passe
+      // directement a la creation de la boutique.
+      if (!verify) {
+        await createSessionForUser(user.id)
+        return { ok: true, email: user.email, delivered: false, devCode: undefined, redirectTo: '/onboarding' }
+      }
+
       const { delivered, devCode } = await issueVerificationCode(user)
-      return { ok: true, email: user.email, delivered, devCode }
+      return { ok: true, email: user.email, delivered, devCode, redirectTo: undefined }
     } catch (error: any) {
       // Course entre la verification et la creation (email pris entre-temps).
       if (error?.code === 'P2002') {

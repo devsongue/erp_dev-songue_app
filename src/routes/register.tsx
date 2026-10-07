@@ -20,6 +20,7 @@ export const Route = createFileRoute('/register')({
     if (!installation?.needsSetup && !installation?.allowRegistration) {
       throw redirect({ to: '/login', search: { redirect: undefined } })
     }
+    return { emailVerification: Boolean(installation && 'emailVerification' in installation && installation.emailVerification) }
   },
   component: RegisterPage,
 })
@@ -28,6 +29,7 @@ export const Route = createFileRoute('/register')({
 // une fois l'adresse email confirmee (/verify).
 function RegisterPage() {
   const navigate = useNavigate()
+  const { emailVerification } = Route.useRouteContext()
   const [name, setName] = React.useState('')
   const [email, setEmail] = React.useState('')
   const [password, setPassword] = React.useState('')
@@ -47,9 +49,15 @@ function RegisterPage() {
       return
     }
 
-    // Sans transport email configure, le serveur renvoie le code pour ne pas
-    // bloquer le dev. Il transite par sessionStorage plutot que par l'URL, ou il
-    // finirait dans l'historique et les logs.
+    // Sans service d'e-mail, pas d'etape de code : le compte est deja actif et
+    // la session ouverte, on passe a la creation de la boutique.
+    if (result.redirectTo) {
+      window.location.href = result.redirectTo
+      return
+    }
+
+    // En dev, le serveur peut renvoyer le code. Il transite par sessionStorage
+    // plutot que par l'URL, ou il finirait dans l'historique et les logs.
     if (result.devCode) {
       window.sessionStorage.setItem('erp-dev-verification-code', result.devCode)
     }
@@ -62,7 +70,7 @@ function RegisterPage() {
       <BrandMark subtitle="Création de votre espace" />
       <AuthCard>
         <Stepper current={1} />
-        <PageHeading title="Creez votre compte" description="Commencons par vous. La boutique arrive juste apres." />
+        <PageHeading title="Créez votre compte" description="Commençons par vous. La boutique arrive juste après." />
 
         <form onSubmit={handleSubmit} className="mt-7 grid gap-4">
           <Field
@@ -82,7 +90,7 @@ function RegisterPage() {
             type="email"
             placeholder="nom@entreprise.com"
             autoComplete="email"
-            hint="Un code de confirmation y sera envoyé."
+            hint={emailVerification ? 'Un code de confirmation y sera envoyé.' : 'Il vous servira à vous connecter.'}
           />
           <Field
             icon={LockKeyhole}
