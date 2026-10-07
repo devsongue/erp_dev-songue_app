@@ -33,7 +33,7 @@ export function DateRangeFilter({
             key={option.value}
             type="button"
             onClick={() => onPresetChange(option.value)}
-            className={`h-9 rounded px-3 text-xs font-bold transition ${preset === option.value ? 'bg-slate-950 text-white dark:bg-cyan-400 dark:text-slate-950' : 'border border-slate-200 text-slate-600 hover:border-slate-300 hover:text-slate-950 dark:border-slate-800 dark:text-slate-300 dark:hover:border-slate-700 dark:hover:text-white'}`}
+            className={`h-9 rounded px-3 text-xs font-bold transition ${preset === option.value ? 'bg-slate-950 text-white' : 'border border-slate-200 text-slate-600 hover:border-slate-300 hover:text-slate-950'}`}
           >
             {option.label}
           </button>
@@ -43,21 +43,21 @@ export function DateRangeFilter({
       {preset === 'custom' ? (
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           <label className="block">
-            <span className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-400 dark:text-slate-500">Du</span>
+            <span className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-400">Du</span>
             <input
               value={startDate}
               onChange={(event) => onStartDateChange(event.target.value)}
               type="date"
-              className="h-10 w-full rounded border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-950 outline-none focus:border-slate-950 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:focus:border-cyan-400"
+              className="h-10 w-full rounded border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-950 outline-none focus:border-slate-950"
             />
           </label>
           <label className="block">
-            <span className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-400 dark:text-slate-500">Au</span>
+            <span className="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-400">Au</span>
             <input
               value={endDate}
               onChange={(event) => onEndDateChange(event.target.value)}
               type="date"
-              className="h-10 w-full rounded border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-950 outline-none focus:border-slate-950 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:focus:border-cyan-400"
+              className="h-10 w-full rounded border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-950 outline-none focus:border-slate-950"
             />
           </label>
         </div>

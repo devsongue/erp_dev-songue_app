@@ -17,7 +17,7 @@ function LeavesPage() {
       <div className="mb-6">
         <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">RH</p>
         <h1 className="mt-1 text-2xl font-bold text-slate-950">Conges & absences</h1>
-        <p className="mt-1 text-sm text-slate-500">Suivi simple des absences declarees dans les statuts employes.</p>
+        <p className="mt-1 text-sm text-slate-500">Suivi simple des absences declarees dans les statuts employés.</p>
       </div>
       <section className="mb-6 grid gap-4 md:grid-cols-3">
         <Stat title="Absences" value={onLeave.length.toString()} icon={CalendarClock} alert={onLeave.length > 0} />
@@ -35,7 +35,7 @@ function LeavesPage() {
                 <p className="font-bold text-slate-950">{employee.firstName} {employee.lastName}</p>
                 <p className="mt-1 text-xs text-slate-500">{employee.department} - {employee.position}</p>
               </div>
-              <span className="rounded bg-amber-100 px-2.5 py-1 text-xs font-bold text-amber-700">En conge</span>
+              <span className="rounded bg-amber-100 px-2.5 py-1 text-xs font-bold text-amber-700">En congé</span>
             </div>
           )) : <p className="px-5 py-8 text-sm text-slate-500">Aucune absence en cours.</p>}
         </div>

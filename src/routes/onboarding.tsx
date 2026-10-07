@@ -96,16 +96,16 @@ function OnboardingPage() {
     let cancelled = false
     const timer = window.setTimeout(async () => {
       const result = await checkSubdomainAvailability({ data: { subdomain: value } }).catch(() => null)
-      // La reponse d'une frappe precedente ne doit pas ecraser l'etat courant.
+      // La reponse d'une frappe précédente ne doit pas ecraser l'etat courant.
       if (cancelled) return
       if (!result?.ok) {
-        setAvailability({ status: 'taken', message: result?.message ?? 'Verification impossible.' })
+        setAvailability({ status: 'taken', message: result?.message ?? 'Vérification impossible.' })
         return
       }
       setAvailability(
         result.available
           ? { status: 'available', subdomain: value }
-          : { status: 'taken', message: result.message ?? 'Ce sous-domaine est deja pris.' },
+          : { status: 'taken', message: result.message ?? 'Ce sous-domaine est déjà pris.' },
       )
     }, 400)
 
@@ -125,7 +125,7 @@ function OnboardingPage() {
     })
 
     if (!result?.ok) {
-      setError(result?.message ?? 'Impossible de creer la boutique.')
+      setError(result?.message ?? 'Impossible de créer la boutique.')
       setIsSubmitting(false)
       return
     }
@@ -137,7 +137,7 @@ function OnboardingPage() {
 
   return (
     <AuthShell wide>
-      <BrandMark subtitle="Creation de votre espace" />
+      <BrandMark subtitle="Création de votre espace" />
       <AuthCard>
         <Stepper current={2} />
         <PageHeading title="Creez votre boutique" description="Quelques informations et votre boutique est prete" />
@@ -207,7 +207,7 @@ function OnboardingPage() {
 
           <div className="mt-1">
             <SubmitButton isSubmitting={isSubmitting} disabled={!canSubmit} icon={ArrowRight}>
-              {isSubmitting ? 'Creation...' : 'Continuer'}
+              {isSubmitting ? 'Création...' : 'Continuer'}
             </SubmitButton>
           </div>
         </form>
@@ -228,7 +228,7 @@ function SubdomainStatus({
   if (availability.status === 'idle') {
     return (
       <p id={id} className="text-xs text-slate-400">
-        L adresse de votre boutique en ligne.
+        L’adresse de votre boutique en ligne.
       </p>
     )
   }
@@ -237,7 +237,7 @@ function SubdomainStatus({
     return (
       <p id={id} className="flex items-center gap-1.5 text-xs font-medium text-slate-500">
         <Loader2 className="size-3.5 animate-spin" />
-        Verification...
+        Vérification...
       </p>
     )
   }

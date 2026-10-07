@@ -26,7 +26,7 @@ export const Route = createFileRoute('/verify')({
 
 const codeLength = 6
 
-// Etape 1b : confirmation de l'adresse email. La session n'est ouverte qu'ici,
+// Etape 1b : confirmation de l'adresse e-mail. La session n'est ouverte qu'ici,
 // et l'etape 2 (/onboarding) en depend.
 function VerifyPage() {
   const { email } = Route.useSearch()
@@ -89,7 +89,7 @@ function VerifyPage() {
 
   return (
     <AuthShell>
-      <BrandMark subtitle="Creation de votre espace" />
+      <BrandMark subtitle="Création de votre espace" />
       <AuthCard>
         <Stepper current={1} />
 
@@ -99,7 +99,7 @@ function VerifyPage() {
           </span>
         </div>
 
-        <PageHeading title="Confirmez votre email" description={`Nous avons envoye un code a ${email}`} />
+        <PageHeading title="Confirmez votre email" description={`Nous avons envoyé un code a ${email}`} />
 
         <form
           onSubmit={(event) => {
@@ -117,7 +117,7 @@ function VerifyPage() {
               autoComplete="one-time-code"
               autoFocus
               placeholder="000000"
-              aria-label="Code de verification a 6 chiffres"
+              aria-label="Code de vérification a 6 chiffres"
               className="h-14 w-56 rounded-lg border border-slate-300 bg-white text-center font-mono text-2xl font-bold tracking-[0.4em] text-slate-950 outline-none transition-colors focus:border-slate-950 focus:ring-2 focus:ring-slate-950/10 placeholder:text-slate-300"
             />
             <span className="text-xs text-slate-400">Le code expire dans 15 minutes.</span>
@@ -133,14 +133,14 @@ function VerifyPage() {
 
           {devCode ? (
             <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
-              Aucun service d envoi d email n est configure : le code est aussi affiche dans la console du serveur.
+              Aucun service d’envoi d’email n’est configure : le code est aussi affiche dans la console du serveur.
               <span className="ml-1 font-mono font-bold">{devCode}</span>
             </div>
           ) : null}
 
           <div className="mt-2">
             <SubmitButton isSubmitting={isSubmitting} disabled={code.length !== codeLength} icon={ArrowRight}>
-              {isSubmitting ? 'Verification...' : 'Verifier'}
+              {isSubmitting ? 'Vérification...' : 'Verifier'}
             </SubmitButton>
           </div>
         </form>
@@ -156,7 +156,7 @@ function VerifyPage() {
           </button>
           <span className="mx-2 text-slate-300">|</span>
           <Link to="/register" className="font-semibold text-slate-950 hover:underline">
-            Changer d adresse
+            Changer d’adresse
           </Link>
         </div>
       </AuthCard>

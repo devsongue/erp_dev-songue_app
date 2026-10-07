@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useRouter } from '@tanstack/react-router'
+import { useFeedback, useMessageToast } from '~/components/ui'
 import { Fragment, useMemo, useState, type FormEvent, type InputHTMLAttributes, type KeyboardEvent, type ReactNode } from 'react'
 import {
   AlertTriangle,
@@ -17,9 +18,11 @@ import {
   Plus,
   Search,
   SlidersHorizontal,
+  Tags,
   Trash2,
   X,
 } from 'lucide-react'
+import { CategoryManager } from '~/components/CategoryManager'
 import { type CatalogCategory, type CatalogItem, type CatalogItemStatus, type CatalogItemType } from '~/domain/catalogData'
 import { getCatalogData } from '~/server/dataFetchers'
 import { createCatalogCategory, createCatalogItem, deleteCatalogItem, restockCatalogItem, updateCatalogItem, updateCatalogItemStatus } from '~/server/operations'
@@ -32,7 +35,7 @@ export const Route = createFileRoute('/$companySlug/products-services')({
 })
 
 type StockFilter = 'all' | 'low' | 'out' | 'ok' | 'service'
-type CatalogModal = 'product' | 'category' | null
+type CatalogModal = 'product' | 'category' | 'categories' | null
 
 interface ProductFormState {
   name: string
@@ -94,6 +97,7 @@ function productStepsFor(type: CatalogItemType): ProductStep[] {
 }
 
 function CatalogPage() {
+  const { confirm } = useFeedback()
   const { formatMoney, symbol } = useMoney()
   const { companySlug } = Route.useParams()
   const router = useRouter()
@@ -111,6 +115,7 @@ function CatalogPage() {
   const [productStep, setProductStep] = useState(0)
   const [categoryForm, setCategoryForm] = useState<CategoryFormState>(categoryFormDefaults)
   const [actionMessage, setActionMessage] = useState('')
+  useMessageToast(actionMessage, setActionMessage)
   const [isSaving, setIsSaving] = useState(false)
 
   const products = items.filter((item) => item.type === 'Product')
@@ -288,7 +293,7 @@ function CatalogPage() {
       setActionMessage(`${savedItem.name} ${editingItemId ? 'modifie' : 'ajoute au catalogue'}.`)
       await router.invalidate()
     } catch (error: any) {
-      setActionMessage(error.message || 'Impossible d ajouter cet article.')
+      setActionMessage(error.message || 'Impossible d’ajouter cet article.')
     } finally {
       setIsSaving(false)
     }
@@ -298,7 +303,7 @@ function CatalogPage() {
     event.preventDefault()
     const name = categoryForm.name.trim()
     if (!name) {
-      setActionMessage('Renseigne le nom de la categorie.')
+      setActionMessage('Renseigne le nom de la catégorie.')
       return
     }
     if (isSaving) return
@@ -316,9 +321,9 @@ function CatalogPage() {
       setProductForm((current) => ({ ...current, categoryId: newCategory.id, type: newCategory.type }))
       setCategoryForm(categoryFormDefaults)
       setActiveModal('product')
-      setActionMessage(`${newCategory.name} ajoutee aux categories.`)
+      setActionMessage(`${newCategory.name} ajoutee aux catégories.`)
     } catch (error: any) {
-      setActionMessage(error.message || 'Impossible d ajouter cette categorie.')
+      setActionMessage(error.message || 'Impossible d’ajouter cette catégorie.')
     } finally {
       setIsSaving(false)
     }
@@ -359,7 +364,7 @@ function CatalogPage() {
 
   async function removeProduct(itemId: string) {
     const item = items.find((candidate) => candidate.id === itemId)
-    if (!item || !window.confirm(`Supprimer definitivement « ${item.name} » ?`)) return
+    if (!item || !await confirm({ title: 'Supprimer cet article ?', message: `« ${item.name} » sera supprimé définitivement du catalogue.`, confirmLabel: 'Supprimer', danger: true })) return
     try {
       await deleteCatalogItem({ data: { companySlug, itemId } })
       setItems((current) => current.filter((candidate) => candidate.id !== itemId))
@@ -375,7 +380,7 @@ function CatalogPage() {
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-950">Produits & stock</h1>
-          <p className="mt-1 text-sm text-slate-500">Articles, prix, images, codes-barres, seuils et alertes de reapprovisionnement.</p>
+          <p className="mt-1 text-sm text-slate-500">Articles, prix, images, codes-barres, seuils et alertes de réapprovisionnement.</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <button onClick={() => openProductModal('Product')} className="inline-flex items-center gap-2 rounded border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
@@ -386,6 +391,10 @@ function CatalogPage() {
             <Briefcase className="size-4" />
             Nouveau service
           </button>
+          <button onClick={() => setActiveModal('categories')} className="inline-flex items-center gap-2 rounded border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+            <Tags className="size-4" />
+            Catégories
+          </button>
           <Link to="/$companySlug/inventory" params={{ companySlug }} className="inline-flex items-center gap-2 rounded bg-slate-950 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800">
             <Boxes className="size-4" />
             Voir stock
@@ -393,16 +402,12 @@ function CatalogPage() {
         </div>
       </div>
 
-      {actionMessage ? (
-        <div className="mb-6 rounded border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">
-          {actionMessage}
-        </div>
-      ) : null}
+      
 
       <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-4">
         <SummaryCard title="Produits actifs" value={products.length.toString()} detail={`${services.length} services`} icon={Package} />
-        <SummaryCard title="Valeur stock" value={formatMoney(totalStockValue)} detail="Prix x quantite" icon={Boxes} />
-        <SummaryCard title="Stock faible" value={lowStock.length.toString()} detail="A commander bientot" icon={AlertTriangle} alert={lowStock.length > 0} />
+        <SummaryCard title="Valeur stock" value={formatMoney(totalStockValue)} detail="Prix x quantité" icon={Boxes} />
+        <SummaryCard title="Stock faible" value={lowStock.length.toString()} detail="À commander bientot" icon={AlertTriangle} alert={lowStock.length > 0} />
         <SummaryCard title="Ruptures" value={outOfStock.length.toString()} detail="Vente bloquee" icon={PackagePlus} alert={outOfStock.length > 0} />
       </div>
 
@@ -485,15 +490,15 @@ function CatalogPage() {
                 <option value="Service">Service</option>
               </SelectField>
               <label className="block">
-                <span className="mb-1 block text-xs font-bold uppercase tracking-wide text-slate-400">Categorie *</span>
+                <span className="mb-1 block text-xs font-bold uppercase tracking-wide text-slate-400">Catégorie *</span>
                 <div className="flex gap-2">
                   <select value={productForm.categoryId} onChange={(event) => setProductForm((current) => ({ ...current, categoryId: event.target.value }))} className="min-w-0 flex-1 rounded border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 outline-none focus:border-slate-950">
-                    <option value="">{productForm.type === 'Product' ? 'Ex: Electronique' : 'Ex: Services techniques'}</option>
+                    <option value="">{productForm.type === 'Product' ? 'Ex: Électronique' : 'Ex: Services techniques'}</option>
                     {categories.filter((category) => category.type === productForm.type).map((category) => (
                       <option key={category.id} value={category.id}>{category.name}</option>
                     ))}
                   </select>
-                  <button type="button" onClick={() => setActiveModal('category')} className="inline-flex size-10 shrink-0 items-center justify-center rounded border border-slate-300 text-slate-600 hover:bg-slate-50" aria-label="Ajouter une categorie">
+                  <button type="button" onClick={() => setActiveModal('category')} className="inline-flex size-10 shrink-0 items-center justify-center rounded border border-slate-300 text-slate-600 hover:bg-slate-50" aria-label="Ajouter une catégorie">
                     <Layers className="size-4" />
                   </button>
                 </div>
@@ -518,7 +523,7 @@ function CatalogPage() {
                 {productForm.type === 'Service' ? (
                   <div className="rounded border border-slate-200 bg-slate-50 p-4 sm:col-span-2">
                     <p className="text-sm font-bold text-slate-950">Pas de gestion de stock</p>
-                    <p className="mt-1 text-xs leading-5 text-slate-500">Un service est vendu comme une prestation. Il n'a pas de quantite en depot, pas de seuil minimum et ne declenche pas d'alerte de rupture.</p>
+                    <p className="mt-1 text-xs leading-5 text-slate-500">Un service est vendu comme une prestation. Il n'a pas de quantité en dépôt, pas de seuil minimum et ne declenche pas d'alerte de rupture.</p>
                   </div>
                 ) : null}
               </div>
@@ -534,11 +539,11 @@ function CatalogPage() {
                   </div>
                   <div>
                     <TextField label="Stock minimum" name="minStockLevel" value={productForm.minStockLevel} onChange={(value) => setProductForm((current) => ({ ...current, minStockLevel: value }))} type="number" min="0" />
-                    <p className="mt-1 text-xs text-slate-500">Alerte envoyee lorsque le stock descend en dessous de cette valeur</p>
+                    <p className="mt-1 text-xs text-slate-500">Alerte envoyée lorsque le stock descend en dessous de cette valeur</p>
                   </div>
                 <label className="block sm:col-span-2">
                   <span className="mb-1 block text-xs font-bold uppercase tracking-wide text-slate-400">Fournisseur</span>
-                  <input list="product-suppliers" value={productForm.supplier} onChange={(event) => setProductForm((current) => ({ ...current, supplier: event.target.value }))} placeholder="Selectionner un fournisseur" className="w-full rounded border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 outline-none focus:border-slate-950" />
+                  <input list="product-suppliers" value={productForm.supplier} onChange={(event) => setProductForm((current) => ({ ...current, supplier: event.target.value }))} placeholder="Sélectionner un fournisseur" className="w-full rounded border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 outline-none focus:border-slate-950" />
                   <datalist id="product-suppliers">
                     {suppliers.map((supplier) => <option key={supplier} value={supplier} />)}
                   </datalist>
@@ -551,7 +556,7 @@ function CatalogPage() {
             <FormSection title={productForm.type === 'Product' ? 'Prix du produit' : 'Prix du service'}>
               <div className={`grid gap-4 ${productForm.type === 'Product' ? 'sm:grid-cols-3' : 'sm:grid-cols-2'}`}>
                 <TextField label={productForm.type === 'Product' ? `Prix d'achat (${symbol}) *` : `Cout de revient (${symbol})`} name="cost" value={productForm.cost} onChange={(value) => setProductForm((current) => ({ ...current, cost: value }))} type="number" min="0" required={productForm.type === 'Product'} />
-                <PriceField label={productForm.type === 'Product' ? `Prix detail (${symbol}) *` : `Prix de la prestation (${symbol}) *`} value={productForm.price} cost={productForm.cost} onChange={(value) => setProductForm((current) => ({ ...current, price: value }))} />
+                <PriceField label={productForm.type === 'Product' ? `Prix détail (${symbol}) *` : `Prix de la prestation (${symbol}) *`} value={productForm.price} cost={productForm.cost} onChange={(value) => setProductForm((current) => ({ ...current, price: value }))} />
                 {productForm.type === 'Product' ? (
                   <PriceField label={`Prix gros (${symbol}) *`} value={productForm.wholesalePrice} cost={productForm.cost} onChange={(value) => setProductForm((current) => ({ ...current, wholesalePrice: value }))} />
                 ) : null}
@@ -584,8 +589,25 @@ function CatalogPage() {
         </Modal>
       ) : null}
 
+      {activeModal === 'categories' ? (
+        <CategoryManager
+          companySlug={companySlug}
+          categories={categories}
+          itemCounts={items.reduce<Record<string, number>>((counts, item) => {
+            if (item.categoryId) counts[item.categoryId] = (counts[item.categoryId] ?? 0) + 1
+            return counts
+          }, {})}
+          onRenamed={(category) => setCategories((current) => current.map((item) => item.id === category.id ? { ...item, name: category.name, color: category.color } : item))}
+          onDeleted={(categoryId) => {
+            setCategories((current) => current.filter((item) => item.id !== categoryId))
+            setItems((current) => current.map((item) => item.categoryId === categoryId ? { ...item, categoryId: '' } : item))
+          }}
+          onClose={() => setActiveModal(null)}
+        />
+      ) : null}
+
       {activeModal === 'category' ? (
-        <Modal title="Nouvelle categorie" onClose={() => setActiveModal('product')}>
+        <Modal title="Nouvelle catégorie" onClose={() => setActiveModal('product')}>
           <form onSubmit={addCategory} className="space-y-5">
             <TextField label="Nom" name="categoryName" value={categoryForm.name} onChange={(value) => setCategoryForm((current) => ({ ...current, name: value }))} required />
             <div className="grid gap-4 sm:grid-cols-2">
@@ -686,7 +708,7 @@ function CatalogList({ items, categories, onRestock, onToggleStatus, onEdit, onD
             <tr>
               <th className="w-12 px-4 py-3 font-semibold"></th>
               <th className="px-4 py-3 font-semibold">Article</th>
-              <th className="px-4 py-3 font-semibold">Categorie</th>
+              <th className="px-4 py-3 font-semibold">Catégorie</th>
               <th className="px-4 py-3 text-right font-semibold">Prix</th>
               <th className="px-4 py-3 text-right font-semibold">Stock</th>
               <th className="px-4 py-3 text-center font-semibold">Etat</th>

@@ -35,7 +35,7 @@ export function mailIsConfigured() {
 }
 
 function fromAddress() {
-  return process.env.MAIL_FROM || 'Gestion PME <onboarding@resend.dev>'
+  return process.env.MAIL_FROM || 'DevSongue Business <onboarding@resend.dev>'
 }
 
 export async function sendMail(message: MailMessage): Promise<MailResult> {
@@ -45,7 +45,7 @@ export async function sendMail(message: MailMessage): Promise<MailResult> {
     console.info(
       [
         '',
-        '─── Email non envoye (aucun transport configure) ───',
+        '─── Email non envoyé (aucun transport configure) ───',
         `A       : ${message.to}`,
         `Sujet   : ${message.subject}`,
         '',
@@ -76,20 +76,20 @@ export async function sendMail(message: MailMessage): Promise<MailResult> {
     if (!response.ok) {
       const detail = await response.text().catch(() => '')
       console.error('sendMail: envoi refuse par Resend', response.status, detail)
-      return { ok: false, delivered: false, message: "L'email n'a pas pu etre envoye." }
+      return { ok: false, delivered: false, message: "L'email n'a pas pu être envoyé." }
     }
 
     return { ok: true, delivered: true }
   } catch (error) {
     console.error('sendMail: erreur reseau', error)
-    return { ok: false, delivered: false, message: "L'email n'a pas pu etre envoye." }
+    return { ok: false, delivered: false, message: "L'email n'a pas pu être envoyé." }
   }
 }
 
 // Construit l'URL absolue d'un lien envoye par email.
 //
 // L'en-tete Host est fourni par le client : le deduire en production permettrait
-// d'empoisonner un lien de reinitialisation (l'attaquant force un Host qui lui
+// d'empoisonner un lien de réinitialisation (l'attaquant force un Host qui lui
 // appartient, la victime clique, le token part chez lui). On l'accepte donc en
 // developpement seulement ; en production APP_BASE_URL est obligatoire.
 export function appBaseUrl(): string | null {
@@ -113,7 +113,7 @@ export function invitationEmail(input: {
     text: [
       'Bonjour,',
       '',
-      `${input.inviterName} vous invite à rejoindre ${input.companyName} sur Gestion PME`,
+      `${input.inviterName} vous invite à rejoindre ${input.companyName} sur DevSongue Business`,
       `en tant que « ${input.roleName} ».`,
       '',
       'Créez votre compte ici :',
@@ -122,7 +122,7 @@ export function invitationEmail(input: {
       'Ce lien expire dans 7 jours.',
       "Si vous n'attendiez pas cette invitation, ignorez ce message.",
       '',
-      'Gestion PME',
+      'DevSongue Business',
     ].join('\n'),
   }
 }
@@ -144,25 +144,25 @@ export function passwordResetEmail(input: {
       "Si vous n'êtes pas à l'origine de cette demande, ignorez ce message :",
       "votre mot de passe actuel reste valable.",
       '',
-      'Gestion PME',
+      'DevSongue Business',
     ].join('\n'),
   }
 }
 
 export function verificationCodeEmail(input: { code: string; name: string }): Omit<MailMessage, 'to'> {
   return {
-    subject: `${input.code} — votre code de verification`,
+    subject: `${input.code} — votre code de vérification`,
     text: [
       `Bonjour ${input.name},`,
       '',
-      'Voici le code pour confirmer votre adresse email :',
+      'Voici le code pour confirmer votre adresse e-mail :',
       '',
       `    ${input.code}`,
       '',
       'Ce code expire dans 15 minutes.',
-      "Si vous n'etes pas a l'origine de cette demande, ignorez ce message.",
+      "Si vous n'êtes pas a l'origine de cette demande, ignorez ce message.",
       '',
-      'Gestion PME',
+      'DevSongue Business',
     ].join('\n'),
   }
 }

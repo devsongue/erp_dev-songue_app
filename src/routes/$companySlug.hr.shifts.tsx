@@ -16,7 +16,7 @@ function ShiftsPage() {
       <div className="mb-6">
         <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">RH</p>
         <h1 className="mt-1 text-2xl font-bold text-slate-950">Planning equipes</h1>
-        <p className="mt-1 text-sm text-slate-500">Organisation rapide par departement et disponibilite.</p>
+        <p className="mt-1 text-sm text-slate-500">Organisation rapide par departement et disponibilité.</p>
       </div>
       <section className="mb-6 grid gap-4 md:grid-cols-3">
         <Stat title="Equipes" value={departments.length.toString()} icon={BriefcaseBusiness} />

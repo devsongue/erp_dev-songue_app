@@ -59,8 +59,8 @@ function PosHistory() {
       <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <p className="text-xs font-bold uppercase tracking-wider text-cyan-500">Caisse</p>
-          <h1 className="mt-1 text-2xl font-bold text-slate-950 dark:text-white">Tickets</h1>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Un historique lisible pour retrouver un ticket, verifier un statut ou preparer un retour.</p>
+          <h1 className="mt-1 text-2xl font-bold text-slate-950">Tickets</h1>
+          <p className="mt-1 text-sm text-slate-500">Un historique lisible pour retrouver un ticket, vérifier un statut ou preparer un retour.</p>
         </div>
         <div className="neon-surface grid grid-cols-3 rounded text-center">
           <TicketStat label="Tickets" value={periodTickets.length.toString()} />
@@ -77,7 +77,7 @@ function PosHistory() {
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Rechercher un ticket ou un client"
-              className="h-11 w-full rounded border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm font-semibold text-slate-950 outline-none focus:border-slate-950 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:focus:border-cyan-400"
+              className="h-11 w-full rounded border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm font-semibold text-slate-950 outline-none focus:border-slate-950"
             />
           </label>
         </div>
@@ -93,36 +93,36 @@ function PosHistory() {
 
       {visibleTickets.length > 0 ? (
         <section className="neon-surface overflow-hidden rounded">
-          <div className="hidden grid-cols-[1.2fr_1fr_.8fr_.8fr_auto] gap-4 border-b border-slate-200 px-5 py-3 text-xs font-bold uppercase tracking-wide text-slate-400 dark:border-slate-800 lg:grid">
+          <div className="hidden grid-cols-[1.2fr_1fr_.8fr_.8fr_auto] gap-4 border-b border-slate-200 px-5 py-3 text-xs font-bold uppercase tracking-wide text-slate-400 lg:grid">
             <span>Ticket</span>
             <span>Client</span>
             <span>Statut</span>
             <span className="text-right">Total</span>
             <span className="text-right">Action</span>
           </div>
-          <div className="divide-y divide-slate-100 dark:divide-slate-800">
+          <div className="divide-y divide-slate-100">
             {visibleTickets.map((ticket) => (
               <article key={ticket.id} className="list-row grid gap-3 px-5 py-4 lg:grid-cols-[1.2fr_1fr_.8fr_.8fr_auto] lg:items-center">
                 <div className="min-w-0">
-                  <div className="flex items-center gap-2 font-bold text-slate-950 dark:text-white">
+                  <div className="flex items-center gap-2 font-bold text-slate-950">
                     <ReceiptText className="size-4 text-slate-400" />
                     {ticket.reference}
                   </div>
-                  <div className="mt-1 flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
+                  <div className="mt-1 flex items-center gap-1 text-xs text-slate-500">
                     <Clock className="size-3" />
                     {new Date(ticket.date).toLocaleString('fr-FR')}
                   </div>
                 </div>
-                <div className="truncate text-sm font-semibold text-slate-700 dark:text-slate-200">{ticket.description}</div>
+                <div className="truncate text-sm font-semibold text-slate-700">{ticket.description}</div>
                 <div>
                   <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-bold ${ticketStatusClass(ticket.status)}`}>{ticketStatus(ticket.status)}</span>
                 </div>
-                <div className="font-bold text-slate-950 dark:text-white lg:text-right">{formatMoney(ticket.amount)}</div>
+                <div className="font-bold text-slate-950 lg:text-right">{formatMoney(ticket.amount)}</div>
                 <div className="flex justify-start gap-2 lg:justify-end">
                   <button
                     type="button"
                     onClick={() => setSelectedTicket(ticket)}
-                    className="inline-flex size-9 items-center justify-center rounded border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-950 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-900 dark:hover:text-white"
+                    className="inline-flex size-9 items-center justify-center rounded border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-950"
                     aria-label={`Voir le ticket ${ticket.reference}`}
                     title="Voir le ticket"
                   >
@@ -131,7 +131,7 @@ function PosHistory() {
                   <button
                     type="button"
                     onClick={() => printTicket(ticket)}
-                    className="inline-flex size-9 items-center justify-center rounded border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-950 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-900 dark:hover:text-white"
+                    className="inline-flex size-9 items-center justify-center rounded border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-950"
                     aria-label={`Imprimer le ticket ${ticket.reference}`}
                     title="Imprimer"
                   >
@@ -144,25 +144,25 @@ function PosHistory() {
         </section>
       ) : (
         <section className="neon-surface rounded p-10 text-center">
-          <ReceiptText className="mx-auto size-10 text-slate-300 dark:text-slate-700" />
-          <h2 className="mt-3 text-base font-bold text-slate-950 dark:text-white">{tickets.length === 0 ? 'Aucun ticket pour le moment' : 'Aucun resultat'}</h2>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{tickets.length === 0 ? 'Les ventes encaissees apparaitront ici.' : 'Modifie la recherche ou la periode pour retrouver un ticket.'}</p>
+          <ReceiptText className="mx-auto size-10 text-slate-300" />
+          <h2 className="mt-3 text-base font-bold text-slate-950">{tickets.length === 0 ? 'Aucun ticket pour le moment' : 'Aucun résultat'}</h2>
+          <p className="mt-1 text-sm text-slate-500">{tickets.length === 0 ? 'Les ventes encaissées apparaîtront ici.' : 'Modifie la recherche ou la période pour retrouver un ticket.'}</p>
         </section>
       )}
 
       {issueTickets.length > 0 ? (
-        <p className="mt-4 text-xs font-semibold text-slate-500 dark:text-slate-400">{issueTickets.length} ticket(s) avec annulation, remboursement ou avoir.</p>
+        <p className="mt-4 text-xs font-semibold text-slate-500">{issueTickets.length} ticket(s) avec annulation, remboursement ou avoir.</p>
       ) : null}
 
       {selectedTicket ? (
         <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-950/50 px-3 py-6 sm:items-center sm:px-4 sm:py-8">
-          <div className="w-full max-w-md rounded border border-slate-200 bg-white shadow-xl dark:border-slate-800 dark:bg-slate-950">
-            <div className="flex items-center justify-between gap-4 border-b border-slate-100 px-5 py-4 dark:border-slate-800">
-              <h2 className="text-lg font-bold text-slate-950 dark:text-white">Ticket de caisse</h2>
+          <div className="w-full max-w-md rounded border border-slate-200 bg-white shadow-xl">
+            <div className="flex items-center justify-between gap-4 border-b border-slate-100 px-5 py-4">
+              <h2 className="text-lg font-bold text-slate-950">Ticket de caisse</h2>
               <button
                 type="button"
                 onClick={() => setSelectedTicket(null)}
-                className="inline-flex size-9 items-center justify-center rounded border border-slate-200 text-slate-500 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-900"
+                className="inline-flex size-9 items-center justify-center rounded border border-slate-200 text-slate-500 hover:bg-slate-50"
                 aria-label="Fermer"
                 title="Fermer"
               >
@@ -176,7 +176,7 @@ function PosHistory() {
                   <p className="mt-1 text-xs text-slate-500">Ticket / facture caisse</p>
                 </div>
                 <div className="space-y-2 border-b border-dashed border-slate-300 py-4 text-sm">
-                  <TicketInfo label="Reference" value={selectedTicket.reference ?? '-'} />
+                  <TicketInfo label="Référence" value={selectedTicket.reference ?? '-'} />
                   <TicketInfo label="Date" value={new Date(selectedTicket.date).toLocaleString('fr-FR')} />
                   <TicketInfo label="Libelle" value={selectedTicket.description} />
                   <TicketInfo label="Paiement" value={paymentLabel(selectedTicket.account?.name)} />
@@ -195,10 +195,10 @@ function PosHistory() {
               </div>
               <div className="mt-4 flex justify-end gap-2">
                 {editing ? <button type="button" onClick={() => void saveCorrection()} className="inline-flex h-10 items-center gap-2 rounded bg-emerald-600 px-4 text-sm font-bold text-white"><Save className="size-4" />Enregistrer</button> : <button type="button" onClick={startEditing} className="inline-flex h-10 items-center gap-2 rounded border border-slate-300 px-4 text-sm font-bold"><Pencil className="size-4" />Corriger</button>}
-                <button type="button" onClick={() => setSelectedTicket(null)} className="inline-flex h-10 items-center justify-center rounded border border-slate-300 px-4 text-sm font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-900">
+                <button type="button" onClick={() => setSelectedTicket(null)} className="inline-flex h-10 items-center justify-center rounded border border-slate-300 px-4 text-sm font-bold text-slate-700 hover:bg-slate-50">
                   Fermer
                 </button>
-                <button type="button" onClick={() => printTicket()} className="inline-flex h-10 items-center justify-center gap-2 rounded bg-slate-950 px-4 text-sm font-bold text-white hover:bg-slate-800 dark:bg-cyan-500 dark:text-slate-950 dark:hover:bg-cyan-400">
+                <button type="button" onClick={() => printTicket()} className="inline-flex h-10 items-center justify-center gap-2 rounded bg-slate-950 px-4 text-sm font-bold text-white hover:bg-slate-800">
                   <Printer className="size-4" />
                   Imprimer
                 </button>
@@ -223,29 +223,29 @@ function TicketInfo({ label, value }: { label: string; value: string }) {
 function paymentLabel(accountName?: string) {
   if (accountName === 'Mobile money') return 'Mobile money'
   if (accountName === 'Paiement carte') return 'Carte'
-  if (accountName === 'Caisse boutique') return 'Especes'
+  if (accountName === 'Caisse boutique') return 'Espèces'
   return accountName ?? 'Non renseigne'
 }
 
 function TicketStat({ label, value }: { label: string; value: string }) {
   return (
     <div className="min-w-0 px-4 py-3">
-      <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400 dark:text-slate-500">{label}</p>
-      <p className="truncate text-sm font-bold text-slate-950 dark:text-white">{value}</p>
+      <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">{label}</p>
+      <p className="truncate text-sm font-bold text-slate-950">{value}</p>
     </div>
   )
 }
 
 function ticketStatus(status: string) {
-  if (status === 'Completed') return 'Paye'
-  if (status === 'Pending') return 'A verifier'
+  if (status === 'Completed') return 'Payé'
+  if (status === 'Pending') return 'À vérifier'
   if (status === 'Failed') return 'Echec'
   return status
 }
 
 function ticketStatusClass(status: string) {
-  if (status === 'Completed') return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300'
-  if (status === 'Pending') return 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300'
-  if (status === 'Failed') return 'bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300'
-  return 'bg-cyan-100 text-cyan-700 dark:bg-cyan-500/15 dark:text-cyan-300'
+  if (status === 'Completed') return 'bg-emerald-100 text-emerald-700'
+  if (status === 'Pending') return 'bg-amber-100 text-amber-700'
+  if (status === 'Failed') return 'bg-rose-100 text-rose-700'
+  return 'bg-cyan-100 text-cyan-700'
 }

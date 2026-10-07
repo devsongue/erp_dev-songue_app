@@ -1,4 +1,5 @@
 import { createFileRoute, useRouter } from '@tanstack/react-router'
+import { useFeedback } from '~/components/ui'
 import { getVendorData } from '~/server/dataFetchers'
 import { createVendor, deleteVendor, updateVendor } from '~/server/operations'
 import { useState, type FormEvent } from 'react'
@@ -86,6 +87,7 @@ function ScoreBar({ value }: { value: number }) {
 }
 
 function VendorsPage() {
+  const { confirm } = useFeedback()
   const { vendors: initialVendors } = Route.useLoaderData()
   const { companySlug } = Route.useParams()
   const router = useRouter()
@@ -156,13 +158,13 @@ function VendorsPage() {
       router.invalidate()
     } catch (err) {
       console.error(err)
-      alert("Erreur lors de la creation du fournisseur")
+      alert("Erreur lors de la création du fournisseur")
     }
   }
 
   async function handleDelete(id: string, e: React.MouseEvent) {
     e.stopPropagation()
-    if (!window.confirm("Supprimer ce fournisseur ?")) return
+    if (!await confirm({ title: 'Supprimer ce fournisseur ?', message: 'Ses factures sont conservées, sans lien vers sa fiche.', confirmLabel: 'Supprimer', danger: true })) return
     try {
       await deleteVendor({ data: { companySlug, id } })
       setVendors(v => v.filter(vendor => vendor.id !== id))
@@ -184,7 +186,7 @@ function VendorsPage() {
       router.invalidate()
     } catch (err) {
       console.error(err)
-      alert("Erreur lors de la mise a jour")
+      alert("Erreur lors de la mise à jour")
     }
   }
 
@@ -197,7 +199,7 @@ function VendorsPage() {
             <span className="grid size-8 place-items-center rounded bg-slate-950 text-white">
               <Handshake className="size-4" />
             </span>
-            <h1 className="text-xl font-bold text-slate-950">Gestion fournisseurs avancee</h1>
+            <h1 className="text-xl font-bold text-slate-950">Fournisseurs</h1>
           </div>
           <p className="mt-2 max-w-3xl text-xs leading-6 text-slate-500">
             Pilotage des fournisseurs, scoring performance, contrats, risques et plans d'action achats.
@@ -264,8 +266,8 @@ function VendorsPage() {
               <thead className="border-b border-slate-200 bg-slate-50 text-slate-500">
                 <tr>
                   <th className="px-4 py-3 font-semibold">Fournisseur</th>
-                  <th className="px-4 py-3 font-semibold">Categorie</th>
-                  <th className="px-4 py-3 font-semibold">Depense</th>
+                  <th className="px-4 py-3 font-semibold">Catégorie</th>
+                  <th className="px-4 py-3 font-semibold">Dépense</th>
                   <th className="px-4 py-3 font-semibold">Livraison</th>
                   <th className="px-4 py-3 font-semibold">Qualite</th>
                   <th className="px-4 py-3 font-semibold">Risque</th>
@@ -417,7 +419,7 @@ function VendorsPage() {
                   <input required value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className="w-full rounded border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 outline-none focus:border-slate-950" />
                 </label>
                 <label className="block">
-                  <span className="mb-1 block text-xs font-bold uppercase tracking-wide text-slate-400">Categorie *</span>
+                  <span className="mb-1 block text-xs font-bold uppercase tracking-wide text-slate-400">Catégorie *</span>
                   <input required value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value })} className="w-full rounded border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 outline-none focus:border-slate-950" />
                 </label>
                 <label className="block">
@@ -433,7 +435,7 @@ function VendorsPage() {
                   <input type="email" required value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} className="w-full rounded border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 outline-none focus:border-slate-950" />
                 </label>
                 <label className="block">
-                  <span className="mb-1 block text-xs font-bold uppercase tracking-wide text-slate-400">Telephone *</span>
+                  <span className="mb-1 block text-xs font-bold uppercase tracking-wide text-slate-400">Téléphone *</span>
                   <input required value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} className="w-full rounded border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 outline-none focus:border-slate-950" />
                 </label>
                 <label className="block">
@@ -458,7 +460,7 @@ function VendorsPage() {
                 </button>
                 <button type="submit" className="inline-flex items-center justify-center gap-2 rounded bg-slate-950 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800">
                   <Check className="size-4" />
-                  Creer le fournisseur
+                  Créer le fournisseur
                 </button>
               </div>
             </form>

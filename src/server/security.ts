@@ -82,13 +82,13 @@ export const createInvitation = createServerFn({ method: 'POST' })
     const { user, company } = await requireCompanyAccess(data.companySlug, 'company.manage')
 
     const role = await prisma.role.findFirst({ where: { id: data.roleId, companyId: company.id } })
-    if (!role) return { ok: false as const, message: 'Role introuvable.' }
+    if (!role) return { ok: false as const, message: 'Rôle introuvable.' }
 
     const email = data.email.toLowerCase().trim()
     const existingMember = await prisma.companyMembership.findFirst({
       where: { companyId: company.id, status: 'ACTIVE', user: { email } },
     })
-    if (existingMember) return { ok: false as const, message: 'Cette personne est deja membre de l entreprise.' }
+    if (existingMember) return { ok: false as const, message: 'Cette personne est déjà membre de l’entreprise.' }
 
     const token = createToken()
     await prisma.companyInvitation.create({
@@ -133,7 +133,7 @@ export const createInvitation = createServerFn({ method: 'POST' })
       : null
 
     if (!baseUrl) {
-      console.warn('createInvitation: APP_BASE_URL manquant, invitation non envoyee par email.')
+      console.warn('createInvitation: APP_BASE_URL manquant, invitation non envoyée par email.')
     }
 
     return { ok: true as const, invitePath, delivered: Boolean(delivery?.delivered) }
@@ -144,14 +144,14 @@ export const getInvitationInfo = createServerFn({ method: 'GET' })
   .handler(async ({ data }) => {
     // Anti-scan : borne les consultations de tokens par IP.
     const probe = throttle(`invite-info:ip:${clientIp()}`, 30, 5 * 60 * 1000)
-    if (!probe.allowed) return { ok: false as const, message: 'Trop de requetes. Reessaie dans quelques minutes.' }
+    if (!probe.allowed) return { ok: false as const, message: 'Trop de requetes. Réessaie dans quelques minutes.' }
 
     const invitation = await prisma.companyInvitation.findUnique({
       where: { tokenHash: hashToken(data.token) },
       include: { company: true, inviter: true },
     })
     if (!invitation) return { ok: false as const, message: 'Invitation introuvable ou revoquee.' }
-    if (invitation.acceptedAt) return { ok: false as const, message: 'Cette invitation a deja ete utilisee.' }
+    if (invitation.acceptedAt) return { ok: false as const, message: 'Cette invitation a déjà été utilisee.' }
     if (invitation.expiresAt <= new Date()) return { ok: false as const, message: 'Cette invitation a expire.' }
 
     const existingUser = await prisma.user.findUnique({ where: { email: invitation.email } })
@@ -176,7 +176,7 @@ export const acceptInvitation = createServerFn({ method: 'POST' })
     const { blocked, retryAfterSeconds } = isBlocked(rateKey)
     if (blocked) {
       const minutes = Math.max(1, Math.ceil(retryAfterSeconds / 60))
-      return { ok: false as const, message: `Trop de tentatives. Reessaie dans ${minutes} min.` }
+      return { ok: false as const, message: `Trop de tentatives. Réessaie dans ${minutes} min.` }
     }
 
     const invitation = await prisma.companyInvitation.findUnique({
@@ -185,7 +185,7 @@ export const acceptInvitation = createServerFn({ method: 'POST' })
     })
     if (!invitation || invitation.acceptedAt || invitation.expiresAt <= new Date()) {
       recordFailure(rateKey)
-      return { ok: false as const, message: 'Invitation invalide, expiree ou deja utilisee.' }
+      return { ok: false as const, message: 'Invitation invalide, expirée ou déjà utilisee.' }
     }
 
     let user = await prisma.user.findUnique({ where: { email: invitation.email } })
@@ -244,7 +244,7 @@ export const acceptInvitation = createServerFn({ method: 'POST' })
     recordSuccess(rateKey)
     invalidateSessionCache()
 
-    // Auto-connexion uniquement pour un compte qui vient d'etre cree (l'identite
+    // Auto-connexion uniquement pour un compte qui vient d'être cree (l'identite
     // est prouvee par le choix du mot de passe). Un compte existant doit se
     // connecter normalement.
     if (isNewUser) {
@@ -289,11 +289,11 @@ export const updateMembership = createServerFn({ method: 'POST' })
       include: { user: true },
     })
     if (!membership) return { ok: false as const, message: 'Membre introuvable.' }
-    if (membership.user.isOwner) return { ok: false as const, message: 'Le compte proprietaire ne peut pas etre suspendu ou modifie ici.' }
+    if (membership.user.isOwner) return { ok: false as const, message: 'Le compte propriétaire ne peut pas être suspendu ou modifie ici.' }
 
     const roleIds = Array.from(new Set(data.roleIds))
     const roles = await prisma.role.findMany({ where: { id: { in: roleIds }, companyId: company.id } })
-    if (roles.length !== roleIds.length) return { ok: false as const, message: 'Un ou plusieurs roles sont invalides.' }
+    if (roles.length !== roleIds.length) return { ok: false as const, message: 'Un ou plusieurs rôles sont invalides.' }
 
     await prisma.$transaction(async (tx) => {
       await tx.userRole.deleteMany({ where: { membershipId: membership.id } })
@@ -320,7 +320,7 @@ export const removeMembership = createServerFn({ method: 'POST' })
       include: { user: true },
     })
     if (!membership) return { ok: false as const, message: 'Membre introuvable.' }
-    if (membership.user.isOwner) return { ok: false as const, message: 'Le proprietaire ne peut pas etre retire de son entreprise.' }
+    if (membership.user.isOwner) return { ok: false as const, message: 'Le propriétaire ne peut pas être retire de son entreprise.' }
 
     await prisma.$transaction(async (tx) => {
       await tx.auditLog.create({
@@ -355,7 +355,7 @@ export const createPasswordResetLink = createServerFn({ method: 'POST' })
     }
     // Seul le proprietaire peut reinitialiser le mot de passe d'un proprietaire.
     if (target.isOwner && !requester.isOwner) {
-      return { ok: false as const, message: 'Seul le proprietaire peut reinitialiser ce compte.' }
+      return { ok: false as const, message: 'Seul le propriétaire peut réinitialiser ce compte.' }
     }
 
     const token = createToken()
@@ -395,7 +395,7 @@ export const createPasswordResetLink = createServerFn({ method: 'POST' })
       : null
 
     if (!baseUrl) {
-      console.warn('createPasswordResetLink: APP_BASE_URL manquant, lien non envoye par email.')
+      console.warn('createPasswordResetLink: APP_BASE_URL manquant, lien non envoyé par email.')
     }
 
     return { ok: true as const, resetPath, expiresInMinutes, delivered: Boolean(delivery?.delivered) }
@@ -406,14 +406,14 @@ export const getResetInfo = createServerFn({ method: 'GET' })
   .handler(async ({ data }) => {
     // Anti-scan : borne les consultations de tokens par IP.
     const probe = throttle(`reset-info:ip:${clientIp()}`, 30, 5 * 60 * 1000)
-    if (!probe.allowed) return { ok: false as const, message: 'Trop de requetes. Reessaie dans quelques minutes.' }
+    if (!probe.allowed) return { ok: false as const, message: 'Trop de requetes. Réessaie dans quelques minutes.' }
 
     const reset = await prisma.passwordResetToken.findUnique({
       where: { tokenHash: hashToken(data.token) },
       include: { user: true },
     })
     if (!reset || reset.usedAt || reset.expiresAt <= new Date()) {
-      return { ok: false as const, message: 'Lien invalide, expire ou deja utilise.' }
+      return { ok: false as const, message: 'Lien invalide, expire ou déjà utilise.' }
     }
     return { ok: true as const, maskedEmail: maskEmail(reset.user.email) }
   })
@@ -425,7 +425,7 @@ export const resetPassword = createServerFn({ method: 'POST' })
     const { blocked, retryAfterSeconds } = isBlocked(rateKey)
     if (blocked) {
       const minutes = Math.max(1, Math.ceil(retryAfterSeconds / 60))
-      return { ok: false as const, message: `Trop de tentatives. Reessaie dans ${minutes} min.` }
+      return { ok: false as const, message: `Trop de tentatives. Réessaie dans ${minutes} min.` }
     }
 
     if (data.password.length < minPasswordLength) {
@@ -437,7 +437,7 @@ export const resetPassword = createServerFn({ method: 'POST' })
     })
     if (!reset || reset.usedAt || reset.expiresAt <= new Date()) {
       recordFailure(rateKey)
-      return { ok: false as const, message: 'Lien invalide, expire ou deja utilise.' }
+      return { ok: false as const, message: 'Lien invalide, expire ou déjà utilise.' }
     }
 
     const passwordHash = await hashPassword(data.password)
@@ -545,7 +545,7 @@ export const getSecurityOverview = createServerFn({ method: 'GET' }).handler(asy
 
 export const startTotpSetup = createServerFn({ method: 'POST' }).handler(async () => {
   const user = await requireUser()
-  if (user.totpEnabledAt) return { ok: false as const, message: 'La double authentification est deja active.' }
+  if (user.totpEnabledAt) return { ok: false as const, message: 'La double authentification est déjà active.' }
 
   const secret = generateTotpSecret()
   await prisma.user.update({ where: { id: user.id }, data: { totpSecret: secret, totpEnabledAt: null } })
@@ -558,7 +558,7 @@ export const confirmTotpSetup = createServerFn({ method: 'POST' })
     const user = await requireUser()
     if (!user.totpSecret) return { ok: false as const, message: 'Aucune configuration en cours.' }
     if (!verifyTotp(user.totpSecret, data.code)) {
-      return { ok: false as const, message: 'Code invalide. Verifie l heure de ton telephone et reessaie.' }
+      return { ok: false as const, message: 'Code invalide. Verifie l’heure de ton téléphone et réessaie.' }
     }
     await prisma.user.update({ where: { id: user.id }, data: { totpEnabledAt: new Date() } })
     return { ok: true as const }
@@ -569,7 +569,7 @@ export const disableTotp = createServerFn({ method: 'POST' })
   .handler(async ({ data }) => {
     const user = await requireUser()
     if (!user.totpSecret || !user.totpEnabledAt) {
-      return { ok: false as const, message: 'La double authentification n est pas active.' }
+      return { ok: false as const, message: 'La double authentification n’est pas active.' }
     }
     if (!verifyTotp(user.totpSecret, data.code)) {
       return { ok: false as const, message: 'Code invalide.' }

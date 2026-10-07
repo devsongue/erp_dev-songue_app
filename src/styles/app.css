@@ -79,7 +79,12 @@
    leur propre conteneur : rendu clair des le HTML serveur, sans flash sombre et
    sans toucher au theme choisi par l'utilisateur pour l'application. */
 html.theme-light,
-.auth-light {
+.auth-light,
+.quote-print-area {
+  /* .quote-print-area : un devis ou une facture s'affiche toujours comme une
+     feuille blanche, y compris en theme sombre. Les surcharges de theme sont
+     dans @layer et leurs !important l'emportent sur des regles hors layer :
+     redefinir les tokens est le seul moyen fiable. */
   color-scheme: light;
   --app-bg: #f6f8fb;
   --app-bg-start: #ffffff;

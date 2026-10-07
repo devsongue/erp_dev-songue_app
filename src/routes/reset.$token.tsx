@@ -34,7 +34,7 @@ function ResetPage() {
     try {
       const result = await resetPassword({ data: { token, password } })
       if (!result.ok) {
-        setError(result.message ?? 'Impossible de reinitialiser le mot de passe.')
+        setError(result.message ?? 'Impossible de réinitialiser le mot de passe.')
         return
       }
       setDone(true)
@@ -42,48 +42,48 @@ function ResetPage() {
         void navigate({ to: '/login', search: { redirect: undefined } })
       }, 1500)
     } catch (submitError: any) {
-      setError(submitError?.message ?? 'Impossible de reinitialiser le mot de passe.')
+      setError(submitError?.message ?? 'Impossible de réinitialiser le mot de passe.')
     } finally {
       setIsSubmitting(false)
     }
   }
 
   return (
-    <main className="grid min-h-screen place-items-center bg-slate-50 px-4 py-8 text-slate-950 dark:bg-slate-950 dark:text-slate-50">
-      <section className="w-full max-w-md rounded-lg border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-8">
+    <main className="grid min-h-screen place-items-center bg-slate-50 px-4 py-8 text-slate-950">
+      <section className="w-full max-w-md rounded-lg border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
         {!info.ok ? (
           <div>
             <h1 className="text-xl font-bold">Lien non valide</h1>
-            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">{info.message}</p>
-            <Link to="/login" search={{ redirect: undefined }} className="mt-5 inline-flex h-10 items-center rounded bg-slate-950 px-4 text-sm font-semibold text-white dark:bg-emerald-400 dark:text-slate-950">
+            <p className="mt-2 text-sm text-slate-500">{info.message}</p>
+            <Link to="/login" search={{ redirect: undefined }} className="mt-5 inline-flex h-10 items-center rounded bg-slate-950 px-4 text-sm font-semibold text-white">
               Aller a la connexion
             </Link>
           </div>
         ) : done ? (
           <div>
             <h1 className="text-xl font-bold">Mot de passe modifie</h1>
-            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-              Toutes les sessions ont ete deconnectees. Redirection vers la connexion...
+            <p className="mt-2 text-sm text-slate-500">
+              Toutes les sessions ont été deconnectees. Redirection vers la connexion...
             </p>
           </div>
         ) : (
           <form onSubmit={handleSubmit}>
             <h1 className="text-xl font-bold">Nouveau mot de passe</h1>
-            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-              Pour le compte <span className="font-semibold text-slate-800 dark:text-slate-200">{info.maskedEmail}</span>. Ce lien est a usage unique.
+            <p className="mt-2 text-sm text-slate-500">
+              Pour le compte <span className="font-semibold text-slate-800">{info.maskedEmail}</span>. Ce lien est a usage unique.
             </p>
 
             <div className="mt-5 grid gap-4">
               <label className="grid gap-2">
-                <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">Mot de passe (10 caracteres min.)</span>
-                <span className="flex h-11 items-center gap-2 rounded border border-slate-300 bg-white px-3 focus-within:border-slate-950 dark:border-slate-700 dark:bg-slate-950">
+                <span className="text-sm font-semibold text-slate-700">Mot de passe (10 caracteres min.)</span>
+                <span className="flex h-11 items-center gap-2 rounded border border-slate-300 bg-white px-3 focus-within:border-slate-950">
                   <LockKeyhole className="size-4 text-slate-500" />
                   <input value={password} onChange={(event) => setPassword(event.target.value)} required minLength={10} type="password" autoComplete="new-password" className="w-full bg-transparent text-sm outline-none" />
                 </span>
               </label>
               <label className="grid gap-2">
-                <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">Confirmer le mot de passe</span>
-                <span className="flex h-11 items-center gap-2 rounded border border-slate-300 bg-white px-3 focus-within:border-slate-950 dark:border-slate-700 dark:bg-slate-950">
+                <span className="text-sm font-semibold text-slate-700">Confirmer le mot de passe</span>
+                <span className="flex h-11 items-center gap-2 rounded border border-slate-300 bg-white px-3 focus-within:border-slate-950">
                   <LockKeyhole className="size-4 text-slate-500" />
                   <input value={confirm} onChange={(event) => setConfirm(event.target.value)} required type="password" autoComplete="new-password" className="w-full bg-transparent text-sm outline-none" />
                 </span>
@@ -91,7 +91,7 @@ function ResetPage() {
             </div>
 
             {error ? (
-              <div className="mt-4 rounded border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-200">
+              <div className="mt-4 rounded border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700">
                 {error}
               </div>
             ) : null}
@@ -99,7 +99,7 @@ function ResetPage() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="mt-5 inline-flex h-11 w-full items-center justify-center rounded bg-slate-950 px-4 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-emerald-400 dark:text-slate-950 dark:hover:bg-emerald-300"
+              className="mt-5 inline-flex h-11 w-full items-center justify-center rounded bg-slate-950 px-4 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {isSubmitting ? 'Enregistrement...' : 'Definir le mot de passe'}
             </button>

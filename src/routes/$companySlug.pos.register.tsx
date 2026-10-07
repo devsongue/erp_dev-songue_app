@@ -102,7 +102,7 @@ function PosRegister() {
 
   async function checkout() {
     if (cart.length === 0) {
-      setActionMessage('Ajoute au moins un produit avant d encaisser.')
+      setActionMessage('Ajoute au moins un produit avant d’encaisser.')
       return
     }
     if (isCheckingOut) return
@@ -126,7 +126,7 @@ function PosRegister() {
         },
       }) as Omit<CheckoutTicket, 'lines'>
     } catch (error: any) {
-      setActionMessage(error.message || 'Impossible d encaisser cette vente.')
+      setActionMessage(error.message || 'Impossible d’encaisser cette vente.')
       return
     } finally {
       setIsCheckingOut(false)
@@ -170,10 +170,10 @@ function PosRegister() {
     <main className="app-page-bg min-h-[calc(100vh-4rem)]">
       {!currentSession ? (
         <div className="fixed inset-0 z-40 grid place-items-center bg-slate-950/70 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded border border-slate-200 bg-white p-7 text-center shadow-2xl dark:border-slate-800 dark:bg-slate-950">
-            <div className="mx-auto grid size-16 place-items-center rounded-full bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400"><Wallet className="size-8" /></div>
-            <h2 className="mt-5 text-2xl font-bold text-slate-950 dark:text-white">La caisse est prete</h2>
-            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Ouvre la session, ajoute les articles puis appuie sur Encaisser. Rien d'autre a configurer.</p>
+          <div className="w-full max-w-md rounded border border-slate-200 bg-white p-7 text-center shadow-2xl">
+            <div className="mx-auto grid size-16 place-items-center rounded-full bg-emerald-50 text-emerald-600"><Wallet className="size-8" /></div>
+            <h2 className="mt-5 text-2xl font-bold text-slate-950">La caisse est prete</h2>
+            <p className="mt-2 text-sm text-slate-500">Ouvre la session, ajoute les articles puis appuie sur Encaisser. Rien d'autre a configurer.</p>
             <button onClick={() => void openSession()} className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded bg-emerald-600 px-5 py-4 text-base font-bold text-white hover:bg-emerald-500"><Wallet className="size-5" />Ouvrir la caisse</button>
           </div>
         </div>
@@ -183,8 +183,8 @@ function PosRegister() {
           <div className="mb-4 flex shrink-0 flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <p className="text-xs font-bold uppercase tracking-wider text-cyan-500">Vente rapide</p>
-              <h1 className="mt-1 text-2xl font-bold text-slate-950 dark:text-white">Nouvelle vente</h1>
-              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{activeCompany.name} - {currentSession ? `session ouverte depuis ${new Date(currentSession.openedAt).toLocaleTimeString('fr-FR')}` : 'caisse fermee'}</p>
+              <h1 className="mt-1 text-2xl font-bold text-slate-950">Nouvelle vente</h1>
+              <p className="mt-1 text-sm text-slate-500">{activeCompany.name} - {currentSession ? `session ouverte depuis ${new Date(currentSession.openedAt).toLocaleTimeString('fr-FR')}` : 'caisse fermee'}</p>
             </div>
             <div className="flex items-center gap-2">
             <button onClick={() => void (currentSession ? closeSession() : openSession())} className={`rounded px-3 py-2 text-xs font-bold ${currentSession ? 'border border-rose-200 text-rose-600' : 'bg-emerald-600 text-white'}`}>{currentSession ? 'Fermer la caisse' : 'Ouvrir la caisse'}</button>
@@ -208,7 +208,7 @@ function PosRegister() {
                     if (exact) { event.preventDefault(); addItem(exact); setQuery('') }
                   }}
                   placeholder="Scanner ou rechercher un produit"
-                  className="h-12 w-full rounded border border-slate-300 bg-white py-2 pl-10 pr-4 text-base font-semibold text-slate-950 outline-none focus:border-slate-950 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:focus:border-cyan-400"
+                  className="h-12 w-full rounded border border-slate-300 bg-white py-2 pl-10 pr-4 text-base font-semibold text-slate-950 outline-none focus:border-slate-950"
                 />
               </label>
               <label className="relative">
@@ -216,7 +216,7 @@ function PosRegister() {
                 <select
                   value={customerId}
                   onChange={(event) => setCustomerId(event.target.value)}
-                  className="h-12 w-full rounded border border-slate-300 bg-white pl-9 pr-3 text-sm font-bold text-slate-700 outline-none focus:border-slate-950 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-cyan-400"
+                  className="h-12 w-full rounded border border-slate-300 bg-white pl-9 pr-3 text-sm font-bold text-slate-700 outline-none focus:border-slate-950"
                 >
                   <option value="counter">Client comptoir</option>
                   {customers.map((customer) => (
@@ -247,31 +247,31 @@ function PosRegister() {
               </div>
             ) : (
               <div className="neon-surface rounded p-10 text-center">
-                <Search className="mx-auto size-8 text-slate-300 dark:text-slate-600" />
-                <p className="mt-3 text-sm font-bold text-slate-950 dark:text-white">Aucun article trouve</p>
-                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Essaie un autre nom, SKU ou categorie.</p>
+                <Search className="mx-auto size-8 text-slate-300" />
+                <p className="mt-3 text-sm font-bold text-slate-950">Aucun article trouve</p>
+                <p className="mt-1 text-xs text-slate-500">Essaie un autre nom, SKU ou catégorie.</p>
               </div>
             )}
           </div>
         </section>
 
-        <aside className="neon-surface border-l border-slate-200 bg-white lg:sticky lg:top-16 lg:flex lg:h-[calc(100vh-4rem)] lg:flex-col dark:border-slate-800 dark:bg-slate-950">
-          <div className="flex shrink-0 items-center justify-between border-b border-slate-200 px-5 py-4 dark:border-slate-800">
+        <aside className="neon-surface border-l border-slate-200 bg-white lg:sticky lg:top-16 lg:flex lg:h-[calc(100vh-4rem)] lg:flex-col">
+          <div className="flex shrink-0 items-center justify-between border-b border-slate-200 px-5 py-4">
             <div>
-              <h2 className="font-bold text-slate-950 dark:text-white">Panier</h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400">{selectedCustomer?.name ?? 'Client comptoir'}</p>
+              <h2 className="font-bold text-slate-950">Panier</h2>
+              <p className="text-xs text-slate-500">{selectedCustomer?.name ?? 'Client comptoir'}</p>
             </div>
-            <div className="grid size-10 place-items-center rounded bg-slate-950 text-white dark:bg-cyan-400 dark:text-slate-950">
+            <div className="grid size-10 place-items-center rounded bg-slate-950 text-white">
               <ShoppingCart className="size-5" />
             </div>
           </div>
 
-          <div className="min-h-[260px] flex-1 divide-y divide-slate-100 overflow-y-auto dark:divide-slate-800">
+          <div className="min-h-[260px] flex-1 divide-y divide-slate-100 overflow-y-auto">
             {cart.length === 0 ? (
               <div className="px-5 py-12 text-center">
-                <ShoppingCart className="mx-auto size-10 text-slate-300 dark:text-slate-700" />
-                <p className="mt-3 text-sm font-semibold text-slate-950 dark:text-white">Panier vide</p>
-                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Ajoute un produit pour commencer.</p>
+                <ShoppingCart className="mx-auto size-10 text-slate-300" />
+                <p className="mt-3 text-sm font-semibold text-slate-950">Panier vide</p>
+                <p className="mt-1 text-xs text-slate-500">Ajoute un produit pour commencer.</p>
               </div>
             ) : (
               cart.map((line) => (
@@ -280,23 +280,23 @@ function PosRegister() {
             )}
           </div>
 
-          <div className="shrink-0 border-t border-slate-200 p-5 dark:border-slate-800">
+          <div className="shrink-0 border-t border-slate-200 p-5">
             <div className="mb-4 space-y-2">
               <PriceLine label="Sous-total" value={formatMoney(subtotal)} />
-              <div className="flex items-center justify-between border-t border-slate-200 pt-3 text-2xl font-bold text-slate-950 dark:border-slate-800 dark:text-white">
+              <div className="flex items-center justify-between border-t border-slate-200 pt-3 text-2xl font-bold text-slate-950">
                 <span>Total</span>
                 <span>{formatMoney(total)}</span>
               </div>
             </div>
 
             <div className="mb-4 grid grid-cols-3 gap-2">
-              <PaymentButton active={paymentMethod === 'cash'} icon={Wallet} label="Especes" onClick={() => setPaymentMethod('cash')} />
+              <PaymentButton active={paymentMethod === 'cash'} icon={Wallet} label="Espèces" onClick={() => setPaymentMethod('cash')} />
               <PaymentButton active={paymentMethod === 'mobile'} icon={Smartphone} label="Mobile" onClick={() => setPaymentMethod('mobile')} />
               <PaymentButton active={paymentMethod === 'card'} icon={CreditCard} label="Carte" onClick={() => setPaymentMethod('card')} />
             </div>
 
             {actionMessage ? (
-              <div className="mb-3 rounded border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200">
+              <div className="mb-3 rounded border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-700">
                 {actionMessage}
               </div>
             ) : null}
@@ -304,16 +304,16 @@ function PosRegister() {
             <button
               onClick={checkout}
               disabled={cart.length === 0 || isCheckingOut || !currentSession}
-              className="inline-flex w-full items-center justify-center gap-2 rounded bg-slate-950 px-4 py-4 text-base font-bold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400 dark:bg-cyan-400 dark:text-slate-950 dark:hover:bg-cyan-300 dark:disabled:bg-slate-700 dark:disabled:text-slate-400"
+              className="inline-flex w-full items-center justify-center gap-2 rounded bg-slate-950 px-4 py-4 text-base font-bold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400"
             >
               <ReceiptText className="size-5" />
               {isCheckingOut ? 'Encaissement...' : `Encaisser ${total > 0 ? formatMoney(total) : ''}`}
             </button>
 
             {lastTicket ? (
-              <div className="mt-3 rounded border border-slate-200 px-3 py-2 text-xs text-slate-600 dark:border-slate-800 dark:text-slate-300">
-                <span className="font-bold text-slate-950 dark:text-white">{lastTicket.reference}</span> - {paymentLabel(lastTicket.paymentMethod)} - {lastTicket.customer}
-                <button onClick={() => setIsTicketModalOpen(true)} className="mt-2 block font-bold text-slate-950 hover:underline dark:text-white">Voir le ticket</button>
+              <div className="mt-3 rounded border border-slate-200 px-3 py-2 text-xs text-slate-600">
+                <span className="font-bold text-slate-950">{lastTicket.reference}</span> - {paymentLabel(lastTicket.paymentMethod)} - {lastTicket.customer}
+                <button onClick={() => setIsTicketModalOpen(true)} className="mt-2 block font-bold text-slate-950 hover:underline">Voir le ticket</button>
               </div>
             ) : null}
           </div>
@@ -337,29 +337,29 @@ function ProductButton({ item, onAdd }: { item: CatalogItem; onAdd: () => void }
   const isLowStock = item.stock !== null && item.minStockLevel && item.stock <= item.minStockLevel
 
   return (
-    <button onClick={onAdd} className="group overflow-hidden rounded border border-slate-200 bg-white text-left transition hover:-translate-y-0.5 hover:border-slate-400 hover:shadow-lg dark:border-slate-800 dark:bg-slate-950 dark:hover:border-cyan-500">
-      <div className="relative aspect-square bg-slate-100 dark:bg-slate-900">
+    <button onClick={onAdd} className="group overflow-hidden rounded border border-slate-200 bg-white text-left transition hover:-translate-y-0.5 hover:border-slate-400 hover:shadow-lg">
+      <div className="relative aspect-square bg-slate-100">
         {item.imageUrl ? (
           <img src={item.imageUrl} alt={item.name} className="size-full object-cover" />
         ) : (
-          <div className="flex size-full items-center justify-center text-slate-300 dark:text-slate-700">
+          <div className="flex size-full items-center justify-center text-slate-300">
             <ImageIcon className="size-8" />
           </div>
         )}
-        <span className="absolute right-2 top-2 rounded border border-slate-200 bg-white/95 px-2 py-1 text-[11px] font-bold text-slate-950 dark:border-slate-700 dark:bg-slate-950/95 dark:text-white">
+        <span className="absolute right-2 top-2 rounded border border-slate-200 bg-white/95 px-2 py-1 text-[11px] font-bold text-slate-950">
           {formatMoney(item.price)}
         </span>
-        <span className="absolute left-2 top-2 rounded border border-slate-200 bg-white/95 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-slate-600 dark:border-slate-700 dark:bg-slate-950/95 dark:text-slate-300">
+        <span className="absolute left-2 top-2 rounded border border-slate-200 bg-white/95 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-slate-600">
           {item.type === 'Service' ? 'Service' : 'Produit'}
         </span>
       </div>
       <div className="p-3">
-        <p className="line-clamp-2 min-h-10 text-sm font-bold text-slate-950 dark:text-white">{item.name}</p>
+        <p className="line-clamp-2 min-h-10 text-sm font-bold text-slate-950">{item.name}</p>
         <div className="mt-3 flex items-center justify-between gap-2">
-          <span className={`truncate text-xs font-semibold ${isLowStock ? 'text-rose-600' : 'text-slate-500 dark:text-slate-400'}`}>
+          <span className={`truncate text-xs font-semibold ${isLowStock ? 'text-rose-600' : 'text-slate-500'}`}>
             {item.stock === null ? 'Prestation' : `${item.stock} en stock`}
           </span>
-          <span className="grid size-8 place-items-center rounded bg-slate-950 text-white transition group-hover:bg-slate-800 dark:bg-cyan-400 dark:text-slate-950 dark:group-hover:bg-cyan-300">
+          <span className="grid size-8 place-items-center rounded bg-slate-950 text-white transition group-hover:bg-slate-800">
             <Plus className="size-4" />
           </span>
         </div>
@@ -374,29 +374,29 @@ function CartLineRow({ line, onChangeQuantity }: { line: CartLine; onChangeQuant
     <div className="px-5 py-4">
       <div className="mb-3 flex items-start justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
-          <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded bg-slate-100 text-slate-300 dark:bg-slate-900 dark:text-slate-700">
+          <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded bg-slate-100 text-slate-300">
             {line.item.imageUrl ? <img src={line.item.imageUrl} alt="" className="size-full object-cover" /> : <ImageIcon className="size-5" />}
           </div>
           <div className="min-w-0">
-            <p className="truncate text-sm font-bold text-slate-950 dark:text-white">{line.item.name}</p>
-            <p className="text-xs text-slate-500 dark:text-slate-400">{formatMoney(line.item.price)} / unite</p>
+            <p className="truncate text-sm font-bold text-slate-950">{line.item.name}</p>
+            <p className="text-xs text-slate-500">{formatMoney(line.item.price)} / unite</p>
           </div>
         </div>
-        <button onClick={() => onChangeQuantity(line.item.id, -line.quantity)} className="rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-950 dark:hover:bg-slate-900 dark:hover:text-white" aria-label="Retirer du panier">
+        <button onClick={() => onChangeQuantity(line.item.id, -line.quantity)} className="rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-950" aria-label="Retirer du panier">
           <Trash2 className="size-4" />
         </button>
       </div>
       <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center rounded border border-slate-200 dark:border-slate-800">
-          <button onClick={() => onChangeQuantity(line.item.id, -1)} className="p-2 text-slate-500 hover:text-slate-950 dark:hover:text-white" aria-label="Diminuer">
+        <div className="flex items-center rounded border border-slate-200">
+          <button onClick={() => onChangeQuantity(line.item.id, -1)} className="p-2 text-slate-500 hover:text-slate-950" aria-label="Diminuer">
             <Minus className="size-3" />
           </button>
-          <span className="w-9 text-center text-sm font-bold text-slate-950 dark:text-white">{line.quantity}</span>
-          <button onClick={() => onChangeQuantity(line.item.id, 1)} className="p-2 text-slate-500 hover:text-slate-950 dark:hover:text-white" aria-label="Augmenter">
+          <span className="w-9 text-center text-sm font-bold text-slate-950">{line.quantity}</span>
+          <button onClick={() => onChangeQuantity(line.item.id, 1)} className="p-2 text-slate-500 hover:text-slate-950" aria-label="Augmenter">
             <Plus className="size-3" />
           </button>
         </div>
-        <span className="text-right font-bold text-slate-950 dark:text-white">{formatMoney(line.item.price * line.quantity)}</span>
+        <span className="text-right font-bold text-slate-950">{formatMoney(line.item.price * line.quantity)}</span>
       </div>
     </div>
   )
@@ -404,7 +404,7 @@ function CartLineRow({ line, onChangeQuantity }: { line: CartLine; onChangeQuant
 
 function CategoryButton({ active, onClick, children }: { active: boolean; onClick: () => void; children: ReactNode }) {
   return (
-    <button onClick={onClick} className={`shrink-0 rounded border px-4 py-2 text-sm font-bold transition ${active ? 'border-slate-950 bg-slate-950 text-white dark:border-cyan-400 dark:bg-cyan-400 dark:text-slate-950' : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-950 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300 dark:hover:border-cyan-500 dark:hover:text-white'}`}>
+    <button onClick={onClick} className={`shrink-0 rounded border px-4 py-2 text-sm font-bold transition ${active ? 'border-slate-950 bg-slate-950 text-white' : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-950'}`}>
       {children}
     </button>
   )
@@ -413,15 +413,15 @@ function CategoryButton({ active, onClick, children }: { active: boolean; onClic
 function MiniStat({ label, value }: { label: string; value: string }) {
   return (
     <div className="min-w-0 px-3 py-1">
-      <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400 dark:text-slate-500">{label}</p>
-      <p className="truncate text-sm font-bold text-slate-950 dark:text-white">{value}</p>
+      <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">{label}</p>
+      <p className="truncate text-sm font-bold text-slate-950">{value}</p>
     </div>
   )
 }
 
 function PaymentButton({ active, icon: Icon, label, onClick }: { active: boolean; icon: ComponentType<{ className?: string }>; label: string; onClick: () => void }) {
   return (
-    <button onClick={onClick} className={`inline-flex h-12 items-center justify-center gap-2 rounded border text-xs font-bold transition ${active ? 'border-slate-950 bg-slate-950 text-white dark:border-cyan-400 dark:bg-cyan-400 dark:text-slate-950' : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-950 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300 dark:hover:border-cyan-500 dark:hover:text-white'}`}>
+    <button onClick={onClick} className={`inline-flex h-12 items-center justify-center gap-2 rounded border text-xs font-bold transition ${active ? 'border-slate-950 bg-slate-950 text-white' : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-950'}`}>
       <Icon className="size-4" />
       {label}
     </button>
@@ -430,9 +430,9 @@ function PaymentButton({ active, icon: Icon, label, onClick }: { active: boolean
 
 function PriceLine({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between text-sm text-slate-600 dark:text-slate-400">
+    <div className="flex items-center justify-between text-sm text-slate-600">
       <span>{label}</span>
-      <span className="font-semibold text-slate-900 dark:text-slate-100">{value}</span>
+      <span className="font-semibold text-slate-900">{value}</span>
     </div>
   )
 }
@@ -441,26 +441,26 @@ function TicketModal({ companyName, ticket, onClose, onPrint }: { companyName: s
   const { formatMoney } = useMoney()
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-950/50 px-3 py-6 sm:items-center sm:px-4 sm:py-8" role="dialog" aria-modal="true">
-      <div className="w-full max-w-md rounded border border-slate-200 bg-white shadow-xl dark:border-slate-800 dark:bg-slate-950">
-        <div className="no-print flex items-center justify-between gap-4 border-b border-slate-100 px-5 py-4 dark:border-slate-800">
+      <div className="w-full max-w-md rounded border border-slate-200 bg-white shadow-xl">
+        <div className="no-print flex items-center justify-between gap-4 border-b border-slate-100 px-5 py-4">
           <div>
-            <h2 className="text-lg font-bold text-slate-950 dark:text-white">Ticket encaisse</h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400">Impression lancee automatiquement.</p>
+            <h2 className="text-lg font-bold text-slate-950">Ticket encaisse</h2>
+            <p className="text-xs text-slate-500">Impression lancee automatiquement.</p>
           </div>
-          <button type="button" onClick={onClose} className="inline-flex size-9 items-center justify-center rounded border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-900 dark:border-slate-800 dark:hover:bg-slate-900 dark:hover:text-white" aria-label="Fermer">
+          <button type="button" onClick={onClose} className="inline-flex size-9 items-center justify-center rounded border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-900" aria-label="Fermer">
             <X className="size-4" />
           </button>
         </div>
 
         <div className="p-5">
-          <div className="ticket-print-area rounded border border-slate-200 bg-white p-5 text-slate-950 dark:border-slate-800">
+          <div className="ticket-print-area rounded border border-slate-200 bg-white p-5 text-slate-950">
             <div className="text-center">
               <p className="text-lg font-black uppercase tracking-wide">{companyName}</p>
               <p className="mt-1 text-xs text-slate-500">Ticket / facture caisse</p>
             </div>
 
             <div className="my-4 border-y border-dashed border-slate-300 py-3 text-xs">
-              <TicketInfo label="Reference" value={ticket.reference} />
+              <TicketInfo label="Référence" value={ticket.reference} />
               <TicketInfo label="Date" value={ticket.createdAt} />
               <TicketInfo label="Client" value={ticket.customer} />
               <TicketInfo label="Paiement" value={paymentLabel(ticket.paymentMethod)} />
@@ -491,10 +491,10 @@ function TicketModal({ companyName, ticket, onClose, onPrint }: { companyName: s
           </div>
 
           <div className="no-print mt-4 grid grid-cols-2 gap-2">
-            <button onClick={onClose} className="inline-flex h-11 items-center justify-center rounded border border-slate-300 px-4 text-sm font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-900">
+            <button onClick={onClose} className="inline-flex h-11 items-center justify-center rounded border border-slate-300 px-4 text-sm font-bold text-slate-700 hover:bg-slate-50">
               Fermer
             </button>
-            <button onClick={onPrint} className="inline-flex h-11 items-center justify-center gap-2 rounded bg-slate-950 px-4 text-sm font-bold text-white hover:bg-slate-800 dark:bg-cyan-400 dark:text-slate-950 dark:hover:bg-cyan-300">
+            <button onClick={onPrint} className="inline-flex h-11 items-center justify-center gap-2 rounded bg-slate-950 px-4 text-sm font-bold text-white hover:bg-slate-800">
               <Printer className="size-4" />
               Imprimer
             </button>
@@ -517,7 +517,7 @@ function TicketInfo({ label, value }: { label: string; value: string }) {
 function paymentLabel(method: PaymentMethod) {
   if (method === 'mobile') return 'Mobile'
   if (method === 'card') return 'Carte'
-  return 'Especes'
+  return 'Espèces'
 }
 
 function toCatalogCategory(category: any): CatalogCategory {

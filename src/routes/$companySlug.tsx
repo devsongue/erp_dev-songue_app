@@ -26,10 +26,14 @@ import {
   ShoppingCart,
   Sun,
   Truck,
+  UserRound,
   Users,
+  Wallet,
+  CalendarDays,
 } from 'lucide-react'
 import * as React from 'react'
 import { CompanyProvider, useCompany } from '~/context/CompanyContext'
+import { FeedbackProvider } from '~/components/ui'
 import { GlobalSearch } from '~/components/GlobalSearch'
 import { getCompanyAuthState, logout, createCompany } from '~/server/auth'
 
@@ -67,9 +71,11 @@ function CompanyLayout() {
 
   return (
     <CompanyProvider activeCompanySlug={companySlug} companies={auth.companies}>
-      <ErpAppShell companySlug={companySlug}>
-        <Outlet />
-      </ErpAppShell>
+      <FeedbackProvider>
+        <ErpAppShell companySlug={companySlug}>
+          <Outlet />
+        </ErpAppShell>
+      </FeedbackProvider>
     </CompanyProvider>
   )
 }
@@ -80,7 +86,7 @@ const adminOnlyPaths = new Set(['/users'])
 
 const mobileLinks = [
   { path: '/pos/register', label: 'Caisse' },
-  { path: '/dashboard', label: 'Resume' },
+  { path: '/dashboard', label: 'Résumé' },
   { path: '/sales', label: 'Ventes' },
   { path: '/inventory', label: 'Stock' },
   { path: '/crm', label: 'Clients' },
@@ -107,9 +113,9 @@ const erpNavigation: Array<{ label: string; sections: SidebarSection[] }> = [
       {
         label: 'Caisse',
         icon: ShoppingCart,
-        moduleKey: 'sales',
+        moduleKey: 'pos',
         children: [
-          { path: '/pos', label: 'Resume caisse', icon: BarChart3, exact: true },
+          { path: '/pos', label: 'Résumé caisse', icon: BarChart3, exact: true },
           { path: '/pos/register', label: 'Nouvelle vente', icon: ShoppingCart },
           { path: '/pos/history', label: 'Tickets', icon: History },
           { path: '/pos/sales-report', label: 'Rapport caisse', icon: ReceiptText },
@@ -120,7 +126,7 @@ const erpNavigation: Array<{ label: string; sections: SidebarSection[] }> = [
         icon: ReceiptText,
         moduleKey: 'sales',
         children: [
-          { path: '/sales', label: 'Resume ventes', icon: LayoutDashboard, exact: true },
+          { path: '/sales', label: 'Résumé ventes', icon: LayoutDashboard, exact: true },
           { path: '/quotes', label: 'Devis', icon: FileCheck2, exact: true },
           { path: '/invoices', label: 'Factures', icon: ReceiptText, exact: true },
         ],
@@ -130,9 +136,10 @@ const erpNavigation: Array<{ label: string; sections: SidebarSection[] }> = [
         icon: Contact,
         moduleKey: 'crm',
         children: [
-          { path: '/crm', label: 'Resume clients', icon: LayoutDashboard, exact: true },
-          { path: '/crm/leads', label: 'Ajouter client', icon: Plus },
-          { path: '/crm/deals', label: 'Opportunites', icon: Handshake },
+          { path: '/crm', label: 'Résumé clients', icon: LayoutDashboard, exact: true },
+          { path: '/crm/customers', label: 'Clients', icon: Contact },
+          { path: '/crm/leads', label: 'Prospects', icon: Plus },
+          { path: '/crm/deals', label: 'Opportunités', icon: Handshake },
         ],
       },
     ],
@@ -153,7 +160,7 @@ const erpNavigation: Array<{ label: string; sections: SidebarSection[] }> = [
         icon: Boxes,
         moduleKey: 'inventory',
         children: [
-          { path: '/inventory', label: 'Resume stock', icon: LayoutDashboard, exact: true },
+          { path: '/inventory', label: 'Résumé stock', icon: LayoutDashboard, exact: true },
           { path: '/inventory/transfers', label: 'Mouvements', icon: ArrowRightLeft },
         ],
       },
@@ -162,9 +169,9 @@ const erpNavigation: Array<{ label: string; sections: SidebarSection[] }> = [
         icon: Truck,
         moduleKey: 'inventory',
         children: [
-          { path: '/purchases', label: 'Resume achats', icon: LayoutDashboard, exact: true },
+          { path: '/purchases', label: 'Résumé achats', icon: LayoutDashboard, exact: true },
           { path: '/purchases/vendors', label: 'Fournisseurs', icon: Building2 },
-          { path: '/purchases/invoices', label: 'Factures achats', icon: FileText },
+          { path: '/purchases/invoices', label: 'Factures fournisseurs', icon: FileText },
         ],
       },
     ],
@@ -177,9 +184,9 @@ const erpNavigation: Array<{ label: string; sections: SidebarSection[] }> = [
         icon: CircleDollarSign,
         moduleKey: 'finance',
         children: [
-          { path: '/finance', label: 'Resume argent', icon: LayoutDashboard, exact: true },
-          { path: '/finance/revenues', label: 'Entrees', icon: ArrowUpRight },
-          { path: '/finance/expenses', label: 'Depenses', icon: ArrowDownRight },
+          { path: '/finance', label: 'Résumé argent', icon: LayoutDashboard, exact: true },
+          { path: '/finance/revenues', label: 'Entrées', icon: ArrowUpRight },
+          { path: '/finance/expenses', label: 'Dépenses', icon: ArrowDownRight },
           { path: '/finance/bank-accounts', label: 'Comptes & caisse', icon: Landmark },
         ],
       },
@@ -188,20 +195,36 @@ const erpNavigation: Array<{ label: string; sections: SidebarSection[] }> = [
         icon: ReceiptText,
         moduleKey: 'finance',
         children: [
-          { path: '/reports', label: 'Rapport activite', icon: BarChart3, exact: true },
+          { path: '/reports', label: 'Rapport d’activité', icon: BarChart3, exact: true },
         ],
       },
     ],
   },
   {
-    label: 'Systeme',
+    label: 'Équipe',
+    sections: [
+      {
+        label: 'RH',
+        icon: UserRound,
+        moduleKey: 'hr',
+        children: [
+          { path: '/hr', label: 'Résumé RH', icon: LayoutDashboard, exact: true },
+          { path: '/hr/employees', label: 'Employés', icon: Users },
+          { path: '/hr/leaves', label: 'Congés', icon: CalendarDays },
+          { path: '/hr/payrolls', label: 'Salaires', icon: Wallet },
+        ],
+      },
+    ],
+  },
+  {
+    label: 'Système',
     sections: [
       {
         label: 'Administration',
         icon: Settings,
         moduleKey: 'settings',
         children: [
-          { path: '/settings', label: 'Parametres', icon: Settings, exact: true },
+          { path: '/settings', label: 'Paramètres', icon: Settings, exact: true },
           { path: '/users', label: 'Utilisateurs', icon: Users, exact: true },
         ],
       },
@@ -214,9 +237,10 @@ function ErpAppShell({ children, companySlug }: { children: React.ReactNode, com
   const pathname = useRouterState({ select: (state) => state.location.pathname })
   const [isDropdownOpen, setIsDropdownOpen] = React.useState(false)
   const [showCreateCompanyModal, setShowCreateCompanyModal] = React.useState(false)
+  // Le theme est deja pose sur <html> par le script du document (__root.tsx).
   const [theme, setTheme] = React.useState<'light' | 'dark'>(() => {
-    if (typeof window === 'undefined') return 'dark'
-    return window.localStorage.getItem('erp-theme') === 'light' ? 'light' : 'dark'
+    if (typeof document === 'undefined') return 'light'
+    return document.documentElement.classList.contains('theme-dark') ? 'dark' : 'light'
   })
   const { activeCompany } = useCompany()
   const dropdownRef = React.useRef<HTMLDivElement>(null)
@@ -262,8 +286,30 @@ function ErpAppShell({ children, companySlug }: { children: React.ReactNode, com
     root.classList.toggle('theme-light', theme === 'light')
     root.classList.toggle('theme-dark', theme === 'dark')
     root.style.colorScheme = theme
-    window.localStorage.setItem('erp-theme', theme)
   }, [theme])
+
+  // Titre d'onglet par page ("Factures · Boutique Demo") a partir du menu :
+  // l'entree dont le chemin correspond le plus precisement a la page courante.
+  React.useEffect(() => {
+    let best: { path: string; label: string } | null = null
+    for (const group of erpNavigation) {
+      for (const section of group.sections) {
+        for (const child of section.children) {
+          const matches = child.exact ? currentSubPath === child.path : currentSubPath === child.path || currentSubPath.startsWith(`${child.path}/`)
+          if (matches && (!best || child.path.length > best.path.length)) best = child
+        }
+      }
+    }
+    const label = best?.label ?? (currentSubPath.startsWith('/pos/register') ? 'Nouvelle vente' : currentSubPath === '/dashboard' ? 'Tableau de bord' : null)
+    document.title = [label, activeCompany.name, 'DevSongue Business'].filter(Boolean).join(' · ')
+  }, [currentSubPath, activeCompany.name])
+
+  function toggleTheme() {
+    const next = theme === 'dark' ? 'light' : 'dark'
+    setTheme(next)
+    // Memorise seulement un choix explicite : sans choix, on suit le système.
+    try { window.localStorage.setItem('erp-theme', next) } catch {}
+  }
 
   return (
     <div className="neon-grid min-h-screen text-slate-950">
@@ -342,7 +388,7 @@ function ErpAppShell({ children, companySlug }: { children: React.ReactNode, com
               Nouvelle vente
             </SidebarLink>
             <SidebarLink to={`/${companySlug}/dashboard`} icon={LayoutDashboard}>
-              Resume
+              Tableau de bord
             </SidebarLink>
           </div>
 
@@ -376,7 +422,7 @@ function ErpAppShell({ children, companySlug }: { children: React.ReactNode, com
             className="flex w-full items-center gap-2.5 rounded px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-950"
           >
             <LogOut className="size-4" />
-            Deconnexion
+            Déconnexion
           </button>
         </div>
       </aside>
@@ -388,13 +434,13 @@ function ErpAppShell({ children, companySlug }: { children: React.ReactNode, com
               <GlobalSearch companySlug={companySlug} />
             </div>
             <div className="flex items-center gap-2">
-              <ThemeSwitch theme={theme} onToggle={() => setTheme((current) => current === 'dark' ? 'light' : 'dark')} />
+              <ThemeSwitch theme={theme} onToggle={toggleTheme} />
               <Link
                 to="/$companySlug/settings"
                 params={{ companySlug }}
                 className="hidden h-9 items-center rounded border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-600 transition-colors hover:bg-slate-50 sm:inline-flex"
               >
-                Parametres
+                Paramètres
               </Link>
               <div className="flex size-9 items-center justify-center rounded bg-slate-950 text-xs font-bold text-white" title={auth.user?.email ?? ''}>
                 {(auth.user?.email ?? 'U').slice(0, 1).toUpperCase()}
@@ -489,6 +535,7 @@ function SidebarMenu({
       <button
         type="button"
         onClick={() => setIsOpen((value) => !value)}
+        aria-expanded={isOpen}
         className={`flex w-full items-center gap-2.5 rounded px-3 py-2 text-sm font-medium transition-colors hover:bg-slate-100 hover:text-slate-950 ${
           isSectionActive ? 'bg-slate-100 text-slate-950 font-bold' : 'text-slate-600'
         }`}
@@ -664,7 +711,7 @@ function CreateCompanyModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
       <div className="absolute inset-0 bg-slate-950/40 backdrop-blur-sm" onClick={onClose} />
       <div className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded border border-slate-200 bg-white p-4 sm:p-5">
-        <h2 className="text-lg font-bold text-slate-950">Creation rapide d'entreprise</h2>
+        <h2 className="text-lg font-bold text-slate-950">Création rapide d'entreprise</h2>
         <p className="mt-1 text-xs text-slate-500">Creez une entreprise avec son logo et ses informations principales.</p>
         
         <form onSubmit={handleSubmit} className="mt-4 space-y-4">
@@ -723,7 +770,7 @@ function CreateCompanyModal({
               />
             </label>
             <label className="block">
-              <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-400">Telephone</span>
+              <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-400">Téléphone</span>
               <input
                 type="tel"
                 value={phone}
@@ -739,7 +786,7 @@ function CreateCompanyModal({
             onClick={() => setShowMore((value) => !value)}
             className="text-xs font-bold uppercase tracking-wide text-slate-500 hover:text-slate-950"
           >
-            {showMore ? 'Masquer les details' : 'Ajouter adresse, NIF et site web'}
+            {showMore ? 'Masquer les détails' : 'Ajouter adresse, NIF et site web'}
           </button>
 
           {showMore ? (
@@ -795,7 +842,7 @@ function CreateCompanyModal({
               disabled={isSubmitting}
               className="rounded bg-slate-950 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
             >
-              {isSubmitting ? 'Creation...' : "Creer l'entreprise"}
+              {isSubmitting ? 'Création…' : "Créer l'entreprise"}
             </button>
           </div>
         </form>

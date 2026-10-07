@@ -4,7 +4,11 @@ import { getPosData } from '~/server/dataFetchers'
 import { useMoney } from '~/context/CompanyContext'
 
 export const Route = createFileRoute('/$companySlug/sales/')({
-  loader: async ({ params }) => getPosData({ data: { companySlug: params.companySlug } }),
+  // Les chiffres du jour viennent de la caisse : sans le module Caisse (ou sans
+  // pos.read), la page reste accessible avec des compteurs a zero.
+  loader: async ({ params }) => getPosData({ data: { companySlug: params.companySlug } })
+    .then((data) => ({ today: data.today }))
+    .catch(() => ({ today: { total: 0, count: 0 } })),
   component: SalesDashboard,
 })
 
@@ -18,10 +22,10 @@ function SalesDashboard() {
     <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-950 dark:text-white">Ventes</h1>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Caisse, devis et factures dans un parcours simple.</p>
+          <h1 className="text-2xl font-bold text-slate-950">Ventes</h1>
+          <p className="mt-1 text-sm text-slate-500">Caisse, devis et factures dans un parcours simple.</p>
         </div>
-        <Link to="/$companySlug/pos/register" params={{ companySlug }} className="inline-flex items-center justify-center gap-2 rounded bg-slate-950 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 dark:bg-cyan-400 dark:text-slate-950 dark:hover:bg-cyan-300">
+        <Link to="/$companySlug/pos/register" params={{ companySlug }} className="inline-flex items-center justify-center gap-2 rounded bg-slate-950 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800">
           <ShoppingCart className="size-4" />
           Nouvelle vente
         </Link>
@@ -46,11 +50,11 @@ function SalesMetric({ title, value, detail, icon: Icon }: { title: string; valu
   return (
     <div className="neon-surface rounded p-5">
       <div className="mb-4 flex items-start justify-between">
-        <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">{title}</p>
-        <Icon className="size-4 text-slate-300 dark:text-slate-600" />
+        <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">{title}</p>
+        <Icon className="size-4 text-slate-300" />
       </div>
-      <p className="text-2xl font-bold text-slate-950 dark:text-white">{value}</p>
-      <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">{detail}</p>
+      <p className="text-2xl font-bold text-slate-950">{value}</p>
+      <p className="mt-3 text-xs text-slate-500">{detail}</p>
     </div>
   )
 }
@@ -59,10 +63,10 @@ function SalesAction({ to, title, text }: { to: string; title: string; text: str
   return (
     <Link to={to as any} className="neon-surface group rounded p-5 transition hover:border-slate-300">
       <div className="flex items-center justify-between">
-        <h3 className="font-bold text-slate-950 dark:text-white">{title}</h3>
-        <ArrowRight className="size-4 text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-slate-600 dark:text-slate-600 dark:group-hover:text-cyan-300" />
+        <h3 className="font-bold text-slate-950">{title}</h3>
+        <ArrowRight className="size-4 text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-slate-600" />
       </div>
-      <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">{text}</p>
+      <p className="mt-2 text-sm text-slate-500">{text}</p>
     </Link>
   )
 }

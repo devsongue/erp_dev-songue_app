@@ -1,0 +1,5 @@
+ALTER TABLE "Customer" ADD COLUMN "phone" TEXT;
+ALTER TABLE "Customer" ADD COLUMN "address" TEXT;
+ALTER TABLE "Customer" ADD COLUMN "city" TEXT;
+ALTER TABLE "Customer" ADD COLUMN "taxId" TEXT;
+ALTER TABLE "Customer" ADD COLUMN "notes" TEXT;

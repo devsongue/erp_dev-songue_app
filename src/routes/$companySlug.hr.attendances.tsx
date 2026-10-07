@@ -22,7 +22,7 @@ function AttendancesPage() {
       </section>
       <section className="neon-surface overflow-hidden rounded">
         <div className="hidden grid-cols-[1fr_1fr_1fr_auto] gap-4 border-b border-slate-200 px-5 py-3 text-xs font-bold uppercase text-slate-400 lg:grid">
-          <span>Employe</span>
+          <span>Employé</span>
           <span>Departement</span>
           <span>Poste</span>
           <span className="text-right">Statut</span>

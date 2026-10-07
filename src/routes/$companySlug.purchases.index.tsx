@@ -18,9 +18,9 @@ function PurchasesDashboard() {
   const [startDate, setStartDate] = useState(todayInputValue())
   const [endDate, setEndDate] = useState(todayInputValue())
 
-  const periodInvoices = purchaseInvoices.filter((invoice: any) => matchesDatePreset(invoice.date, datePreset, startDate, endDate))
+  const periodInvoices = purchaseInvoices.filter((invoice: any) => invoice.status !== 'Cancelled' && matchesDatePreset(invoice.date, datePreset, startDate, endDate))
   const totalPurchases = periodInvoices.reduce((sum: number, invoice: any) => sum + invoice.amount, 0)
-  const pendingInvoices = periodInvoices.filter((invoice: any) => invoice.status === 'Pending')
+  const pendingInvoices = periodInvoices.filter((invoice: any) => ['Pending', 'PartiallyPaid', 'Overdue'].includes(invoice.status))
   const activeVendors = vendors.filter((vendor: any) => vendor.status !== 'Suspendu')
   const riskVendors = vendors.filter((vendor: any) => vendor.risk === 'Eleve' || vendor.status === 'A surveiller')
   const topCategories = Array.from(
@@ -35,8 +35,8 @@ function PurchasesDashboard() {
       <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Achats</p>
-          <h1 className="mt-1 text-2xl font-bold text-slate-950">Resume achats</h1>
-          <p className="mt-1 max-w-2xl text-sm text-slate-500">Suivi des depenses fournisseurs, factures achats, risques et besoins de reapprovisionnement.</p>
+          <h1 className="mt-1 text-2xl font-bold text-slate-950">Résumé achats</h1>
+          <p className="mt-1 max-w-2xl text-sm text-slate-500">Suivi des dépenses fournisseurs, factures achats, risques et besoins de réapprovisionnement.</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Link to="/$companySlug/purchases/invoices" params={{ companySlug }} className="inline-flex h-10 items-center gap-2 rounded border border-slate-300 bg-white px-4 text-sm font-bold text-slate-700 hover:bg-slate-50">
@@ -62,18 +62,18 @@ function PurchasesDashboard() {
       </div>
 
       <section className="mb-6 grid gap-4 md:grid-cols-4">
-        <Metric title="Achats periode" value={formatMoney(totalPurchases)} detail={`${periodInvoices.length} facture(s)`} icon={FileText} />
-        <Metric title="A verifier" value={pendingInvoices.length.toString()} detail="Factures en attente" icon={AlertTriangle} alert={pendingInvoices.length > 0} />
+        <Metric title="Achats période" value={formatMoney(totalPurchases)} detail={`${periodInvoices.length} facture(s)`} icon={FileText} />
+        <Metric title="À vérifier" value={pendingInvoices.length.toString()} detail="Factures en attente" icon={AlertTriangle} alert={pendingInvoices.length > 0} />
         <Metric title="Fournisseurs actifs" value={activeVendors.length.toString()} detail={`${riskVendors.length} a surveiller`} icon={Truck} alert={riskVendors.length > 0} />
-        <Metric title="Stock a commander" value={stockAlerts.length.toString()} detail="Produits sous seuil" icon={PackageCheck} alert={stockAlerts.length > 0} />
+        <Metric title="Stock à commander" value={stockAlerts.length.toString()} detail="Produits sous seuil" icon={PackageCheck} alert={stockAlerts.length > 0} />
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[1fr_380px]">
         <div className="neon-surface overflow-hidden rounded">
           <div className="flex items-center justify-between gap-4 border-b border-slate-200 px-5 py-4">
             <div>
-              <h2 className="font-bold text-slate-950">Dernieres factures achats</h2>
-              <p className="text-xs text-slate-500">Depenses et paiements fournisseurs sur la periode.</p>
+              <h2 className="font-bold text-slate-950">Dernières factures achats</h2>
+              <p className="text-xs text-slate-500">Dépenses et paiements fournisseurs sur la période.</p>
             </div>
             <Link to="/$companySlug/purchases/invoices" params={{ companySlug }} className="inline-flex items-center gap-1 text-xs font-bold text-slate-500 hover:text-slate-950">
               Voir tout <ArrowRight className="size-3" />
@@ -92,7 +92,7 @@ function PurchasesDashboard() {
                 </div>
               </div>
             )) : (
-              <p className="px-5 py-8 text-sm text-slate-500">Aucune facture achat sur cette periode.</p>
+              <p className="px-5 py-8 text-sm text-slate-500">Aucune facture achat sur cette période.</p>
             )}
           </div>
         </div>
@@ -100,8 +100,8 @@ function PurchasesDashboard() {
         <aside className="space-y-6">
           <section className="neon-surface rounded">
             <div className="border-b border-slate-200 px-5 py-4">
-              <h2 className="font-bold text-slate-950">Categories achats</h2>
-              <p className="text-xs text-slate-500">Repartition des depenses filtrees.</p>
+              <h2 className="font-bold text-slate-950">Catégories achats</h2>
+              <p className="text-xs text-slate-500">Repartition des dépenses filtrees.</p>
             </div>
             <div className="space-y-3 p-5">
               {topCategories.length ? topCategories.map(([category, amount]) => (
@@ -110,7 +110,7 @@ function PurchasesDashboard() {
                   <span className="shrink-0 text-sm font-bold text-slate-950">{formatMoney(amount)}</span>
                 </div>
               )) : (
-                <p className="text-sm text-slate-500">Pas encore de categorie sur cette periode.</p>
+                <p className="text-sm text-slate-500">Pas encore de catégorie sur cette période.</p>
               )}
             </div>
           </section>
@@ -134,7 +134,7 @@ function PurchasesDashboard() {
                 </Link>
               ))}
               {stockAlerts.length === 0 && riskVendors.length === 0 ? (
-                <p className="px-5 py-8 text-sm text-slate-500">Aucune priorite achat.</p>
+                <p className="px-5 py-8 text-sm text-slate-500">Aucune priorité achat.</p>
               ) : null}
             </div>
           </section>

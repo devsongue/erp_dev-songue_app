@@ -130,7 +130,7 @@ export async function getSessionContext(): Promise<SessionContext | null> {
   const ip = getRequestIP({ xForwardedFor: true }) ?? 'unknown'
   const flood = throttle(`flood:ip:${ip}`, floodLimit, floodWindowMs)
   if (!flood.allowed) {
-    throw new Error('Trop de requetes. Reessaie dans un instant.')
+    throw new Error('Trop de requetes. Réessaie dans un instant.')
   }
 
   const token = getCookie(sessionCookieName)
@@ -171,6 +171,7 @@ export async function requireCompanyAccess(companySlug: string, permission?: str
   const permissions = new Set(company.permissions)
   const moduleKey = permission?.startsWith('customer.') ? 'crm'
     : permission?.startsWith('invoice.') ? 'sales'
+      : permission?.startsWith('pos.') ? 'pos'
       : permission?.startsWith('inventory.') ? 'inventory'
         : permission?.startsWith('finance.') || permission === 'audit.read' ? 'finance'
           : permission?.startsWith('employee.') ? 'hr'

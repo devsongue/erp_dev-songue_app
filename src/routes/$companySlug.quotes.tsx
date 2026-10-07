@@ -1,4 +1,4 @@
-import { createFileRoute, useRouter } from '@tanstack/react-router'
+import { createFileRoute, useNavigate, useRouter } from '@tanstack/react-router'
 import {
   BadgeCheck,
   Building2,
@@ -8,6 +8,7 @@ import {
   Pencil,
   Plus,
   Printer,
+  ReceiptText,
   Save,
   Search,
   Send,
@@ -17,7 +18,8 @@ import {
 } from 'lucide-react'
 import * as React from 'react'
 import { getQuoteData } from '~/server/dataFetchers'
-import { createQuote, deleteQuote, saveQuoteSettings, updateQuote, updateQuoteStatus } from '~/server/operations'
+import { createInvoiceFromQuote, createQuote, deleteQuote, saveQuoteSettings, updateQuote, updateQuoteStatus } from '~/server/operations'
+import { buttonClass, errorMessage, useFeedback, useMessageToast } from '~/components/ui'
 import { useMoney } from '~/context/CompanyContext'
 import { ImageUploadField } from '~/components/ImageUploadField'
 
@@ -39,10 +41,10 @@ type QuoteLineForm = {
 
 const statusLabels: Record<string, string> = {
   Draft: 'Brouillon',
-  Sent: 'Envoye',
-  Accepted: 'Accepte',
-  Rejected: 'Refuse',
-  Expired: 'Expire',
+  Sent: 'Envoyé',
+  Accepted: 'Accepté',
+  Rejected: 'Refusé',
+  Expired: 'Expiré',
 }
 
 const statusClasses: Record<string, string> = {
@@ -57,6 +59,8 @@ function QuotesPage() {
   const { formatMoney } = useMoney()
   const { companySlug } = Route.useParams()
   const router = useRouter()
+  const navigate = useNavigate()
+  const { confirm, notify } = useFeedback()
   const data = Route.useLoaderData()
 
   const [quotes, setQuotes] = React.useState<any[]>(data.quotes)
@@ -65,6 +69,7 @@ function QuotesPage() {
   const [activeModal, setActiveModal] = React.useState<Modal>(null)
   const [editingQuote, setEditingQuote] = React.useState<any | null>(null)
   const [message, setMessage] = React.useState('')
+  useMessageToast(message, setMessage)
   const [searchTerm, setSearchTerm] = React.useState('')
   const [statusFilter, setStatusFilter] = React.useState<StatusFilter>('All')
   const [sortBy, setSortBy] = React.useState<QuoteSort>('updated')
@@ -103,7 +108,7 @@ function QuotesPage() {
 
   async function changeStatus(quoteId: string, status: QuoteStatus) {
     const quote = quotes.find((candidate) => candidate.id === quoteId)
-    if (status === 'Accepted' && quote && !window.confirm(`Marquer le devis ${quote.reference} comme accepte ?`)) {
+    if (status === 'Accepted' && quote && !await confirm({ title: 'Accepter ce devis ?', message: `Le devis ${quote.reference} sera marqué comme accepté et ne pourra plus être modifié.`, confirmLabel: 'Accepter' })) {
       return
     }
     const updated = await updateQuoteStatus({ data: { companySlug, quoteId, status } })
@@ -112,7 +117,7 @@ function QuotesPage() {
   }
 
   async function removeQuote(quote: any) {
-    if (!window.confirm(`Supprimer definitivement le devis ${quote.reference} ?`)) return
+    if (!await confirm({ title: 'Supprimer ce devis ?', message: `Le devis ${quote.reference} sera supprimé définitivement.`, confirmLabel: 'Supprimer', danger: true })) return
     try {
       await deleteQuote({ data: { companySlug, quoteId: quote.id } })
       setQuotes((current) => current.filter((item) => item.id !== quote.id))
@@ -120,6 +125,16 @@ function QuotesPage() {
       setMessage(`Devis ${quote.reference} supprime.`)
       await refresh()
     } catch (error: any) { setMessage(error.message || 'Suppression impossible.') }
+  }
+
+  async function invoiceQuote(quote: any) {
+    try {
+      await createInvoiceFromQuote({ data: { companySlug, quoteId: quote.id } })
+      notify(`Brouillon de facture créé depuis ${quote.reference}.`)
+      await navigate({ to: '/$companySlug/invoices', params: { companySlug } })
+    } catch (error) {
+      notify(errorMessage(error), 'error')
+    }
   }
 
   return (
@@ -144,17 +159,13 @@ function QuotesPage() {
         </div>
       </div>
 
-      {message ? (
-        <div className="no-print mb-6 rounded border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">
-          {message}
-        </div>
-      ) : null}
+      
 
       <div className="no-print mb-6 grid gap-4 md:grid-cols-4">
         <Metric icon={FileCheck2} label="Devis" value={String(quotes.length)} detail="Documents crees" />
         <Metric icon={Send} label="En cours" value={formatMoney(pendingTotal)} detail="Brouillons et envoyes" />
         <Metric icon={BadgeCheck} label="Acceptes" value={formatMoney(acceptedTotal)} detail="Chiffre valide" />
-        <Metric icon={Palette} label="Identite" value={settings.legalName || data.company.name} detail="Modele entreprise" />
+        <Metric icon={Palette} label="Identite" value={settings.legalName || data.company.name} detail="Modèle entreprise" />
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_480px]">
@@ -171,7 +182,7 @@ function QuotesPage() {
                   <input
                     value={searchTerm}
                     onChange={(event) => setSearchTerm(event.target.value)}
-                    placeholder="Rechercher reference, client ou objet..."
+                    placeholder="Rechercher référence, client ou objet..."
                     className="field-input pl-9"
                   />
                 </label>
@@ -180,8 +191,8 @@ function QuotesPage() {
                   {Object.entries(statusLabels).map(([status, label]) => <option key={status} value={status}>{label}</option>)}
                 </select>
                 <select value={sortBy} onChange={(event) => setSortBy(event.target.value as QuoteSort)} className="field-input">
-                  <option value="updated">Derniere activite</option>
-                  <option value="validUntil">Validite proche</option>
+                  <option value="updated">Dernière activité</option>
+                  <option value="validUntil">Validité proche</option>
                   <option value="amountDesc">Montant decroissant</option>
                   <option value="amountAsc">Montant croissant</option>
                 </select>
@@ -192,7 +203,7 @@ function QuotesPage() {
                   <table className="w-full min-w-[900px] text-left text-sm">
                     <thead className="bg-slate-50 text-slate-500">
                       <tr>
-                        <th className="px-4 py-3 font-semibold">Reference</th>
+                        <th className="px-4 py-3 font-semibold">Référence</th>
                         <th className="px-4 py-3 font-semibold">Client</th>
                         <th className="px-4 py-3 font-semibold">Objet</th>
                         <th className="px-4 py-3 text-right font-semibold">Montant</th>
@@ -227,7 +238,7 @@ function QuotesPage() {
                                     : 'border border-slate-300 text-slate-700 hover:bg-slate-50'
                                 }`}
                               >
-                                {quote.id === selectedQuote?.id ? 'Ouvert' : 'Voir apercu'}
+                                {quote.id === selectedQuote?.id ? 'Ouvert' : 'Voir aperçu'}
                               </button>
                               <select
                                 value={quote.status}
@@ -250,7 +261,7 @@ function QuotesPage() {
                 <div className="px-5 py-10 text-center">
                   <p className="font-semibold text-slate-800">Aucun devis ne correspond aux filtres.</p>
                   <button onClick={() => { setSearchTerm(''); setStatusFilter('All') }} className="mt-3 rounded border border-slate-300 px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50">
-                    Reinitialiser la recherche
+                    Réinitialiser la recherche
                   </button>
                 </div>
               )}
@@ -262,7 +273,7 @@ function QuotesPage() {
               <p className="mt-1 text-sm text-slate-500">Ajoute un premier devis avec produits, services et conditions.</p>
               <button onClick={() => setActiveModal('quote')} className="mt-4 inline-flex items-center gap-2 rounded bg-slate-950 px-4 py-2 text-sm font-semibold text-white">
                 <Plus className="size-4" />
-                Creer un devis
+                Créer un devis
               </button>
             </div>
           )}
@@ -273,19 +284,27 @@ function QuotesPage() {
             <>
               <div className="no-print mb-4 flex items-center justify-between gap-2">
                 <div>
-                  <h2 className="font-light text-slate-950">Apercu impression de devis</h2>
+                  <h2 className="font-light text-slate-950">Aperçu impression de devis</h2>
                   <p className="text-xs text-slate-500">{selectedQuote.reference}</p>
                 </div>
-                <button onClick={() => window.print()} className="inline-flex items-center gap-2 rounded bg-slate-950 px-3 py-2 text-sm font-semibold text-white">
-                  <Printer className="size-4" />
-                  Imprimer
-                </button>
+                <div className="flex flex-wrap justify-end gap-2">
+                  {!['Rejected', 'Expired'].includes(selectedQuote.status) ? (
+                    <button type="button" onClick={() => void invoiceQuote(selectedQuote)} className={buttonClass.secondary}>
+                      <ReceiptText className="size-4" />
+                      Facturer
+                    </button>
+                  ) : null}
+                  <button onClick={() => window.print()} className="inline-flex items-center gap-2 rounded bg-slate-950 px-3 py-2 text-sm font-semibold text-white">
+                    <Printer className="size-4" />
+                    Imprimer
+                  </button>
+                </div>
               </div>
               <QuotePrint quote={selectedQuote} settings={settings} companyName={data.company.name} />
             </>
           ) : (
             <div className="no-print rounded border border-dashed border-slate-300 p-8 text-center text-sm text-slate-500">
-              Selectionne ou cree un devis pour afficher l'apercu imprimable.
+              Selectionne ou cree un devis pour afficher l'aperçu imprimable.
             </div>
           )}
         </aside>
@@ -322,7 +341,7 @@ function QuotesPage() {
             const nextSettings = await saveQuoteSettings({ data: { companySlug, ...payload } })
             setSettings(nextSettings)
             setActiveModal(null)
-            setMessage('Modele de devis mis a jour.')
+            setMessage('Modèle de devis mis à jour.')
           }}
         />
       ) : null}
@@ -389,7 +408,7 @@ function QuoteModal({
       .filter((line) => line.description)
 
     if (!title.trim() || !validUntil || cleanLines.length === 0) {
-      setError('Renseigne un objet, une date de validite et au moins une ligne.')
+      setError('Renseigne un objet, une date de validité et au moins une ligne.')
       return
     }
 
@@ -415,7 +434,7 @@ function QuoteModal({
         lines: cleanLines,
       })
     } catch (submitError: any) {
-      setError(submitError?.message || 'Impossible de creer le devis.')
+      setError(submitError?.message || 'Impossible de créer le devis.')
     } finally {
       setIsSubmitting(false)
     }
@@ -456,7 +475,7 @@ function QuoteModal({
             <div className="hidden grid-cols-[1fr_1.4fr_80px_110px_90px_36px] gap-2 border-b border-slate-100 px-4 py-2 text-[10px] font-bold uppercase tracking-wide text-slate-400 md:grid">
               <span>Article</span>
               <span>Description</span>
-              <span className="text-right">Qte</span>
+              <span className="text-right">Qté</span>
               <span className="text-right">PU</span>
               <span className="text-right">Total</span>
               <span />
@@ -476,7 +495,7 @@ function QuoteModal({
                     <input value={line.description} onChange={(event) => setLines((current) => current.map((candidate, lineIndex) => lineIndex === index ? { ...candidate, description: event.target.value } : candidate))} placeholder="Description" className="field-input" />
                   </label>
                   <label>
-                    <span className="field-label md:hidden">Qte</span>
+                    <span className="field-label md:hidden">Qté</span>
                     <input value={line.quantity} onChange={(event) => setLines((current) => current.map((candidate, lineIndex) => lineIndex === index ? { ...candidate, quantity: event.target.value } : candidate))} type="number" min="1" className="field-input text-right" />
                   </label>
                   <label>
@@ -515,7 +534,7 @@ function QuoteModal({
           <AmountRow label="Remise" value={-discount} />
           <AmountRow label="Taxe" value={tax} />
           <div className="mt-4 border-t border-slate-200 pt-4">
-            <AmountRow label="A payer" value={total} strong />
+            <AmountRow label="À payer" value={total} strong />
           </div>
           {error ? <p className="mt-4 rounded border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700">{error}</p> : null}
           <div className="mt-5 grid gap-2">
@@ -557,11 +576,11 @@ function SettingsModal({ settings, companyName, companySlug, onClose, onSubmit }
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (form.logoUrl.trim() && !isHttpUrl(form.logoUrl)) {
-      setError('Le logo doit etre une URL valide commençant par http:// ou https://.')
+      setError('Le logo doit être une URL valide commençant par http:// ou https://.')
       return
     }
     if (!isHexColor(form.accentColor)) {
-      setError('La couleur doit etre au format hexadecimal, par exemple #0f172a.')
+      setError('La couleur doit être au format hexadecimal, par exemple #0f172a.')
       return
     }
     if (isSubmitting) return
@@ -569,7 +588,7 @@ function SettingsModal({ settings, companyName, companySlug, onClose, onSubmit }
     try {
       await onSubmit(form)
     } catch (submitError: any) {
-      setError(submitError?.message || 'Impossible d enregistrer le modele.')
+      setError(submitError?.message || 'Impossible d’enregistrer le modèle.')
     } finally {
       setIsSubmitting(false)
     }
@@ -669,7 +688,7 @@ function QuotePrint({ quote, settings, companyName }: { quote: any; settings: an
           <thead>
             <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-400">
               <th className="py-2 font-bold">Description</th>
-              <th className="py-2 text-right font-bold">Qte</th>
+              <th className="py-2 text-right font-bold">Qté</th>
               <th className="py-2 text-right font-bold">PU</th>
               <th className="py-2 text-right font-bold">Total</th>
             </tr>

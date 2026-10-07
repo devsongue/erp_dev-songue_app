@@ -1,6 +1,8 @@
 node_modules
-package-lock.json
 yarn.lock
+
+# Client Prisma : genere dans node_modules par `prisma generate`
+/src/generated/
 
 .DS_Store
 .cache

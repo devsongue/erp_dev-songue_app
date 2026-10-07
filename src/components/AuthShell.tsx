@@ -22,10 +22,10 @@ export function BrandMark({ subtitle }: { subtitle: string }) {
   return (
     <div className="mb-8 flex items-center justify-center gap-3">
       <span className="grid size-10 place-items-center rounded-lg bg-slate-950 text-sm font-bold text-white">
-        GP
+        DS
       </span>
       <div>
-        <p className="text-sm font-bold text-slate-950">Gestion PME</p>
+        <p className="text-sm font-bold text-slate-950">DevSongue Business</p>
         <p className="text-xs text-slate-500">{subtitle}</p>
       </div>
     </div>

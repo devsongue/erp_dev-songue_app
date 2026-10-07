@@ -118,7 +118,7 @@ function LoginPage() {
           {needsTotp ? (
             <Field
               icon={LockKeyhole}
-              label="Code de verification (2FA)"
+              label="Code de vérification (2FA)"
               value={totpCode}
               onChange={setTotpCode}
               autoComplete="one-time-code"
@@ -138,7 +138,7 @@ function LoginPage() {
         <p className="mt-6 text-center text-sm text-slate-500">
           Premiere utilisation ?{' '}
           <Link to="/register" className="font-semibold text-slate-950 hover:underline">
-            Creer votre espace
+            Créer votre espace
           </Link>
         </p>
       </AuthCard>

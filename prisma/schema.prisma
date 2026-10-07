@@ -146,6 +146,7 @@ model Company {
   posRegisters     PosRegister[]
   posSessions      PosSession[]
   posTickets       PosTicket[]
+  sequences        DocumentSequence[]
 
   @@index([workspaceId])
 }
@@ -292,6 +293,11 @@ model Customer {
   companyId     String
   name          String
   email         String?
+  phone         String?
+  address       String?
+  city          String?
+  taxId         String?
+  notes         String?
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
   company       Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
@@ -359,6 +365,7 @@ model CatalogItem {
   company        Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
   category       Category?   @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   quoteLines     QuoteLine[]
+  invoiceLines   SalesInvoiceLine[]
   posTicketLines PosTicketLine[]
 
   @@unique([companyId, sku])
@@ -405,6 +412,7 @@ model Quote {
   company       Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
   customer      Customer?   @relation(fields: [customerId], references: [id], onDelete: SetNull)
   lines         QuoteLine[]
+  invoices      SalesInvoice[]
 
   @@unique([companyId, reference])
   @@index([companyId, status])
@@ -488,20 +496,47 @@ model SalesInvoice {
   dueDate       DateTime?
   status        String    @default("Draft") // 'Draft' | 'Sent' | 'PartiallyPaid' | 'Paid' | 'Overdue' | 'Cancelled'
   subtotalCents Int       @default(0)
+  discountRate  Int       @default(0)
+  discountCents Int       @default(0)
+  taxRate       Int       @default(0)
   taxCents      Int       @default(0)
   totalCents    Int       @default(0)
   paidCents     Int       @default(0)
   currency      String    @default("FCFA")
   notes         String?
+  // Devis d'origine quand la facture a ete creee depuis un devis.
+  quoteId       String?
+  // Date d'emission effective : un brouillon n'a pas encore de numero definitif.
+  issuedAt      DateTime?
+  cancelledAt   DateTime?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   company       Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
   customer      Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  quote         Quote?    @relation(fields: [quoteId], references: [id], onDelete: SetNull)
   payments      Payment[]
+  lines         SalesInvoiceLine[]
 
   @@unique([companyId, number])
   @@index([companyId, status])
   @@index([customerId])
+  @@index([quoteId])
+}
+
+model SalesInvoiceLine {
+  id          String       @id @default(cuid())
+  invoiceId   String
+  itemId      String?
+  description String
+  quantity    Int
+  unitPrice   Int
+  totalCents  Int
+  sortOrder   Int          @default(0)
+  invoice     SalesInvoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  item        CatalogItem? @relation(fields: [itemId], references: [id], onDelete: SetNull)
+
+  @@index([invoiceId])
+  @@index([itemId])
 }
 
 model PurchaseInvoice {
@@ -794,4 +829,16 @@ model PosTicketLine {
 
   @@index([ticketId])
   @@index([itemId])
+}
+
+// Compteur de numerotation par entreprise et par type de document (et par
+// annee) : factures et tickets doivent suivre une numerotation continue, sans
+// trou ni doublon. Incremente uniquement via nextDocumentReference().
+model DocumentSequence {
+  companyId  String
+  key        String
+  nextNumber Int     @default(1)
+  company    Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@id([companyId, key])
 }
