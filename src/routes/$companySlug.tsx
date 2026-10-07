@@ -26,7 +26,10 @@ import {
   ShoppingCart,
   Sun,
   Truck,
+  UserRound,
   Users,
+  Wallet,
+  CalendarDays,
 } from 'lucide-react'
 import * as React from 'react'
 import { CompanyProvider, useCompany } from '~/context/CompanyContext'
@@ -83,7 +86,7 @@ const adminOnlyPaths = new Set(['/users'])
 
 const mobileLinks = [
   { path: '/pos/register', label: 'Caisse' },
-  { path: '/dashboard', label: 'Resume' },
+  { path: '/dashboard', label: 'Résumé' },
   { path: '/sales', label: 'Ventes' },
   { path: '/inventory', label: 'Stock' },
   { path: '/crm', label: 'Clients' },
@@ -112,7 +115,7 @@ const erpNavigation: Array<{ label: string; sections: SidebarSection[] }> = [
         icon: ShoppingCart,
         moduleKey: 'pos',
         children: [
-          { path: '/pos', label: 'Resume caisse', icon: BarChart3, exact: true },
+          { path: '/pos', label: 'Résumé caisse', icon: BarChart3, exact: true },
           { path: '/pos/register', label: 'Nouvelle vente', icon: ShoppingCart },
           { path: '/pos/history', label: 'Tickets', icon: History },
           { path: '/pos/sales-report', label: 'Rapport caisse', icon: ReceiptText },
@@ -123,7 +126,7 @@ const erpNavigation: Array<{ label: string; sections: SidebarSection[] }> = [
         icon: ReceiptText,
         moduleKey: 'sales',
         children: [
-          { path: '/sales', label: 'Resume ventes', icon: LayoutDashboard, exact: true },
+          { path: '/sales', label: 'Résumé ventes', icon: LayoutDashboard, exact: true },
           { path: '/quotes', label: 'Devis', icon: FileCheck2, exact: true },
           { path: '/invoices', label: 'Factures', icon: ReceiptText, exact: true },
         ],
@@ -133,10 +136,10 @@ const erpNavigation: Array<{ label: string; sections: SidebarSection[] }> = [
         icon: Contact,
         moduleKey: 'crm',
         children: [
-          { path: '/crm', label: 'Resume clients', icon: LayoutDashboard, exact: true },
+          { path: '/crm', label: 'Résumé clients', icon: LayoutDashboard, exact: true },
           { path: '/crm/customers', label: 'Clients', icon: Contact },
           { path: '/crm/leads', label: 'Prospects', icon: Plus },
-          { path: '/crm/deals', label: 'Opportunites', icon: Handshake },
+          { path: '/crm/deals', label: 'Opportunités', icon: Handshake },
         ],
       },
     ],
@@ -157,7 +160,7 @@ const erpNavigation: Array<{ label: string; sections: SidebarSection[] }> = [
         icon: Boxes,
         moduleKey: 'inventory',
         children: [
-          { path: '/inventory', label: 'Resume stock', icon: LayoutDashboard, exact: true },
+          { path: '/inventory', label: 'Résumé stock', icon: LayoutDashboard, exact: true },
           { path: '/inventory/transfers', label: 'Mouvements', icon: ArrowRightLeft },
         ],
       },
@@ -166,9 +169,9 @@ const erpNavigation: Array<{ label: string; sections: SidebarSection[] }> = [
         icon: Truck,
         moduleKey: 'inventory',
         children: [
-          { path: '/purchases', label: 'Resume achats', icon: LayoutDashboard, exact: true },
+          { path: '/purchases', label: 'Résumé achats', icon: LayoutDashboard, exact: true },
           { path: '/purchases/vendors', label: 'Fournisseurs', icon: Building2 },
-          { path: '/purchases/invoices', label: 'Factures achats', icon: FileText },
+          { path: '/purchases/invoices', label: 'Factures fournisseurs', icon: FileText },
         ],
       },
     ],
@@ -181,9 +184,9 @@ const erpNavigation: Array<{ label: string; sections: SidebarSection[] }> = [
         icon: CircleDollarSign,
         moduleKey: 'finance',
         children: [
-          { path: '/finance', label: 'Resume argent', icon: LayoutDashboard, exact: true },
-          { path: '/finance/revenues', label: 'Entrees', icon: ArrowUpRight },
-          { path: '/finance/expenses', label: 'Depenses', icon: ArrowDownRight },
+          { path: '/finance', label: 'Résumé argent', icon: LayoutDashboard, exact: true },
+          { path: '/finance/revenues', label: 'Entrées', icon: ArrowUpRight },
+          { path: '/finance/expenses', label: 'Dépenses', icon: ArrowDownRight },
           { path: '/finance/bank-accounts', label: 'Comptes & caisse', icon: Landmark },
         ],
       },
@@ -192,20 +195,36 @@ const erpNavigation: Array<{ label: string; sections: SidebarSection[] }> = [
         icon: ReceiptText,
         moduleKey: 'finance',
         children: [
-          { path: '/reports', label: 'Rapport activite', icon: BarChart3, exact: true },
+          { path: '/reports', label: 'Rapport d’activité', icon: BarChart3, exact: true },
         ],
       },
     ],
   },
   {
-    label: 'Systeme',
+    label: 'Équipe',
+    sections: [
+      {
+        label: 'RH',
+        icon: UserRound,
+        moduleKey: 'hr',
+        children: [
+          { path: '/hr', label: 'Résumé RH', icon: LayoutDashboard, exact: true },
+          { path: '/hr/employees', label: 'Employés', icon: Users },
+          { path: '/hr/leaves', label: 'Congés', icon: CalendarDays },
+          { path: '/hr/payrolls', label: 'Salaires', icon: Wallet },
+        ],
+      },
+    ],
+  },
+  {
+    label: 'Système',
     sections: [
       {
         label: 'Administration',
         icon: Settings,
         moduleKey: 'settings',
         children: [
-          { path: '/settings', label: 'Parametres', icon: Settings, exact: true },
+          { path: '/settings', label: 'Paramètres', icon: Settings, exact: true },
           { path: '/users', label: 'Utilisateurs', icon: Users, exact: true },
         ],
       },
@@ -346,7 +365,7 @@ function ErpAppShell({ children, companySlug }: { children: React.ReactNode, com
               Nouvelle vente
             </SidebarLink>
             <SidebarLink to={`/${companySlug}/dashboard`} icon={LayoutDashboard}>
-              Resume
+              Tableau de bord
             </SidebarLink>
           </div>
 
@@ -380,7 +399,7 @@ function ErpAppShell({ children, companySlug }: { children: React.ReactNode, com
             className="flex w-full items-center gap-2.5 rounded px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-950"
           >
             <LogOut className="size-4" />
-            Deconnexion
+            Déconnexion
           </button>
         </div>
       </aside>
@@ -799,7 +818,7 @@ function CreateCompanyModal({
               disabled={isSubmitting}
               className="rounded bg-slate-950 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
             >
-              {isSubmitting ? 'Creation...' : "Creer l'entreprise"}
+              {isSubmitting ? 'Création…' : "Créer l'entreprise"}
             </button>
           </div>
         </form>

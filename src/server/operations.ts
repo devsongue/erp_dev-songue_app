@@ -1613,3 +1613,65 @@ export const deletePurchaseInvoice = createServerFn({ method: 'POST' })
     })
     return { ok: true }
   })
+
+// --- RH : employes ------------------------------------------------------------
+
+const employeeInput = z.object({
+  companySlug: z.string(),
+  firstName: z.string().trim().min(1).max(100),
+  lastName: z.string().trim().min(1).max(100),
+  email: z.union([z.literal(''), z.string().trim().email()]).optional(),
+  phone: z.string().trim().max(50).optional(),
+  department: z.string().trim().min(1).max(100),
+  position: z.string().trim().min(1).max(100),
+  status: z.enum(['Active', 'OnLeave', 'Onboarding', 'Terminated']),
+  type: z.enum(['Full-time', 'Part-time', 'Contract']),
+  hireDate: z.string().min(1),
+  salary: z.number().min(0),
+})
+
+function employeeData(data: z.infer<typeof employeeInput>) {
+  return {
+    firstName: data.firstName,
+    lastName: data.lastName,
+    email: data.email || null,
+    phone: data.phone || null,
+    department: data.department,
+    position: data.position,
+    status: data.status,
+    type: data.type,
+    hireDate: new Date(data.hireDate),
+    salary: Math.round(data.salary),
+  }
+}
+
+export const createEmployee = createServerFn({ method: 'POST' })
+  .inputValidator(employeeInput)
+  .handler(async ({ data }) => {
+    const { company, user } = await getCompanyContext(data.companySlug, 'employee.create')
+    const employee = await prisma.employee.create({ data: { companyId: company.id, ...employeeData(data) } })
+    await prisma.auditLog.create({ data: { companyId: company.id, actorId: user.id, action: 'employee.created', entity: 'Employee', entityId: employee.id, metadata: JSON.stringify({ name: `${employee.firstName} ${employee.lastName}` }) } })
+    return employee
+  })
+
+export const updateEmployee = createServerFn({ method: 'POST' })
+  .inputValidator(employeeInput.extend({ employeeId: z.string() }))
+  .handler(async ({ data }) => {
+    const { company, user } = await getCompanyContext(data.companySlug, 'employee.update')
+    const employee = await prisma.employee.update({ where: { id: data.employeeId, companyId: company.id }, data: employeeData(data) })
+    await prisma.auditLog.create({ data: { companyId: company.id, actorId: user.id, action: 'employee.updated', entity: 'Employee', entityId: employee.id, metadata: JSON.stringify({ name: `${employee.firstName} ${employee.lastName}`, status: employee.status }) } })
+    return employee
+  })
+
+export const deleteEmployee = createServerFn({ method: 'POST' })
+  .inputValidator(z.object({ companySlug: z.string(), employeeId: z.string() }))
+  .handler(async ({ data }) => {
+    const { company, user } = await getCompanyContext(data.companySlug, 'employee.delete')
+    const employee = await prisma.employee.findFirst({ where: { id: data.employeeId, companyId: company.id } })
+    if (!employee) throw new Error('Employe introuvable.')
+    await prisma.$transaction(async (tx) => {
+      await tx.auditLog.create({ data: { companyId: company.id, actorId: user.id, action: 'employee.deleted', entity: 'Employee', entityId: employee.id, metadata: JSON.stringify({ name: `${employee.firstName} ${employee.lastName}` }) } })
+      await tx.employee.delete({ where: { id: employee.id } })
+    })
+    return { ok: true }
+  })
