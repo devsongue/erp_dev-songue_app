@@ -275,6 +275,18 @@ export function useFeedback() {
   return context
 }
 
+// Pour les pages plus anciennes qui gerent un message texte local : chaque
+// nouveau message part en notification, puis l'etat est vide.
+export function useMessageToast(message: string, clear: (value: string) => void) {
+  const { notify } = useFeedback()
+  React.useEffect(() => {
+    if (!message) return
+    const isError = /impossible|erreur|introuvable|invalide|ne peut|^renseigne|^choisis|^ajoute au moins/i.test(message)
+    notify(message, isError ? 'error' : 'success')
+    clear('')
+  }, [message, clear, notify])
+}
+
 // Execute une action serveur avec etat "en cours" et notification d'erreur.
 export function useAction() {
   const { notify } = useFeedback()

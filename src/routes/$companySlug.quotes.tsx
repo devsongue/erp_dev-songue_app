@@ -19,7 +19,7 @@ import {
 import * as React from 'react'
 import { getQuoteData } from '~/server/dataFetchers'
 import { createInvoiceFromQuote, createQuote, deleteQuote, saveQuoteSettings, updateQuote, updateQuoteStatus } from '~/server/operations'
-import { buttonClass, errorMessage, useFeedback } from '~/components/ui'
+import { buttonClass, errorMessage, useFeedback, useMessageToast } from '~/components/ui'
 import { useMoney } from '~/context/CompanyContext'
 import { ImageUploadField } from '~/components/ImageUploadField'
 
@@ -69,6 +69,7 @@ function QuotesPage() {
   const [activeModal, setActiveModal] = React.useState<Modal>(null)
   const [editingQuote, setEditingQuote] = React.useState<any | null>(null)
   const [message, setMessage] = React.useState('')
+  useMessageToast(message, setMessage)
   const [searchTerm, setSearchTerm] = React.useState('')
   const [statusFilter, setStatusFilter] = React.useState<StatusFilter>('All')
   const [sortBy, setSortBy] = React.useState<QuoteSort>('updated')
@@ -158,11 +159,7 @@ function QuotesPage() {
         </div>
       </div>
 
-      {message ? (
-        <div className="no-print mb-6 rounded border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">
-          {message}
-        </div>
-      ) : null}
+      
 
       <div className="no-print mb-6 grid gap-4 md:grid-cols-4">
         <Metric icon={FileCheck2} label="Devis" value={String(quotes.length)} detail="Documents crees" />

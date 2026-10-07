@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useRouter } from '@tanstack/react-router'
+import { useFeedback, useMessageToast } from '~/components/ui'
 import { Fragment, useMemo, useState, type FormEvent, type InputHTMLAttributes, type KeyboardEvent, type ReactNode } from 'react'
 import {
   AlertTriangle,
@@ -96,6 +97,7 @@ function productStepsFor(type: CatalogItemType): ProductStep[] {
 }
 
 function CatalogPage() {
+  const { confirm } = useFeedback()
   const { formatMoney, symbol } = useMoney()
   const { companySlug } = Route.useParams()
   const router = useRouter()
@@ -113,6 +115,7 @@ function CatalogPage() {
   const [productStep, setProductStep] = useState(0)
   const [categoryForm, setCategoryForm] = useState<CategoryFormState>(categoryFormDefaults)
   const [actionMessage, setActionMessage] = useState('')
+  useMessageToast(actionMessage, setActionMessage)
   const [isSaving, setIsSaving] = useState(false)
 
   const products = items.filter((item) => item.type === 'Product')
@@ -361,7 +364,7 @@ function CatalogPage() {
 
   async function removeProduct(itemId: string) {
     const item = items.find((candidate) => candidate.id === itemId)
-    if (!item || !window.confirm(`Supprimer definitivement « ${item.name} » ?`)) return
+    if (!item || !await confirm({ title: 'Supprimer cet article ?', message: `« ${item.name} » sera supprimé définitivement du catalogue.`, confirmLabel: 'Supprimer', danger: true })) return
     try {
       await deleteCatalogItem({ data: { companySlug, itemId } })
       setItems((current) => current.filter((candidate) => candidate.id !== itemId))
@@ -399,11 +402,7 @@ function CatalogPage() {
         </div>
       </div>
 
-      {actionMessage ? (
-        <div className="mb-6 rounded border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">
-          {actionMessage}
-        </div>
-      ) : null}
+      
 
       <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-4">
         <SummaryCard title="Produits actifs" value={products.length.toString()} detail={`${services.length} services`} icon={Package} />

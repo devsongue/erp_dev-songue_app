@@ -3,6 +3,7 @@ import { Building2, Copy, Image as ImageIcon, KeyRound, LockKeyhole, Mail, Penci
 import * as React from 'react'
 import { createRole, deleteRole, getCompanyAdministration, updateCompanyModule, updateCompanyProfile, updateRole } from '~/server/auth'
 import { ImageUploadField } from '~/components/ImageUploadField'
+import { useFeedback, useMessageToast } from '~/components/ui'
 import { defaultCurrency, defaultLocale } from '~/utils/currency'
 import { currencies, locales } from '~/utils/onboarding'
 import {
@@ -55,6 +56,8 @@ function SettingsPage() {
   const [activeTab, setActiveTab] = React.useState<SettingsTab>(canManage ? 'general' : 'security')
   const [data, setData] = React.useState<AdministrationData | null>(null)
   const [message, setMessage] = React.useState<string | null>(null)
+  const clearMessage = React.useCallback(() => setMessage(null), [])
+  useMessageToast(message ?? '', clearMessage)
 
   const refresh = React.useCallback(async () => {
     if (!canManage) return
@@ -131,12 +134,6 @@ function SettingsPage() {
         <h1 className="text-2xl font-bold text-slate-950">Paramètres</h1>
         <p className="text-sm text-slate-500 mt-1">Gestion de l'entreprise, des rôles, permissions et gestionnaires.</p>
       </div>
-
-      {message ? (
-        <div className="mb-6 rounded border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700">
-          {message}
-        </div>
-      ) : null}
 
       <div className="flex flex-col gap-8 lg:flex-row">
         <nav className="shrink-0 lg:w-60">
@@ -301,6 +298,7 @@ function UsersSettings({
   onMessage: (message: string) => void
   onRefresh: () => Promise<void>
 }) {
+  const { confirm } = useFeedback()
   const roles = data?.ok ? data.roles : []
   const users = data?.ok ? data.users : []
   const invitations = data?.ok ? data.invitations : []
@@ -385,7 +383,7 @@ function UsersSettings({
   }
 
   async function handleRemoveMember(user: (typeof users)[number]) {
-    if (isSubmitting || !window.confirm(`Retirer ${user.name} de cette entreprise ?`)) return
+    if (isSubmitting || !await confirm({ title: 'Retirer ce membre ?', message: `${user.name} n’aura plus accès à cette entreprise.`, confirmLabel: 'Retirer', danger: true })) return
     setIsSubmitting(true)
     try {
       const result = await removeMembership({ data: { companySlug, membershipId: user.id } })
@@ -763,6 +761,7 @@ function RolesSettings({
   onMessage: (message: string) => void
   onRefresh: () => Promise<void>
 }) {
+  const { confirm } = useFeedback()
   const roles = data?.ok ? data.roles : []
   const permissions = data?.ok ? data.permissions : []
   const [editingRoleId, setEditingRoleId] = React.useState<string | null>(null)
@@ -794,7 +793,7 @@ function RolesSettings({
   }
 
   async function handleDelete(roleId: string, roleName: string) {
-    if (isBusy || !window.confirm(`Supprimer definitivement le rôle « ${roleName} » ?`)) return
+    if (isBusy || !await confirm({ title: 'Supprimer ce rôle ?', message: `Le rôle « ${roleName} » sera supprimé définitivement.`, confirmLabel: 'Supprimer', danger: true })) return
     setIsBusy(true)
     try {
       const result = await deleteRole({ data: { companySlug, roleId } })

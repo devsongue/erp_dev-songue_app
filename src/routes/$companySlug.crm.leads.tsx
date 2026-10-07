@@ -1,4 +1,5 @@
 import { createFileRoute, useRouter } from '@tanstack/react-router'
+import { useFeedback, useMessageToast } from '~/components/ui'
 import { Check, Mail, Pencil, Plus, Search, Trash2, X } from 'lucide-react'
 import { useState, type FormEvent, type InputHTMLAttributes, type ReactNode } from 'react'
 import { getCrmData } from '~/server/dataFetchers'
@@ -10,6 +11,7 @@ export const Route = createFileRoute('/$companySlug/crm/leads')({
 })
 
 function CrmLeads() {
+  const { confirm } = useFeedback()
   const { companySlug } = Route.useParams()
   const router = useRouter()
   const data = Route.useLoaderData()
@@ -18,6 +20,7 @@ function CrmLeads() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingLeadId, setEditingLeadId] = useState<string | null>(null)
   const [message, setMessage] = useState('')
+  useMessageToast(message, setMessage)
   const [form, setForm] = useState({ name: '', company: '', email: '', phone: '', source: 'POS' })
   const visibleLeads = leads.filter((lead) => `${lead.name} ${lead.company ?? ''} ${lead.email ?? ''}`.toLowerCase().includes(query.toLowerCase()))
 
@@ -51,7 +54,7 @@ function CrmLeads() {
   }
 
   async function removeLead(lead: any) {
-    if (!window.confirm(`Supprimer definitivement « ${lead.name} » ?`)) return
+    if (!await confirm({ title: 'Supprimer ce prospect ?', message: `« ${lead.name} » sera supprimé définitivement.`, confirmLabel: 'Supprimer', danger: true })) return
     await deleteCrmLead({ data: { companySlug, leadId: lead.id } })
     setLeads((current) => current.filter((item) => item.id !== lead.id))
     setMessage(`${lead.name} supprime.`)
@@ -71,7 +74,7 @@ function CrmLeads() {
         </button>
       </div>
 
-      {message ? <div className="mb-6 rounded border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">{message}</div> : null}
+      
 
       <div className="neon-surface mb-6 rounded p-3">
         <div className="relative max-w-md">

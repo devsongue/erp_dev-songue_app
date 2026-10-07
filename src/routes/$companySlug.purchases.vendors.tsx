@@ -1,4 +1,5 @@
 import { createFileRoute, useRouter } from '@tanstack/react-router'
+import { useFeedback } from '~/components/ui'
 import { getVendorData } from '~/server/dataFetchers'
 import { createVendor, deleteVendor, updateVendor } from '~/server/operations'
 import { useState, type FormEvent } from 'react'
@@ -86,6 +87,7 @@ function ScoreBar({ value }: { value: number }) {
 }
 
 function VendorsPage() {
+  const { confirm } = useFeedback()
   const { vendors: initialVendors } = Route.useLoaderData()
   const { companySlug } = Route.useParams()
   const router = useRouter()
@@ -162,7 +164,7 @@ function VendorsPage() {
 
   async function handleDelete(id: string, e: React.MouseEvent) {
     e.stopPropagation()
-    if (!window.confirm("Supprimer ce fournisseur ?")) return
+    if (!await confirm({ title: 'Supprimer ce fournisseur ?', message: 'Ses factures sont conservées, sans lien vers sa fiche.', confirmLabel: 'Supprimer', danger: true })) return
     try {
       await deleteVendor({ data: { companySlug, id } })
       setVendors(v => v.filter(vendor => vendor.id !== id))
