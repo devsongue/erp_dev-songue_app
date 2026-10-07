@@ -829,7 +829,7 @@ export const createPosSale = createServerFn({ method: 'POST' })
     })).min(1),
   }))
   .handler(async ({ data }) => {
-    const { company, user } = await getCompanyContext(data.companySlug, 'finance.manage')
+    const { company, user } = await getCompanyContext(data.companySlug, 'pos.sell')
     await assertCompanyCustomer(company.id, data.customerId)
     const register = await prisma.posRegister.upsert({
       where: { companyId_name: { companyId: company.id, name: 'Caisse principale' } },
@@ -940,7 +940,7 @@ export const createPosSale = createServerFn({ method: 'POST' })
 export const openPosSession = createServerFn({ method: 'POST' })
   .inputValidator(z.object({ companySlug: z.string(), openingBalance: z.number().min(0).default(0) }))
   .handler(async ({ data }) => {
-    const { company, user } = await getCompanyContext(data.companySlug, 'finance.manage')
+    const { company, user } = await getCompanyContext(data.companySlug, 'pos.sell')
     const register = await prisma.posRegister.upsert({ where: { companyId_name: { companyId: company.id, name: 'Caisse principale' } }, update: {}, create: { companyId: company.id, name: 'Caisse principale' } })
     const existing = await prisma.posSession.findFirst({ where: { registerId: register.id, cashierId: user.id, status: 'Open' } })
     if (existing) return existing
@@ -950,7 +950,7 @@ export const openPosSession = createServerFn({ method: 'POST' })
 export const closePosSession = createServerFn({ method: 'POST' })
   .inputValidator(z.object({ companySlug: z.string(), closingBalance: z.number().min(0) }))
   .handler(async ({ data }) => {
-    const { company, user } = await getCompanyContext(data.companySlug, 'finance.manage')
+    const { company, user } = await getCompanyContext(data.companySlug, 'pos.sell')
     const session = await prisma.posSession.findFirst({ where: { companyId: company.id, cashierId: user.id, status: 'Open' }, orderBy: { openedAt: 'desc' } })
     if (!session) throw new Error('Aucune session de caisse ouverte.')
     const cash = await prisma.posTicket.aggregate({ where: { sessionId: session.id, status: 'Completed', paymentMethod: 'cash' }, _sum: { totalCents: true } })
@@ -965,7 +965,7 @@ export const updatePosTicket = createServerFn({ method: 'POST' })
     lines: z.array(z.object({ lineId: z.string(), quantity: z.number().int().positive() })).min(1),
   }))
   .handler(async ({ data }) => {
-    const { company, user } = await getCompanyContext(data.companySlug, 'finance.manage')
+    const { company, user } = await getCompanyContext(data.companySlug, 'pos.manage')
     const ticket = await prisma.posTicket.findFirst({
       where: { id: data.ticketId, companyId: company.id, status: 'Completed' },
       include: { lines: { include: { item: true } }, transaction: true },

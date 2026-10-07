@@ -155,7 +155,7 @@ export const getPosData = createServerFn({ method: 'GET' })
   .inputValidator(z.object({ companySlug: z.string() }))
   .handler(async ({ data }) => {
     const { requireCompanyAccess } = await import('./access')
-    const { company, user } = await requireCompanyAccess(data.companySlug, 'finance.read')
+    const { company, user } = await requireCompanyAccess(data.companySlug, 'pos.read')
 
     const todayStart = new Date()
     todayStart.setHours(0, 0, 0, 0)
@@ -332,7 +332,7 @@ export const getPosReportData = createServerFn({ method: 'GET' })
     end: z.string(),
   }))
   .handler(async ({ data }) => {
-    const company = await getCompany(data.companySlug, 'finance.read')
+    const company = await getCompany(data.companySlug, 'pos.read')
 
     const start = new Date(data.start)
     const end = new Date(data.end)

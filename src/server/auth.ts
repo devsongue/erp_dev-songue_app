@@ -1121,7 +1121,7 @@ async function createCompanyForOwner(input: {
   })
 
   const accountantPermissions = permissions.filter((permission: Permission) =>
-    ['invoice.', 'finance.', 'audit.'].some((prefix) => permission.key.startsWith(prefix)),
+    ['invoice.', 'finance.', 'audit.'].some((prefix) => permission.key.startsWith(prefix)) || permission.key === 'pos.read',
   )
   await prisma.role.create({
     data: {
@@ -1130,6 +1130,21 @@ async function createCompanyForOwner(input: {
       description: 'Gestion finance, factures et rapports comptables.',
       systemKey: 'accountant',
       permissions: { create: accountantPermissions.map((permission: Permission) => ({ permissionId: permission.id })) },
+    },
+  })
+
+  // Vendre sans acceder a la tresorerie ni corriger les tickets deja encaisses.
+  await prisma.role.create({
+    data: {
+      companyId: company.id,
+      name: 'Caissier',
+      description: 'Ventes en caisse et consultation des tickets.',
+      systemKey: 'cashier',
+      permissions: {
+        create: permissions
+          .filter((permission: Permission) => ['pos.read', 'pos.sell'].includes(permission.key))
+          .map((permission: Permission) => ({ permissionId: permission.id })),
+      },
     },
   })
 
@@ -1170,6 +1185,7 @@ async function ensureCoreDefinitions() {
   const modules = [
     { key: 'crm', name: 'CRM', category: 'Sales', permissions: ['customer.create', 'customer.read', 'customer.update', 'customer.delete'] },
     { key: 'sales', name: 'Ventes', category: 'Sales', permissions: ['invoice.create', 'invoice.read', 'invoice.update', 'invoice.delete'] },
+    { key: 'pos', name: 'Caisse', category: 'Sales', permissions: ['pos.read', 'pos.sell', 'pos.manage'] },
     { key: 'inventory', name: 'Stock', category: 'Operations', permissions: ['inventory.read', 'inventory.update', 'inventory.manage'] },
     { key: 'finance', name: 'Finance', category: 'Finance', permissions: ['finance.read', 'finance.manage', 'audit.read'] },
     { key: 'hr', name: 'RH', category: 'People', permissions: ['employee.create', 'employee.read', 'employee.update', 'employee.delete'] },

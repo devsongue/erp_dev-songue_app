@@ -171,6 +171,7 @@ export async function requireCompanyAccess(companySlug: string, permission?: str
   const permissions = new Set(company.permissions)
   const moduleKey = permission?.startsWith('customer.') ? 'crm'
     : permission?.startsWith('invoice.') ? 'sales'
+      : permission?.startsWith('pos.') ? 'pos'
       : permission?.startsWith('inventory.') ? 'inventory'
         : permission?.startsWith('finance.') || permission === 'audit.read' ? 'finance'
           : permission?.startsWith('employee.') ? 'hr'

@@ -107,7 +107,7 @@ const erpNavigation: Array<{ label: string; sections: SidebarSection[] }> = [
       {
         label: 'Caisse',
         icon: ShoppingCart,
-        moduleKey: 'sales',
+        moduleKey: 'pos',
         children: [
           { path: '/pos', label: 'Resume caisse', icon: BarChart3, exact: true },
           { path: '/pos/register', label: 'Nouvelle vente', icon: ShoppingCart },
