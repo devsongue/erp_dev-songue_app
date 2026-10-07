@@ -121,5 +121,5 @@ function paymentLabel(accountName?: string) {
   if (!accountName) return 'Caisse'
   if (accountName.toLowerCase().includes('mobile')) return 'Mobile'
   if (accountName.toLowerCase().includes('carte')) return 'Carte'
-  return 'Especes'
+  return 'Espèces'
 }

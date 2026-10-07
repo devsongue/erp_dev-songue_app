@@ -176,7 +176,7 @@ function PosHistory() {
                   <p className="mt-1 text-xs text-slate-500">Ticket / facture caisse</p>
                 </div>
                 <div className="space-y-2 border-b border-dashed border-slate-300 py-4 text-sm">
-                  <TicketInfo label="Reference" value={selectedTicket.reference ?? '-'} />
+                  <TicketInfo label="Référence" value={selectedTicket.reference ?? '-'} />
                   <TicketInfo label="Date" value={new Date(selectedTicket.date).toLocaleString('fr-FR')} />
                   <TicketInfo label="Libelle" value={selectedTicket.description} />
                   <TicketInfo label="Paiement" value={paymentLabel(selectedTicket.account?.name)} />
@@ -223,7 +223,7 @@ function TicketInfo({ label, value }: { label: string; value: string }) {
 function paymentLabel(accountName?: string) {
   if (accountName === 'Mobile money') return 'Mobile money'
   if (accountName === 'Paiement carte') return 'Carte'
-  if (accountName === 'Caisse boutique') return 'Especes'
+  if (accountName === 'Caisse boutique') return 'Espèces'
   return accountName ?? 'Non renseigne'
 }
 
@@ -237,7 +237,7 @@ function TicketStat({ label, value }: { label: string; value: string }) {
 }
 
 function ticketStatus(status: string) {
-  if (status === 'Completed') return 'Paye'
+  if (status === 'Completed') return 'Payé'
   if (status === 'Pending') return 'À vérifier'
   if (status === 'Failed') return 'Echec'
   return status

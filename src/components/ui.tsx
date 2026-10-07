@@ -1,6 +1,7 @@
 import * as React from 'react'
 import { AlertTriangle, CheckCircle2, Info, X } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
+import { useMoney } from '~/context/CompanyContext'
 
 // Briques d'interface partagees par les pages metier : memes modales, memes
 // confirmations, memes notifications partout, au lieu d'une copie par page.
@@ -175,6 +176,54 @@ export function Field({ label, hint, children, className = '' }: {
       {children}
       {hint ? <span className="mt-1 block text-xs text-slate-500">{hint}</span> : null}
     </label>
+  )
+}
+
+// Champ montant : affiche les milliers separes ("150 000") pendant la saisie,
+// avec la devise a droite, et transmet la valeur brute ("150000") au formulaire
+// via un champ cache du meme nom. Utilisable aussi en mode controle.
+export function MoneyInput({ name, defaultValue, value, onChange, required, autoFocus, placeholder, className = '', ...aria }: {
+  name?: string
+  defaultValue?: number | string | null
+  value?: string
+  onChange?: (value: string) => void
+  required?: boolean
+  autoFocus?: boolean
+  placeholder?: string
+  className?: string
+  'aria-label'?: string
+}) {
+  const { symbol } = useMoney()
+  const [inner, setInner] = React.useState(defaultValue === null || defaultValue === undefined ? '' : String(Math.round(Number(defaultValue)) || 0))
+  const raw = value !== undefined ? value : inner
+  const display = raw === '' ? '' : Number(raw).toLocaleString('fr-FR')
+
+  function handleChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const digits = event.target.value.replace(/\D/g, '').replace(/^0+(?=\d)/, '').slice(0, 13)
+    if (value !== undefined) onChange?.(digits)
+    else {
+      setInner(digits)
+      onChange?.(digits)
+    }
+  }
+
+  return (
+    <div className={`relative ${className}`}>
+      <input
+        type="text"
+        inputMode="numeric"
+        autoComplete="off"
+        value={display}
+        onChange={handleChange}
+        required={required}
+        autoFocus={autoFocus}
+        placeholder={placeholder ?? '0'}
+        aria-label={aria['aria-label']}
+        className={`${inputClass} pr-14 text-right tabular-nums`}
+      />
+      <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">{symbol}</span>
+      {name ? <input type="hidden" name={name} value={raw} /> : null}
+    </div>
   )
 }
 

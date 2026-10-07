@@ -288,6 +288,22 @@ function ErpAppShell({ children, companySlug }: { children: React.ReactNode, com
     root.style.colorScheme = theme
   }, [theme])
 
+  // Titre d'onglet par page ("Factures · Boutique Demo") a partir du menu :
+  // l'entree dont le chemin correspond le plus precisement a la page courante.
+  React.useEffect(() => {
+    let best: { path: string; label: string } | null = null
+    for (const group of erpNavigation) {
+      for (const section of group.sections) {
+        for (const child of section.children) {
+          const matches = child.exact ? currentSubPath === child.path : currentSubPath === child.path || currentSubPath.startsWith(`${child.path}/`)
+          if (matches && (!best || child.path.length > best.path.length)) best = child
+        }
+      }
+    }
+    const label = best?.label ?? (currentSubPath.startsWith('/pos/register') ? 'Nouvelle vente' : currentSubPath === '/dashboard' ? 'Tableau de bord' : null)
+    document.title = [label, activeCompany.name, 'DevSongue Business'].filter(Boolean).join(' · ')
+  }, [currentSubPath, activeCompany.name])
+
   function toggleTheme() {
     const next = theme === 'dark' ? 'light' : 'dark'
     setTheme(next)
@@ -519,6 +535,7 @@ function SidebarMenu({
       <button
         type="button"
         onClick={() => setIsOpen((value) => !value)}
+        aria-expanded={isOpen}
         className={`flex w-full items-center gap-2.5 rounded px-3 py-2 text-sm font-medium transition-colors hover:bg-slate-100 hover:text-slate-950 ${
           isSectionActive ? 'bg-slate-100 text-slate-950 font-bold' : 'text-slate-600'
         }`}

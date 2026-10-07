@@ -1,7 +1,7 @@
 import { createFileRoute, useRouter } from '@tanstack/react-router'
 import { Mail, Pencil, Phone, Search, Trash2, UserPlus, Users, Wallet } from 'lucide-react'
 import * as React from 'react'
-import { Badge, EmptyState, Field, FormActions, Modal, PageHeader, StatCard, buttonClass, formatDate, inputClass, toDateInput, useAction, useFeedback } from '~/components/ui'
+import { Badge, EmptyState, Field, FormActions, Modal, PageHeader, StatCard, buttonClass, formatDate, inputClass, toDateInput, useAction, useFeedback, MoneyInput } from '~/components/ui'
 import { useMoney } from '~/context/CompanyContext'
 import { getHrData } from '~/server/dataFetchers'
 import { createEmployee, deleteEmployee, updateEmployee } from '~/server/operations'
@@ -189,7 +189,7 @@ function EmployeeModal({ companySlug, employee, departments, onClose }: { compan
         <Field label="Téléphone"><input name="phone" type="tel" defaultValue={employee?.phone ?? ''} className={inputClass} /></Field>
         <Field label="Email"><input name="email" type="email" defaultValue={employee?.email ?? ''} className={inputClass} /></Field>
         <Field label="Date d'embauche"><input name="hireDate" type="date" required defaultValue={toDateInput(employee?.hireDate ?? new Date())} className={inputClass} /></Field>
-        <Field label="Salaire mensuel brut"><input name="salary" type="number" min="0" required defaultValue={employee?.salary ?? 0} className={inputClass} /></Field>
+        <Field label="Salaire mensuel brut"><MoneyInput name="salary" required defaultValue={employee?.salary ?? 0} /></Field>
         <Field label="Contrat">
           <select name="type" defaultValue={employee?.type ?? 'Full-time'} className={inputClass}>
             {Object.entries(contractLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}

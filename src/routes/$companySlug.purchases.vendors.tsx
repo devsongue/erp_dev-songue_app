@@ -199,7 +199,7 @@ function VendorsPage() {
             <span className="grid size-8 place-items-center rounded bg-slate-950 text-white">
               <Handshake className="size-4" />
             </span>
-            <h1 className="text-xl font-bold text-slate-950">Gestion fournisseurs avancee</h1>
+            <h1 className="text-xl font-bold text-slate-950">Fournisseurs</h1>
           </div>
           <p className="mt-2 max-w-3xl text-xs leading-6 text-slate-500">
             Pilotage des fournisseurs, scoring performance, contrats, risques et plans d'action achats.

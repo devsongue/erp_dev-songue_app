@@ -3,7 +3,7 @@ import { ArrowLeftRight, Banknote, CreditCard, Landmark, Pencil, PiggyBank, Plus
 import * as React from 'react'
 import { useMoney } from '~/context/CompanyContext'
 import { accountTypeLabels, type FinanceAccount } from '~/components/finance'
-import { Badge, EmptyState, Field, FormActions, Modal, PageHeader, StatCard, buttonClass, inputClass, toDateInput, useAction, useFeedback } from '~/components/ui'
+import { Badge, EmptyState, Field, FormActions, Modal, PageHeader, StatCard, buttonClass, inputClass, toDateInput, useAction, useFeedback, MoneyInput } from '~/components/ui'
 import { getFinanceData } from '~/server/dataFetchers'
 import { createBankAccount, deleteBankAccount, transferBetweenAccounts, updateBankAccount } from '~/server/operations'
 
@@ -158,7 +158,7 @@ function AccountModal({ companySlug, account, onClose }: { companySlug: string; 
         </Field>
         <Field label="Numéro (optionnel)" hint="Numéro de compte, de téléphone mobile money…"><input name="accountNumber" defaultValue={account?.accountNumber ?? ''} className={inputClass} /></Field>
         {account ? null : (
-          <Field label="Solde de départ" hint="L'argent déjà présent sur ce compte aujourd'hui."><input name="openingBalance" type="number" min="0" defaultValue={0} className={inputClass} /></Field>
+          <Field label="Solde de départ" hint="L'argent déjà présent sur ce compte aujourd'hui."><MoneyInput name="openingBalance" defaultValue={0} /></Field>
         )}
         <FormActions onCancel={onClose} pending={pending} submitLabel={account ? 'Enregistrer' : 'Créer le compte'} />
       </form>
@@ -204,7 +204,7 @@ function TransferModal({ companySlug, accounts, onClose }: { companySlug: string
             {accounts.filter((account) => account.id !== fromId).map((account) => <option key={account.id} value={account.id}>{account.name}</option>)}
           </select>
         </Field>
-        <Field label="Montant"><input name="amount" type="number" min="1" max={from?.balance} required className={inputClass} /></Field>
+        <Field label="Montant"><MoneyInput name="amount" required /></Field>
         <Field label="Date"><input name="date" type="date" defaultValue={toDateInput(new Date())} className={inputClass} /></Field>
         <Field label="Note (optionnel)"><input name="note" className={inputClass} /></Field>
         <FormActions onCancel={onClose} pending={pending} submitLabel="Effectuer le virement" />

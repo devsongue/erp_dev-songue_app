@@ -41,10 +41,10 @@ type QuoteLineForm = {
 
 const statusLabels: Record<string, string> = {
   Draft: 'Brouillon',
-  Sent: 'Envoye',
-  Accepted: 'Accepte',
-  Rejected: 'Refuse',
-  Expired: 'Expire',
+  Sent: 'Envoyé',
+  Accepted: 'Accepté',
+  Rejected: 'Refusé',
+  Expired: 'Expiré',
 }
 
 const statusClasses: Record<string, string> = {

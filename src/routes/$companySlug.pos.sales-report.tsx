@@ -72,7 +72,7 @@ function PosSalesReport() {
 
       <div className={`mb-6 grid grid-cols-1 gap-4 transition-opacity md:grid-cols-4 ${isLoading ? 'opacity-60' : ''}`}>
         <ReportCard title="Total caisse" value={formatMoney(report.totalAmount)} icon={ReceiptText} />
-        <ReportCard title="Especes" value={formatMoney(cash)} icon={Wallet} />
+        <ReportCard title="Espèces" value={formatMoney(cash)} icon={Wallet} />
         <ReportCard title="Mobile" value={formatMoney(mobile)} icon={Smartphone} />
         <ReportCard title="Carte" value={formatMoney(card)} icon={CreditCard} />
       </div>
@@ -128,5 +128,5 @@ function paymentLabel(accountName?: string) {
   if (!accountName) return 'Caisse'
   if (accountName.toLowerCase().includes('mobile')) return 'Mobile'
   if (accountName.toLowerCase().includes('carte')) return 'Carte'
-  return 'Especes'
+  return 'Espèces'
 }

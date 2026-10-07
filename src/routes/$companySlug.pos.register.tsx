@@ -290,7 +290,7 @@ function PosRegister() {
             </div>
 
             <div className="mb-4 grid grid-cols-3 gap-2">
-              <PaymentButton active={paymentMethod === 'cash'} icon={Wallet} label="Especes" onClick={() => setPaymentMethod('cash')} />
+              <PaymentButton active={paymentMethod === 'cash'} icon={Wallet} label="Espèces" onClick={() => setPaymentMethod('cash')} />
               <PaymentButton active={paymentMethod === 'mobile'} icon={Smartphone} label="Mobile" onClick={() => setPaymentMethod('mobile')} />
               <PaymentButton active={paymentMethod === 'card'} icon={CreditCard} label="Carte" onClick={() => setPaymentMethod('card')} />
             </div>
@@ -460,7 +460,7 @@ function TicketModal({ companyName, ticket, onClose, onPrint }: { companyName: s
             </div>
 
             <div className="my-4 border-y border-dashed border-slate-300 py-3 text-xs">
-              <TicketInfo label="Reference" value={ticket.reference} />
+              <TicketInfo label="Référence" value={ticket.reference} />
               <TicketInfo label="Date" value={ticket.createdAt} />
               <TicketInfo label="Client" value={ticket.customer} />
               <TicketInfo label="Paiement" value={paymentLabel(ticket.paymentMethod)} />
@@ -517,7 +517,7 @@ function TicketInfo({ label, value }: { label: string; value: string }) {
 function paymentLabel(method: PaymentMethod) {
   if (method === 'mobile') return 'Mobile'
   if (method === 'card') return 'Carte'
-  return 'Especes'
+  return 'Espèces'
 }
 
 function toCatalogCategory(category: any): CatalogCategory {

@@ -3,7 +3,7 @@ import { ArrowDownRight, ArrowLeftRight, ArrowUpRight, Download, Lock, Pencil, P
 import * as React from 'react'
 import { useMoney } from '~/context/CompanyContext'
 import { DateRangeFilter, matchesDatePreset, todayInputValue, type DatePreset } from '~/components/DateRangeFilter'
-import { EmptyState, Field, FormActions, Modal, PageHeader, StatCard, buttonClass, formatDate, inputClass, toDateInput, useAction, useFeedback } from '~/components/ui'
+import { EmptyState, Field, FormActions, Modal, PageHeader, StatCard, buttonClass, formatDate, inputClass, toDateInput, useAction, useFeedback, MoneyInput } from '~/components/ui'
 import { downloadCsv } from '~/utils/csvExport'
 import type { getFinanceData } from '~/server/dataFetchers'
 import { createFinanceTransaction, deleteFinanceTransaction, updateFinanceTransaction } from '~/server/operations'
@@ -242,7 +242,7 @@ export function TransactionFormModal({ companySlug, type, accounts, transaction,
           <input name="description" required autoFocus defaultValue={transaction?.description ?? ''} placeholder={type === 'Income' ? 'Ex. : apport du gérant' : 'Ex. : loyer d’octobre'} className={inputClass} />
         </Field>
         <Field label="Montant">
-          <input name="amount" type="number" min="1" required defaultValue={transaction?.amount ?? ''} className={inputClass} />
+          <MoneyInput name="amount" required defaultValue={transaction?.amount ?? null} />
         </Field>
         <Field label="Date">
           <input name="date" type="date" defaultValue={toDateInput(transaction?.date ?? new Date())} className={inputClass} />

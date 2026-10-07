@@ -2,7 +2,7 @@ import { createFileRoute, useRouter } from '@tanstack/react-router'
 import { AlertTriangle, Building2, CheckCircle2, FileCheck2, FilePlus2, Pencil, Plus, Printer, ReceiptText, Search, Send, Trash2, Wallet, X, XCircle } from 'lucide-react'
 import * as React from 'react'
 import { useMoney } from '~/context/CompanyContext'
-import { Badge, EmptyState, Field, Modal, PageHeader, StatCard, buttonClass, formatDate, inputClass, toDateInput, useAction, useFeedback } from '~/components/ui'
+import { Badge, EmptyState, Field, Modal, PageHeader, StatCard, buttonClass, formatDate, inputClass, toDateInput, useAction, useFeedback, MoneyInput } from '~/components/ui'
 import { getSalesInvoicesData } from '~/server/dataFetchers'
 import {
   cancelSalesInvoice,
@@ -454,14 +454,14 @@ function InvoiceEditor({ companySlug, invoice, customers, items, onClose, onSave
           <p className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-400">Lignes</p>
           <div className="space-y-2">
             {lines.map((line) => (
-              <div key={line.key} className="grid gap-2 rounded border border-slate-200 p-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)_5rem_7rem_7rem_auto] sm:items-center">
+              <div key={line.key} className="grid gap-2 rounded border border-slate-200 p-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)_4.5rem_9rem_7rem_auto] sm:items-center">
                 <select value={line.itemId} onChange={(event) => pickItem(line.key, event.target.value)} aria-label="Article du catalogue" className={inputClass}>
                   <option value="">Ligne libre</option>
                   {items.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
                 </select>
                 <input value={line.description} onChange={(event) => updateLine(line.key, { description: event.target.value })} placeholder="Description" aria-label="Description" className={inputClass} />
                 <input type="number" min="1" value={line.quantity} onChange={(event) => updateLine(line.key, { quantity: event.target.value })} aria-label="Quantité" className={inputClass} />
-                <input type="number" min="0" value={line.unitPrice} onChange={(event) => updateLine(line.key, { unitPrice: event.target.value })} aria-label="Prix unitaire" className={inputClass} />
+                <MoneyInput value={line.unitPrice} onChange={(value) => updateLine(line.key, { unitPrice: value })} aria-label="Prix unitaire" />
                 <p className="text-right text-sm font-bold text-slate-950">{formatMoney(Math.round((Number(line.quantity) || 0) * (Number(line.unitPrice) || 0)))}</p>
                 <button type="button" onClick={() => setLines((current) => current.length > 1 ? current.filter((item) => item.key !== line.key) : current)} disabled={lines.length === 1} className={buttonClass.icon} aria-label="Retirer la ligne">
                   <X className="size-3.5" />
@@ -530,7 +530,7 @@ function PaymentModal({ companySlug, invoice, accounts, onClose, onSaved }: {
     <Modal title="Enregistrer un paiement" description={`${invoice.number} · reste ${formatMoney(due)}`} onClose={onClose} size="sm">
       {accounts.length ? (
         <form onSubmit={submit} className="grid gap-4">
-          <Field label="Montant reçu"><input name="amount" type="number" min="1" max={due} defaultValue={due} required autoFocus className={inputClass} /></Field>
+          <Field label="Montant reçu"><MoneyInput name="amount" defaultValue={due} required autoFocus /></Field>
           <Field label="Mode de paiement">
             <select name="method" defaultValue="Cash" className={inputClass}>
               {Object.entries(methodLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}

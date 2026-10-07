@@ -2,7 +2,7 @@ import { createFileRoute, useRouter } from '@tanstack/react-router'
 import { AlertTriangle, Download, FilePlus, Pencil, ReceiptText, Search, Trash2, Wallet, XCircle } from 'lucide-react'
 import * as React from 'react'
 import { DateRangeFilter, matchesDatePreset, todayInputValue, type DatePreset } from '~/components/DateRangeFilter'
-import { Badge, EmptyState, Field, FormActions, Modal, PageHeader, StatCard, buttonClass, formatDate, inputClass, toDateInput, useAction, useFeedback } from '~/components/ui'
+import { Badge, EmptyState, Field, FormActions, Modal, PageHeader, StatCard, buttonClass, formatDate, inputClass, toDateInput, useAction, useFeedback, MoneyInput } from '~/components/ui'
 import { useMoney } from '~/context/CompanyContext'
 import { getPurchasesData } from '~/server/dataFetchers'
 import { cancelPurchaseInvoice, createPurchaseInvoice, deletePurchaseInvoice, recordPurchaseInvoicePayment, updatePurchaseInvoice } from '~/server/operations'
@@ -295,7 +295,7 @@ function PurchaseInvoiceModal({ companySlug, invoice, data, onClose }: { company
         <Field label="N° de la facture fournisseur" hint={invoice ? undefined : 'Laisse vide pour un numéro automatique.'}>
           <input name="reference" defaultValue={invoice?.reference ?? ''} className={inputClass} />
         </Field>
-        <Field label="Montant TTC"><input name="amount" type="number" min="1" required defaultValue={invoice?.amount ?? ''} className={inputClass} /></Field>
+        <Field label="Montant TTC"><MoneyInput name="amount" required defaultValue={invoice?.amount ?? null} /></Field>
         <Field label="Catégorie">
           <input name="category" required list={listId} defaultValue={invoice?.category ?? purchaseCategories[0]} className={inputClass} />
           <datalist id={listId}>{purchaseCategories.map((category) => <option key={category} value={category} />)}</datalist>
@@ -355,7 +355,7 @@ function PayModal({ companySlug, invoice, accounts, onClose }: { companySlug: st
     <Modal title="Payer le fournisseur" description={`${invoice.vendorName} · ${invoice.reference} · reste ${formatMoney(due)}`} onClose={onClose} size="sm">
       {accounts.length ? (
         <form onSubmit={submit} className="grid gap-4">
-          <Field label="Montant payé"><input name="amount" type="number" min="1" max={due} defaultValue={due} required autoFocus className={inputClass} /></Field>
+          <Field label="Montant payé"><MoneyInput name="amount" defaultValue={due} required autoFocus /></Field>
           <Field label="Mode de paiement">
             <select name="method" defaultValue="Cash" className={inputClass}>
               {Object.entries(methodLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}

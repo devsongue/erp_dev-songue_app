@@ -2,7 +2,7 @@ import { createFileRoute, useRouter } from '@tanstack/react-router'
 import { Handshake, Pencil, Plus, Trash2 } from 'lucide-react'
 import * as React from 'react'
 import { useMoney } from '~/context/CompanyContext'
-import { Badge, EmptyState, Field, FormActions, Modal, PageHeader, StatCard, buttonClass, formatDate, inputClass, toDateInput, useAction, useFeedback } from '~/components/ui'
+import { Badge, EmptyState, Field, FormActions, Modal, PageHeader, StatCard, buttonClass, formatDate, inputClass, toDateInput, useAction, useFeedback, MoneyInput } from '~/components/ui'
 import { getCrmData } from '~/server/dataFetchers'
 import { createCrmDeal, deleteCrmDeal, updateCrmDeal } from '~/server/operations'
 
@@ -181,7 +181,7 @@ function DealModal({ companySlug, deal, customers, onClose }: { companySlug: str
             {customers.map((customer) => <option key={customer.id} value={customer.id}>{customer.name}</option>)}
           </select>
         </Field>
-        <Field label="Montant estimé"><input name="value" type="number" min="0" required defaultValue={deal?.value ?? 0} className={inputClass} /></Field>
+        <Field label="Montant estimé"><MoneyInput name="value" required defaultValue={deal?.value ?? 0} /></Field>
         <Field label="Étape">
           <select name="stageId" defaultValue={deal?.stageId ?? 'new'} className={inputClass}>
             {stages.map((stage) => <option key={stage.key} value={stage.key}>{stage.label}</option>)}
